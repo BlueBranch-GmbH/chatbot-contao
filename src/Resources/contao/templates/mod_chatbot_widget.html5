@@ -1,0 +1,61 @@
+<?php
+if (!$this->hasApiKey): return; endif;
+
+$styleVars = [];
+if ($this->color) {
+    $styleVars[] = '--chatbot-widget-accent: ' . $this->color;
+    $styleVars[] = '--chatbot-widget-accent-contrast: ' . $this->colorContrast;
+}
+if ($this->iconUrl) {
+    $styleVars[] = "--chatbot-widget-icon: url('" . $this->iconUrl . "')";
+}
+?>
+<div class="chatbot-widget" id="chatbot-widget-<?= $this->id ?>" data-position="<?= $this->position ?>"<?php if ($styleVars): ?> style="<?= implode('; ', $styleVars) ?>;"<?php endif; ?>>
+    <button type="button" class="chatbot-widget__toggle" aria-expanded="false" aria-controls="chatbot-widget-panel-<?= $this->id ?>" aria-label="<?= $this->botName ?>">
+        <span class="chatbot-widget__toggle-icon" aria-hidden="true"></span>
+        <span class="chatbot-widget__badge" hidden></span>
+    </button>
+
+    <div class="chatbot-widget__panel" id="chatbot-widget-panel-<?= $this->id ?>" hidden>
+        <div class="chatbot-widget__header">
+            <span class="chatbot-widget__header-title"><?= $this->botName ?></span>
+            <div class="chatbot-widget__header-actions">
+                <div class="chatbot-widget__font-controls">
+                    <button type="button" class="chatbot-widget__font-btn chatbot-widget__font-btn--inc" aria-label="<?= $this->labelFontInc ?>" title="<?= $this->labelFontInc ?>">A</button>
+                    <button type="button" class="chatbot-widget__font-btn chatbot-widget__font-btn--dec" aria-label="<?= $this->labelFontDec ?>" title="<?= $this->labelFontDec ?>">A</button>
+                </div>
+                <button type="button" class="chatbot-widget__clear" aria-label="<?= $this->labelClear ?>" title="<?= $this->labelClear ?>">&#8635;</button>
+                <button type="button" class="chatbot-widget__close" aria-label="<?= $this->labelClose ?>">&times;</button>
+            </div>
+        </div>
+        <div class="chatbot-widget__messages" role="log" aria-live="polite"></div>
+        <div class="chatbot-widget__suggestions" hidden></div>
+        <form class="chatbot-widget__form">
+            <textarea class="chatbot-widget__input" rows="1" placeholder="<?= $this->labelInputPlaceholder ?>" required></textarea>
+            <button type="submit" class="chatbot-widget__send" aria-label="<?= $this->labelSend ?>">&#10148;</button>
+        </form>
+        <?php if ($this->showDisclaimer): ?>
+        <div class="chatbot-widget__footer">Private Chats &amp; Hosted in Germany</div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php if (!$this->unstyled): ?>
+<link rel="stylesheet" href="/bundles/chatbot/css/chatbot.css">
+<?php endif; ?>
+<script src="/bundles/chatbot/js/marked.min.js"></script>
+<script src="/bundles/chatbot/js/chatbot.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new ChatbotWidget(<?= json_encode([
+            'containerId' => 'chatbot-widget-' . $this->id,
+            'requestToken' => $this->requestToken,
+            'language' => $this->language,
+            'pageId' => $this->pageId,
+            'greeting' => $this->greeting,
+            'suggestions' => $this->suggestions,
+            'showSummarize' => $this->showSummarize,
+            'strings' => $this->jsStrings,
+        ]) ?>).init();
+    });
+</script>

@@ -1,0 +1,68 @@
+<!-- indexer::stop -->
+<div class="chatbot-generate-search-container chatbot-generate-search-container--full" id="chatbot-search-<?= $this->id ?>">
+    <?php if ($this->headline): ?>
+    <<?= $this->hl ?> class="headline"><?= $this->headline ?></<?= $this->hl ?>>
+<?php endif; ?>
+
+    <form class="chatbot-search-form" method="get">
+        <div class="widget widget-text">
+            <label for="ctrl_chatbot_keywords_<?= $this->id ?>" class="invisible"><?= $GLOBALS['TL_LANG']['MSC']['keywords'] ?></label>
+            <input type="search" name="<?= $this->queryParam ?>" id="ctrl_chatbot_keywords_<?= $this->id ?>" class="text" value="<?= \Contao\StringUtil::specialchars($this->query) ?>">
+        </div>
+        <div class="widget widget-submit">
+            <button type="submit" class="submit"><?= $GLOBALS['TL_LANG']['MSC']['searchLabel'] ?></button>
+        </div>
+    </form>
+
+<?php if (!$this->hasApiKey): ?>
+    <div class="chatbot-error-message" style="background: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">
+        <strong>Hinweis:</strong> Der Chatbot ist derzeit nicht konfiguriert (API-Key fehlt).
+    </div>
+<?php elseif ($this->query): ?>
+    <div class="chatbot-response">
+        <div class="chatbot-loading" style="display:none;">Antwort wird generiert...</div>
+        <div class="chatbot-content"></div>
+        <div class="chatbot-sources" style="display:none;">
+            <p><strong>Quellen:</strong></p>
+            <ul></ul>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($this->query): ?>
+    <div class="chatbot-native-results">
+        <?php if ($this->searchResultsCount > 0): ?>
+        <p class="chatbot-native-results__header"><?= vsprintf($GLOBALS['TL_LANG']['MSC']['sResults'], [1, \count($this->searchResults), $this->searchResultsCount, \Contao\StringUtil::specialchars($this->query)]) ?></p>
+        <ul class="chatbot-native-results__list">
+            <?php foreach ($this->searchResults as $result): ?>
+            <li class="chatbot-native-results__item">
+                <h3 class="chatbot-native-results__title"><a href="<?= $result['href'] ?>"><?= $result['title'] ?></a></h3>
+                <?php if ($result['context']): ?><p class="chatbot-native-results__context"><?= $result['context'] ?></p><?php endif; ?>
+                <p class="chatbot-native-results__url"><?= $result['url'] ?></p>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php else: ?>
+        <p class="chatbot-native-results__empty"><?= sprintf($GLOBALS['TL_LANG']['MSC']['sEmpty'], \Contao\StringUtil::specialchars($this->query)) ?></p>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+</div>
+
+<?php if ($this->hasApiKey && $this->query): ?>
+<script src="/bundles/chatbot/js/marked.min.js"></script>
+<script src="/bundles/chatbot/js/search.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chatbot = new ChatbotSearch({
+            containerId: 'chatbot-search-<?= $this->id ?>',
+            query: <?= json_encode($this->query) ?>,
+            requestToken: '<?= $this->requestToken ?>',
+            language: '<?= $this->language ?>',
+            pageId: '<?= $this->pageId ?>'
+        });
+        chatbot.init();
+    });
+</script>
+<?php endif; ?>
+<!-- indexer::continue -->

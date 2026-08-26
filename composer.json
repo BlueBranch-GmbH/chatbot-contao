@@ -1,0 +1,30 @@
+{
+  "name": "bluebranch/chatbot",
+  "description": "",
+  "keywords": ["contao", "ki", "ai", "alt", "chatbot", "support"],
+  "type": "contao-bundle",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Lukas M. Beck",
+      "email": "lb@bluebranch.de",
+      "homepage": "https://www.bluebranch.de/"
+    }
+  ],
+  "support": {
+
+  },
+  "require": {
+    "php": "^7.4 || ^8.0",
+    "contao/core-bundle": "^4.13 || ^5.0",
+    "league/html-to-markdown": "^5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Bluebranch\\Chatbot\\": "src/"
+    }
+  },
+  "extra": {
+    "contao-manager-plugin": "Bluebranch\\Chatbot\\ContaoManager\\Plugin"
+  }
+}

@@ -1,0 +1,3 @@
+bluebranch.chatbot.controller:
+  resource: ../Controller
+  type: attribute

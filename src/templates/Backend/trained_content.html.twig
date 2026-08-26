@@ -1,0 +1,674 @@
+<div id="tl_buttons">
+    <a href="{{ path('contao_backend') }}" class="header_back"
+       title="{{ 'MSC.backBT'|trans([], 'contao_default') }}"
+       accesskey="b">{{ 'MSC.backBT'|trans([], 'contao_default') }}</a>
+</div>
+
+<div class="chatbot-admin">
+
+    <div class="chatbot-admin__header">
+        <h2 class="chatbot-admin__title">Chatbot &ndash; Trainierte Inhalte</h2>
+        <p class="chatbot-admin__subtitle">Übersicht der für den Chatbot trainierten Seiten und Inhalte je Website.</p>
+    </div>
+
+    {% if error is defined and error %}
+        <div class="chatbot-admin__notice chatbot-admin__notice--error">
+            <strong>Hinweis:</strong> {{ error }}
+            <br>Bitte prüfen Sie die <a href="contao?do=page&amp;act=edit&amp;id={{ selectedPageId }}">Seiteneinstellungen</a>.
+        </div>
+    {% endif %}
+
+    <div class="chatbot-admin__card">
+        <div class="chatbot-admin__toolbar">
+            <form action="{{ path(app.request.attributes.get('_route')) }}" method="get" class="chatbot-admin__toolbar-form">
+                <input type="hidden" name="do" value="{{ app.request.query.get('do') }}">
+                <div class="chatbot-admin__field">
+                    <label for="pageId">Website</label>
+                    <select name="pageId" id="pageId" class="tl_select" onchange="this.form.submit()">
+                        {% for rootPage in rootPages %}
+                            <option value="{{ rootPage.id }}" {% if rootPage.id == selectedPageId %}selected{% endif %}>{{ rootPage.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="chatbot-admin__field">
+                    <label for="limit-select">Einträge / Seite</label>
+                    <select id="limit-select" class="tl_select">
+                        {% for l in allowedLimits %}
+                            <option value="{{ l }}" {% if l == limit %}selected{% endif %}>{{ l }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+            <div class="chatbot-admin__field chatbot-admin__field--search">
+                <label for="chatbot-search">Suche</label>
+                <input type="text" id="chatbot-search" class="tl_text" placeholder="Titel, URL oder ID …">
+            </div>
+            {% if content is defined and content|length > 0 %}
+                <button id="chatbot-delete-all-btn" class="chatbot-admin__btn chatbot-admin__btn--danger">
+                    Alle Inhalte löschen
+                </button>
+            {% endif %}
+        </div>
+
+        <div id="chatbot-table-info" class="chatbot-admin__info"></div>
+
+        <div class="chatbot-admin__table-wrap">
+            <table class="chatbot-admin__table">
+                <thead>
+                <tr>
+                    <th>Titel / URL</th>
+                    <th>Externe ID</th>
+                    <th>Chunks</th>
+                    <th>Sprache</th>
+                    <th>Trainiert am</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="chatbot-tbody"></tbody>
+            </table>
+        </div>
+
+        <div id="chatbot-pagination" class="chatbot-admin__pagination"></div>
+    </div>
+
+    <div class="chatbot-admin__card chatbot-admin__card--test">
+        <div class="chatbot-admin__card-header">
+            <h3>Chatbot testen</h3>
+            <p class="chatbot-admin__subtitle">Stellen Sie dem Chatbot eine Testfrage, um die trainierten Inhalte live zu prüfen.</p>
+        </div>
+
+        {% if no_api_key is defined and no_api_key %}
+            <div class="chatbot-admin__notice chatbot-admin__notice--warning">
+                Kein API Key hinterlegt. Der Chatbot-Test ist für diese Seite nicht verfügbar.
+            </div>
+        {% else %}
+            <div class="chatbot-admin__route-select">
+                <span class="chatbot-admin__route-label">Route:</span>
+                <label class="chatbot-admin__radio">
+                    <input type="radio" name="chatbot-route" value="search" checked> Suche
+                </label>
+                <label class="chatbot-admin__radio">
+                    <input type="radio" name="chatbot-route" value="chat"> Chat
+                </label>
+            </div>
+
+            <div class="chatbot-admin__test-form">
+                <input type="text" id="chatbot-prompt" class="tl_text" placeholder="Frage eingeben …">
+                <button id="chatbot-send" class="chatbot-admin__btn chatbot-admin__btn--primary">Senden</button>
+            </div>
+
+            <div id="chatbot-test-container" class="chatbot-generate-search-container">
+                <div class="chatbot-response">
+                    <div class="chatbot-loading" style="display:none;">Antwort wird generiert …</div>
+                    <div class="chatbot-content"></div>
+                    <div class="chatbot-sources" style="display:none;">
+                        <p><strong>Quellen:</strong></p>
+                        <ul></ul>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script src="/bundles/chatbot/js/marked.min.js"></script>
+<script src="/bundles/chatbot/js/search.js?v={{ "now"|date("U") }}"></script>
+{% if no_api_key is not defined or not no_api_key %}
+<script>
+    document.getElementById('chatbot-send').addEventListener('click', function() {
+        const prompt = document.getElementById('chatbot-prompt').value;
+        if (!prompt) return;
+
+        const contentDiv = document.querySelector('#chatbot-test-container .chatbot-content');
+        const sourcesDiv = document.querySelector('#chatbot-test-container .chatbot-sources');
+        const sourcesList = sourcesDiv.querySelector('ul');
+
+        contentDiv.innerHTML = '';
+        sourcesDiv.style.display = 'none';
+        sourcesList.innerHTML = '';
+
+        const route = document.querySelector('input[name="chatbot-route"]:checked').value;
+        const apiUrls = {
+            search: '{{ path("bluebranch_chatbot_generate_stream_be") }}',
+            chat: '{{ path("bluebranch_chatbot_chat_stream_be") }}'
+        };
+
+        const chatbot = new ChatbotSearch({
+            containerId: 'chatbot-test-container',
+            query: prompt,
+            requestToken: '{{ requestToken }}',
+            apiUrl: apiUrls[route],
+            language: 'de',
+            pageId: '{{ selectedPageId }}'
+        });
+        chatbot.init();
+    });
+
+    document.getElementById('chatbot-prompt').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('chatbot-send').click();
+        }
+    });
+</script>
+{% endif %}
+
+<script>
+(function() {
+    const allItems = {{ content|json_encode|raw }};
+    const streamToken = '{{ requestToken }}';
+    const pageId = '{{ selectedPageId }}';
+    const deleteUrlTemplate = '{{ path("bluebranch_chatbot_delete_content_be", {"externalId": "__EID__"}) }}';
+    const deleteAllUrl = '{{ path("bluebranch_chatbot_delete_all_content_be") }}';
+
+    let currentPage = 1;
+    let currentLimit = {{ limit }};
+    let filteredItems = allItems.slice();
+
+    const tbody = document.getElementById('chatbot-tbody');
+    const pagination = document.getElementById('chatbot-pagination');
+    const info = document.getElementById('chatbot-table-info');
+    const searchInput = document.getElementById('chatbot-search');
+    const limitSelect = document.getElementById('limit-select');
+
+    function formatDate(str) {
+        if (!str) return '';
+        const d = new Date(str);
+        return d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'})
+            + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function renderRow(item) {
+        const tr = document.createElement('tr');
+        tr.className = 'chatbot-admin__row';
+        tr.dataset.externalId = item.externalId || '';
+        tr.innerHTML =
+            '<td>' +
+                '<div class="chatbot-admin__cell-title">' + (item.title || '') + '</div>' +
+                '<div class="chatbot-admin__cell-url">' + (item.url || '') + '</div>' +
+            '</td>' +
+            '<td class="chatbot-admin__cell-muted">' + (item.externalId || '') + '</td>' +
+            '<td><span class="chatbot-admin__badge">' + (item.chunkCount || 1) + '</span></td>' +
+            '<td class="chatbot-admin__cell-muted">' + (item.language || '') + '</td>' +
+            '<td class="chatbot-admin__cell-muted">' + formatDate(item.createdAt) + '</td>' +
+            '<td class="chatbot-admin__cell-actions">' +
+                '<button class="chatbot-admin__btn chatbot-admin__btn--danger chatbot-admin__btn--small chatbot-delete-btn" ' +
+                    'data-external-id="' + (item.externalId || '') + '" ' +
+                    'data-title="' + (item.title || '').replace(/"/g, '&quot;') + '">' +
+                    'Löschen' +
+                '</button>' +
+            '</td>';
+        tr.querySelector('.chatbot-delete-btn').addEventListener('click', function() {
+            deleteItem(this, tr);
+        });
+        return tr;
+    }
+
+    function renderTable() {
+        const total = filteredItems.length;
+        const pages = Math.max(1, Math.ceil(total / currentLimit));
+        if (currentPage > pages) currentPage = pages;
+        const start = (currentPage - 1) * currentLimit;
+        const slice = filteredItems.slice(start, start + currentLimit);
+
+        tbody.innerHTML = '';
+        if (slice.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="6" class="chatbot-admin__cell-empty">Keine trainierten Inhalte gefunden.</td>';
+            tbody.appendChild(tr);
+        } else {
+            slice.forEach(function(item) { tbody.appendChild(renderRow(item)); });
+        }
+
+        info.textContent = total + ' Einträge gesamt' + (filteredItems.length < allItems.length ? ' (gefiltert von ' + allItems.length + ')' : '');
+        renderPagination(pages);
+    }
+
+    function renderPagination(pages) {
+        pagination.innerHTML = '';
+        if (pages <= 1) return;
+
+        const ul = document.createElement('ul');
+        const maxVisible = 10;
+        let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(pages, start + maxVisible - 1);
+        if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+        function addBtn(label, page, active) {
+            const li = document.createElement('li');
+            if (active) {
+                li.innerHTML = '<span class="current">' + label + '</span>';
+            } else {
+                const a = document.createElement('a');
+                a.href = '#';
+                a.className = 'link';
+                a.textContent = label;
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    currentPage = page;
+                    renderTable();
+                    window.scrollTo(0, 0);
+                });
+                li.appendChild(a);
+            }
+            ul.appendChild(li);
+        }
+
+        if (start > 1) {
+            addBtn('«', 1, false);
+            if (start > 2) addBtn('…', null, true);
+        }
+        for (let p = start; p <= end; p++) addBtn(p, p, p === currentPage);
+        if (end < pages) {
+            if (end < pages - 1) addBtn('…', null, true);
+            addBtn('»', pages, false);
+        }
+
+        pagination.appendChild(ul);
+    }
+
+    function applySearch() {
+        const term = searchInput.value.toLowerCase().trim();
+        filteredItems = term === '' ? allItems.slice() : allItems.filter(function(item) {
+            return (item.title || '').toLowerCase().includes(term)
+                || (item.url || '').toLowerCase().includes(term)
+                || (item.externalId || '').toLowerCase().includes(term);
+        });
+        currentPage = 1;
+        renderTable();
+    }
+
+    function deleteItem(btn, row) {
+        const externalId = btn.dataset.externalId;
+        const title = btn.dataset.title;
+        if (!confirm('Inhalt "' + title + '" wirklich löschen?')) return;
+
+        btn.disabled = true;
+        btn.textContent = '...';
+
+        fetch(deleteUrlTemplate.replace('__EID__', encodeURIComponent(externalId)) + '?pageId=' + pageId, {
+            method: 'DELETE',
+            headers: { 'X-Stream-Token': streamToken }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                const idx = allItems.findIndex(function(i) { return i.externalId === externalId; });
+                if (idx !== -1) allItems.splice(idx, 1);
+                applySearch();
+            } else {
+                alert('Fehler: ' + (data.message || 'Unbekannter Fehler'));
+                btn.disabled = false;
+                btn.textContent = 'Löschen';
+            }
+        })
+        .catch(function() {
+            alert('Verbindungsfehler.');
+            btn.disabled = false;
+            btn.textContent = 'Löschen';
+        });
+    }
+
+    searchInput.addEventListener('input', applySearch);
+
+    limitSelect.addEventListener('change', function() {
+        currentLimit = parseInt(this.value);
+        currentPage = 1;
+        renderTable();
+    });
+
+    const deleteAllBtn = document.getElementById('chatbot-delete-all-btn');
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', function() {
+            if (!confirm('Wirklich ALLE trainierten Inhalte für diese Seite löschen?')) return;
+            deleteAllBtn.disabled = true;
+            deleteAllBtn.textContent = '...';
+
+            fetch(deleteAllUrl + '?pageId=' + pageId, {
+                method: 'DELETE',
+                headers: { 'X-Stream-Token': streamToken }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    allItems.splice(0, allItems.length);
+                    applySearch();
+                    deleteAllBtn.remove();
+                } else {
+                    alert('Fehler: ' + (data.message || 'Unbekannter Fehler'));
+                    deleteAllBtn.disabled = false;
+                    deleteAllBtn.textContent = 'Alle Inhalte löschen';
+                }
+            })
+            .catch(function() {
+                alert('Verbindungsfehler.');
+                deleteAllBtn.disabled = false;
+                deleteAllBtn.textContent = 'Alle Inhalte löschen';
+            });
+        });
+    }
+
+    renderTable();
+})();
+</script>
+
+<style>
+    .chatbot-admin {
+        --chatbot-admin-accent: #2563eb;
+        --chatbot-admin-text: #1f2430;
+        --chatbot-admin-muted: #6b7280;
+        --chatbot-admin-border: #e5e7eb;
+        --chatbot-admin-bg-subtle: #f8f9fb;
+        color: var(--chatbot-admin-text);
+        max-width: 1200px;
+    }
+
+    .chatbot-admin__header {
+        margin-bottom: 20px;
+    }
+
+    .chatbot-admin__title {
+        margin: 0 0 4px;
+        font-size: 1.4rem;
+    }
+
+    .chatbot-admin__subtitle {
+        margin: 0;
+        color: var(--chatbot-admin-muted);
+        font-size: 0.9rem;
+    }
+
+    .chatbot-admin__notice {
+        margin-bottom: 20px;
+        padding: 14px 18px;
+        border-radius: 6px;
+        border-left: 4px solid;
+        font-size: 0.9rem;
+    }
+
+    .chatbot-admin__notice--error {
+        background: #fdf1f0;
+        border-color: #d9534f;
+        color: #7d2b26;
+    }
+
+    .chatbot-admin__notice--warning {
+        background: #fff8e6;
+        border-color: #e0a800;
+        color: #6b5000;
+    }
+
+    .chatbot-admin__notice a {
+        color: inherit;
+        font-weight: 600;
+    }
+
+    .chatbot-admin__card {
+        background: #fff;
+        border: 1px solid var(--chatbot-admin-border);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .chatbot-admin__card-header {
+        margin-bottom: 16px;
+    }
+
+    .chatbot-admin__card-header h3 {
+        margin: 0 0 4px;
+        font-size: 1.1rem;
+    }
+
+    .chatbot-admin__toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--chatbot-admin-border);
+    }
+
+    .chatbot-admin__toolbar-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .chatbot-admin__field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .chatbot-admin__field label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        color: var(--chatbot-admin-muted);
+    }
+
+    .chatbot-admin__field--search {
+        flex: 1 1 220px;
+        max-width: 280px;
+        margin-left: auto;
+    }
+
+    .chatbot-admin__field--search input {
+        width: 100%;
+    }
+
+    .chatbot-admin__btn {
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.15s ease;
+    }
+
+    .chatbot-admin__btn:hover {
+        opacity: .88;
+    }
+
+    .chatbot-admin__btn:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+    .chatbot-admin__btn--primary {
+        background: var(--chatbot-admin-accent);
+        color: #fff;
+    }
+
+    .chatbot-admin__btn--danger {
+        background: #d9534f;
+        color: #fff;
+    }
+
+    .chatbot-admin__btn--small {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+    }
+
+    .chatbot-admin__info {
+        padding: 4px 0 12px;
+        color: var(--chatbot-admin-muted);
+        font-size: 0.85rem;
+    }
+
+    .chatbot-admin__table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--chatbot-admin-border);
+        border-radius: 8px;
+    }
+
+    .chatbot-admin__table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+
+    .chatbot-admin__table th {
+        text-align: left;
+        background: var(--chatbot-admin-bg-subtle);
+        border-bottom: 1px solid var(--chatbot-admin-border);
+        padding: 10px 14px;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        color: var(--chatbot-admin-muted);
+    }
+
+    .chatbot-admin__table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--chatbot-admin-border);
+        vertical-align: middle;
+    }
+
+    .chatbot-admin__table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .chatbot-admin__row:hover {
+        background-color: var(--chatbot-admin-bg-subtle);
+    }
+
+    .chatbot-admin__cell-title {
+        font-weight: 600;
+    }
+
+    .chatbot-admin__cell-url {
+        margin-top: 2px;
+        font-size: 0.8rem;
+        color: var(--chatbot-admin-muted);
+        word-break: break-all;
+    }
+
+    .chatbot-admin__cell-muted {
+        color: var(--chatbot-admin-muted);
+    }
+
+    .chatbot-admin__cell-actions {
+        text-align: right;
+    }
+
+    .chatbot-admin__cell-empty {
+        padding: 24px 14px;
+        text-align: center;
+        color: var(--chatbot-admin-muted);
+    }
+
+    .chatbot-admin__badge {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: var(--chatbot-admin-bg-subtle);
+        border: 1px solid var(--chatbot-admin-border);
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--chatbot-admin-text);
+    }
+
+    .chatbot-admin__pagination {
+        margin-top: 16px;
+    }
+
+    .chatbot-admin__pagination ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .chatbot-admin__pagination .current {
+        font-weight: 700;
+        padding: 5px 11px;
+        background: var(--chatbot-admin-bg-subtle);
+        border: 1px solid var(--chatbot-admin-border);
+        border-radius: 4px;
+    }
+
+    .chatbot-admin__pagination .link {
+        padding: 5px 11px;
+        border: 1px solid var(--chatbot-admin-border);
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--chatbot-admin-text);
+        display: block;
+    }
+
+    .chatbot-admin__pagination .link:hover {
+        background: var(--chatbot-admin-bg-subtle);
+        border-color: var(--chatbot-admin-accent);
+    }
+
+    .chatbot-admin__route-select {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 14px;
+        font-size: 0.85rem;
+    }
+
+    .chatbot-admin__route-label {
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        font-size: 0.75rem;
+        color: var(--chatbot-admin-muted);
+    }
+
+    .chatbot-admin__radio {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+    }
+
+    .chatbot-admin__test-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .chatbot-admin__test-form input {
+        flex: 1 1 auto;
+        padding: 10px 12px;
+    }
+
+    .chatbot-admin .chatbot-generate-search-container {
+        margin: 0;
+    }
+
+    .chatbot-admin .chatbot-response {
+        border: 1px solid var(--chatbot-admin-border);
+        border-radius: 8px;
+        padding: 18px;
+        min-height: 80px;
+        background: var(--chatbot-admin-bg-subtle);
+    }
+
+    .chatbot-admin .chatbot-loading {
+        margin-bottom: 12px;
+        color: var(--chatbot-admin-muted);
+        font-style: italic;
+    }
+
+    .chatbot-admin .chatbot-sources {
+        margin-top: 15px;
+        padding-top: 12px;
+        border-top: 1px solid var(--chatbot-admin-border);
+    }
+
+    .chatbot-admin .chatbot-sources ul {
+        list-style: disc;
+        margin: 8px 0 0 20px;
+        padding: 0;
+    }
+</style>
