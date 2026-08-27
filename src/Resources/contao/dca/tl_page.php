@@ -15,14 +15,16 @@ $GLOBALS['TL_DCA']['tl_page']['palettes']['rootfallback'] = str_replace(
 );
 
 /*
- * `hideInput` zeigt Punkte statt Zeichen - der Schluessel stand vorher offen im Seitenbaum, wo
- * ihn jeder Mitlesende abschreiben konnte.
+ * Der Schluessel verlaesst die Datenbank nicht mehr.
  *
- * Das ist Sichtschutz, kein Geheimnisschutz: Contao gibt den Wert weiterhin im `value`-Attribut
- * des Formularfelds aus, im Quelltext der Seite steht er also im Klartext. Wer ihn wirklich
- * verbergen will, muesste ihn beim Laden durch einen Platzhalter ersetzen und beim Speichern
- * unveraenderte Platzhalter verwerfen - das birgt die Gefahr, bei einem Fehler den Schluessel
- * eines Kunden zu loeschen, und gehoert deshalb nicht ungetestet hierher.
+ * Zwei Schichten: `hideInput` zeigt Punkte statt Zeichen, und `ApiKeyFieldListener` ersetzt den
+ * Wert schon beim Laden durch einen Platzhalter. Die zweite ist die wichtigere - ohne sie gaebe
+ * Contao den Schluessel weiterhin im `value`-Attribut aus, wo er im Quelltext der Backend-Seite
+ * und in jedem Zwischenspeicher steht, der Seiteninhalte mitschreibt.
+ *
+ * Die Bedienung: Platzhalter stehen lassen behaelt den Schluessel, ein leeres Feld loescht ihn,
+ * alles andere gilt als neuer Schluessel. Die Entscheidung trifft
+ * `ApiKeyFieldListener::entscheideWert()`.
  */
 $GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_api_key'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['chatbot_api_key'],

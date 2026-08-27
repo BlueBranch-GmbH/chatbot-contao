@@ -11,6 +11,9 @@ services:
     Bluebranch\Chatbot\EventListener\IndexPageListener:
         public: true
 
+    Bluebranch\Chatbot\EventListener\ApiKeyFieldListener:
+        public: true
+
     Bluebranch\Chatbot\classes\ChatbotAPI:
         public: true
 
