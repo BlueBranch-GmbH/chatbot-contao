@@ -14,11 +14,27 @@ $GLOBALS['TL_DCA']['tl_page']['palettes']['rootfallback'] = str_replace(
     $GLOBALS['TL_DCA']['tl_page']['palettes']['rootfallback']
 );
 
+/*
+ * `hideInput` zeigt Punkte statt Zeichen - der Schluessel stand vorher offen im Seitenbaum, wo
+ * ihn jeder Mitlesende abschreiben konnte.
+ *
+ * Das ist Sichtschutz, kein Geheimnisschutz: Contao gibt den Wert weiterhin im `value`-Attribut
+ * des Formularfelds aus, im Quelltext der Seite steht er also im Klartext. Wer ihn wirklich
+ * verbergen will, muesste ihn beim Laden durch einen Platzhalter ersetzen und beim Speichern
+ * unveraenderte Platzhalter verwerfen - das birgt die Gefahr, bei einem Fehler den Schluessel
+ * eines Kunden zu loeschen, und gehoert deshalb nicht ungetestet hierher.
+ */
 $GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_api_key'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_page']['chatbot_api_key'],
     'exclude'   => true,
     'inputType' => 'text',
-    'eval'      => ['mandatory' => false, 'tl_class' => 'w50', 'decodeEntities' => true],
+    'eval'      => [
+        'mandatory'      => false,
+        'tl_class'       => 'w50',
+        'decodeEntities' => true,
+        'hideInput'      => true,
+        'preserveTags'   => true,
+    ],
     'sql'       => "varchar(255) NOT NULL default ''",
 ];
 

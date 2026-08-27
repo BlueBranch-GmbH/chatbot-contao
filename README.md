@@ -86,6 +86,11 @@ Grund samt Stufe landet im Log der Contao-Installation und nicht im Chatfenster.
 Ein Konto legt man über die Weboberfläche der Plattform selbst an. Neue Konten starten im
 Free Tier; die Hochstufung nimmt der Betreiber der Plattform vor.
 
+> Der API-Key wird im Seitenbaum verdeckt angezeigt (Punkte statt Zeichen). Das schützt vor
+> Mitlesenden am Bildschirm; im Quelltext der Backend-Seite steht er weiterhin im Klartext, wie
+> bei jedem Contao-Feld mit `hideInput`. Zum Ändern den Schlüssel vollständig neu eintragen —
+> ein leeres Feld löscht ihn.
+
 ## Seiten von den KI-Antworten ausschließen
 
 In den Seiteneinstellungen steht neben *Von der Suche ausschließen* das Feld
