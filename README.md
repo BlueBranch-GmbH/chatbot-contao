@@ -24,6 +24,37 @@ composer require bluebranch/chatbot
 
 Anschließend das Contao-Backend einmal aufrufen, damit die Datenbank aktualisiert wird.
 
+## Aktualisieren
+
+Nach dem Einspielen einer neuen Fassung sind **zwei** Schritte nötig, sonst ändert sich nichts:
+
+1. *System-Wartung* → **Anwendungscache leeren**
+2. *System-Wartung* → **Datenbank aktualisieren**
+
+Per Konsole:
+
+```bash
+composer dump-autoload                                   # nur bei Installation über Composer
+php vendor/bin/contao-console cache:clear --env=prod
+php vendor/bin/contao-console contao:migrate
+```
+
+> **Ohne Schritt 1 sieht es aus, als sei nichts angekommen.** Contao kompiliert seinen
+> Dienst-Container nach `var/cache/prod/` und liest ihn danach nur noch. Eine neu hochgeladene
+> Klasse existiert für die Anwendung schlicht nicht: Ihre Callbacks werden nicht registriert,
+> Felder erscheinen weiter wie zuvor — und es gibt keine Fehlermeldung, denn für Contao ist
+> alles in Ordnung. Genau so wirkte es beim ersten Ausrollen des Schlüsselschutzes: Der API-Key
+> stand unverändert im Klartext im Formular.
+>
+> Ob eine Klasse angekommen ist, zeigt
+> `php vendor/bin/contao-console debug:container ApiKeyFieldListener --env=prod` — die Zeile
+> *Tags* muss `contao.callback` nennen.
+
+> **Die Befehle als Webserver-Benutzer ausführen**, meist `www-data`. Als `root` gestartet gehört
+> das neu angelegte Cache-Verzeichnis hinterher root, der Webserver kann nicht mehr
+> hineinschreiben, und die Website antwortet nur noch mit 500 — ohne Eintrag im Anwendungslog,
+> weil der Fehler vor dem Framework passiert. Über den Contao-Manager kann das nicht schiefgehen.
+
 ## Einrichtung
 
 **1. API-Schlüssel hinterlegen.** Der Schlüssel wird pro Website gesetzt: Seitenstruktur →
@@ -118,9 +149,8 @@ Zweig; die Kindseiten einzeln nachzupflegen wäre Arbeit ohne Gewinn. Beim Speic
 betroffenen Seiten sofort aus der Wissensbasis entfernt, nicht erst beim nächsten
 Bereinigungslauf.
 
-> Nach dem Update muss die Datenbank aktualisiert werden (*System → Datenbank-Update* oder
-> `vendor/bin/contao-console contao:migrate`) — sonst fehlt die neue Spalte, und das Feld
-> erscheint zwar, lässt sich aber nicht speichern.
+> Das Feld erscheint erst nach dem Leeren des Anwendungscaches, und speichern lässt es sich erst
+> nach dem Datenbank-Update. Beides steht unter [Aktualisieren](#aktualisieren).
 
 ## Bereiche vom Index ausnehmen
 
