@@ -3,6 +3,7 @@
 namespace Bluebranch\Chatbot\EventListener;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\PageEligibility;
 use Bluebranch\Chatbot\classes\SearchUtil;
 use Contao\Config;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
@@ -17,12 +18,18 @@ class IndexPageListener
 {
     private ChatbotAPI $chatbotApi;
     private SearchUtil $searchUtil;
+    private PageEligibility $eligibility;
     private LoggerInterface $logger;
 
-    public function __construct(ChatbotAPI $chatbotApi, SearchUtil $searchUtil, LoggerInterface $logger)
-    {
+    public function __construct(
+        ChatbotAPI $chatbotApi,
+        SearchUtil $searchUtil,
+        PageEligibility $eligibility,
+        LoggerInterface $logger
+    ) {
         $this->chatbotApi = $chatbotApi;
         $this->searchUtil = $searchUtil;
+        $this->eligibility = $eligibility;
         $this->logger = $logger;
     }
 
@@ -34,6 +41,20 @@ class IndexPageListener
     public function __invoke(string $content, array $pageData, array &$indexData): void
     {
         try {
+            $pageId = (int) ($pageData['id'] ?? $pageData['pid'] ?? 0);
+
+            /*
+             * Der Ausschluss wird hier geprueft, obwohl Contao den Hook fuer Seiten mit
+             * `noSearch` gar nicht erst aufruft: `chatbot_noAnswers` ist von `noSearch`
+             * unabhaengig - eine Seite darf in der Volltextsuche stehen und trotzdem aus den
+             * KI-Antworten heraus. Ohne diese Pruefung traegt der naechste Crawler-Lauf sie
+             * wieder ein, und der Ausschluss haelt genau bis dahin.
+             */
+            if ($this->eligibility->isExcludedFromAnswers($pageId)) {
+                $this->chatbotApi->deleteContent('page_' . $pageId, PageModel::findById($pageId));
+                return;
+            }
+
             // Für die Vektor-Datenbank ignorieren wir die indexer::stop Markierungen,
             // damit auch Newslisten etc. erfasst werden.
             $ignoreIndexerMarkers = true;
@@ -48,8 +69,6 @@ class IndexPageListener
                 $pageData['language'] ?? 'de',
                 15
             );
-
-            $pageId = $pageData['id'] ?? $pageData['pid'] ?? '';
 
             $payload = [
                 'externalId' => 'page_' . $pageId,
@@ -157,31 +176,46 @@ class IndexPageListener
         }
 
         try {
-            // Bewusst eine frische Datenbankabfrage statt $dc->activeRecord oder
-            // PageModel::findById(): activeRecord kann beim Toggle noch den Stand
-            // vor dem Speichern enthalten und der Model-Registry-Cache kann
-            // veraltete Werte liefern.
-            $row = Database::getInstance()
-                ->prepare("SELECT published, noSearch FROM tl_page WHERE id=?")
-                ->limit(1)
-                ->execute($dc->id);
+            // Der Merker der Vorpruefung stammt aus der Zeit vor dem Speichern.
+            $this->eligibility->reset();
 
-            if ($row->numRows < 1) {
-                return;
+            $pageId = (int) $dc->id;
+
+            /*
+             * Beim manuellen Ausschluss haengt der ganze Zweig daran: Die Kindseiten stehen zu
+             * diesem Zeitpunkt noch im Index und erben die Sperre erst durch diese Pruefung.
+             * Der stuendliche Cronjob wuerde sie zwar auch erwischen, aber eine Sperre, die erst
+             * in einer Stunde wirkt, ist keine - der Redakteur haelt die Seite fuer erledigt.
+             */
+            $betroffen = $this->eligibility->isExcludedFromAnswers($pageId)
+                ? $this->eligibility->branchIds($pageId)
+                : [$pageId];
+
+            $entfernt = 0;
+
+            foreach ($betroffen as $id) {
+                if ($this->eligibility->isEligible($id)) {
+                    continue;
+                }
+
+                $vectorId = 'page_' . $id;
+
+                $this->writeDebugFile(
+                    'unpublish_page_' . $vectorId . '.json',
+                    ['id' => $vectorId, 'action' => 'delete', 'reason' => 'not_eligible', 'tstamp' => time()]
+                );
+
+                $this->chatbotApi->deleteContent($vectorId, PageModel::findById($id));
+                ++$entfernt;
             }
 
-            $isEligibleForIndex = (bool) $row->published && !$row->noSearch;
-
-            if ($isEligibleForIndex) {
-                return;
+            if ($entfernt > 0) {
+                $this->logger->info(sprintf(
+                    'Chatbot: %d Seite(n) nach dem Speichern von Seite %d aus dem KI-Index entfernt.',
+                    $entfernt,
+                    $pageId
+                ));
             }
-
-            $vectorId = 'page_' . $dc->id;
-            $pageModel = PageModel::findById($dc->id);
-
-            $this->writeDebugFile('unpublish_page_' . $vectorId . '.json', ['id' => $vectorId, 'action' => 'delete', 'reason' => 'unpublished_or_nosearch', 'tstamp' => time()]);
-
-            $this->chatbotApi->deleteContent($vectorId, $pageModel);
         } catch (\Exception $e) {
             $this->logger->error('Fehler beim Entfernen aus der Vektor-Datenbank nach dem Speichern (tl_page): ' . $e->getMessage());
         }

@@ -3,6 +3,7 @@
 namespace Bluebranch\Chatbot\Cron;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\PageEligibility;
 use Contao\Config;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCronJob;
 use Contao\Database;
@@ -20,18 +21,22 @@ use Psr\Log\LoggerInterface;
  * passiert ohne jedes Speichern des Datensatzes, daher greift auch der
  * onSubmitPage-Callback in IndexPageListener nicht. Dieser Cronjob durchsucht
  * daher regelmäßig tl_page nach aktuell nicht (mehr) berechtigten Seiten
- * (unveröffentlicht, von der Suche ausgeschlossen, oder zeitlich abgelaufen)
- * und entfernt sie aus dem KI-Index.
+ * (unveröffentlicht, von der Suche oder den KI-Antworten ausgeschlossen, oder
+ * zeitlich abgelaufen) und entfernt sie aus dem KI-Index. Beim manuellen
+ * Ausschluss gehören die Unterseiten dazu - die Vererbung hängt am Seitenbaum
+ * und lässt sich nicht als Spaltenbedingung formulieren.
  */
 #[AsCronJob('hourly')]
 class PurgeIneligiblePagesCron
 {
     private ChatbotAPI $chatbotApi;
+    private PageEligibility $eligibility;
     private LoggerInterface $logger;
 
-    public function __construct(ChatbotAPI $chatbotApi, LoggerInterface $logger)
+    public function __construct(ChatbotAPI $chatbotApi, PageEligibility $eligibility, LoggerInterface $logger)
     {
         $this->chatbotApi = $chatbotApi;
+        $this->eligibility = $eligibility;
         $this->logger = $logger;
     }
 
@@ -64,11 +69,32 @@ class PurgeIneligiblePagesCron
                 . " OR (stop != '' AND stop != '0' AND stop < $now)"
             );
 
-            $count = 0;
+            $ids = [];
 
             while ($result->next()) {
-                $pageModel = PageModel::findById($result->id);
-                $this->chatbotApi->deleteContent('page_' . $result->id, $pageModel);
+                $ids[(int) $result->id] = true;
+            }
+
+            /*
+             * Manuell ausgeschlossene Seiten samt ihrer Unterseiten.
+             *
+             * Die Vererbung laesst sich in der Abfrage oben nicht ausdruecken - sie haengt am
+             * Seitenbaum, nicht an einer Spalte. Ohne diesen Schritt bliebe ein Zweig im Index,
+             * dessen Ueberseite laengst abgehakt ist.
+             */
+            $markiert = Database::getInstance()->execute("SELECT id FROM tl_page WHERE chatbot_noAnswers='1'");
+
+            while ($markiert->next()) {
+                foreach ($this->eligibility->branchIds((int) $markiert->id) as $id) {
+                    $ids[$id] = true;
+                }
+            }
+
+            $count = 0;
+
+            foreach (array_keys($ids) as $id) {
+                $pageModel = PageModel::findById($id);
+                $this->chatbotApi->deleteContent('page_' . $id, $pageModel);
                 $count++;
             }
 

@@ -86,6 +86,30 @@ Grund samt Stufe landet im Log der Contao-Installation und nicht im Chatfenster.
 Ein Konto legt man über die Weboberfläche der Plattform selbst an. Neue Konten starten im
 Free Tier; die Hochstufung nimmt der Betreiber der Plattform vor.
 
+## Seiten von den KI-Antworten ausschließen
+
+In den Seiteneinstellungen steht neben *Von der Suche ausschließen* das Feld
+**Aus den KI-Antworten ausschließen**. Beide entscheiden dasselbe — ob eine Seite als Quelle
+dient — nur für zwei verschiedene Suchen, und sie sind voneinander unabhängig:
+
+| | Contao-Volltextsuche | KI-Antworten |
+|---|---|---|
+| *Von der Suche ausschließen* | nein | nein |
+| *Aus den KI-Antworten ausschließen* | ja | nein |
+| beide | nein | nein |
+
+Eine Kontaktseite kann so in der Volltextsuche stehen und trotzdem aus den Chatbot-Antworten
+heraus — oder umgekehrt.
+
+**Die Einstellung vererbt sich auf alle Unterseiten.** Wer eine Rubrik abhakt, meint den ganzen
+Zweig; die Kindseiten einzeln nachzupflegen wäre Arbeit ohne Gewinn. Beim Speichern werden die
+betroffenen Seiten sofort aus der Wissensbasis entfernt, nicht erst beim nächsten
+Bereinigungslauf.
+
+> Nach dem Update muss die Datenbank aktualisiert werden (*System → Datenbank-Update* oder
+> `vendor/bin/contao-console contao:migrate`) — sonst fehlt die neue Spalte, und das Feld
+> erscheint zwar, lässt sich aber nicht speichern.
+
 ## Bereiche vom Index ausnehmen
 
 Zwei Inhaltselemente grenzen Bereiche ab, die nicht in den Suchindex sollen:
