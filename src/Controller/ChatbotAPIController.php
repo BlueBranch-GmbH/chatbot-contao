@@ -188,6 +188,28 @@ class ChatbotAPIController extends AbstractController
         return [$payload, $pageModel];
     }
 
+    /**
+     * Liest die Fehlermeldung der API aus einer abgelehnten Antwort - fuer das Log.
+     *
+     * Bei einer nicht gepufferten Antwort kann der Rumpf bereits verworfen sein; dann bleibt
+     * nur der Statuscode. Ein Fehlschlag hier darf den Ablauf nicht stoeren.
+     */
+    private function upstreamMeldung($apiResponse): string
+    {
+        try {
+            $inhalt = $apiResponse->getContent(false);
+            $daten = json_decode($inhalt, true);
+
+            if (is_array($daten) && isset($daten['message'])) {
+                return is_array($daten['message']) ? json_encode($daten['message']) : (string) $daten['message'];
+            }
+
+            return substr((string) $inhalt, 0, 300);
+        } catch (\Throwable $e) {
+            return '(Rumpf nicht lesbar: ' . $e->getMessage() . ')';
+        }
+    }
+
     private function buildStreamedResponse($apiResponse): StreamedResponse
     {
         return new StreamedResponse(function () use ($apiResponse) {
@@ -211,10 +233,22 @@ class ChatbotAPIController extends AbstractController
                 $statusCode = $apiResponse->getStatusCode();
 
                 if ($statusCode >= 400) {
-                    $this->logger->error(sprintf('Chatbot API antwortete auf einen Stream-Aufruf mit HTTP %d.', $statusCode));
+                    // Den ausfuehrlichen Grund ins Log, nicht ins Chatfenster: Bei 429 nennt die
+                    // API die Nutzungsstufe des Betreibers samt Kontaktadresse. Das gehoert in
+                    // die Betriebsansicht, nicht vor die Augen der Website-Besucher.
+                    $this->logger->error(sprintf(
+                        'Chatbot API antwortete auf einen Stream-Aufruf mit HTTP %d: %s',
+                        $statusCode,
+                        $this->upstreamMeldung($apiResponse)
+                    ));
 
                     echo "event: error\n";
-                    echo 'data: ' . json_encode(['message' => 'Upstream error', 'status' => $statusCode]) . "\n\n";
+                    echo 'data: ' . json_encode([
+                        'message' => 429 === $statusCode
+                            ? 'Zurzeit sind zu viele Anfragen offen. Bitte versuchen Sie es in einer Minute erneut.'
+                            : 'Die Anfrage konnte nicht beantwortet werden.',
+                        'status' => $statusCode,
+                    ]) . "\n\n";
                     flush();
 
                     return;

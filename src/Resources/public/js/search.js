@@ -87,7 +87,22 @@ class ChatbotSearch {
             if (fullAnswer.length > 0) {
                 // If we already have content, treat as finished
             } else {
-                this.handleError(new Error("SSE Connection failed"));
+                // Named SSE-Fehlerereignisse tragen einen Rumpf mit Begruendung, echte
+                // Verbindungsabbrueche nicht.
+                let meldung = 'SSE Connection failed';
+
+                if (event && typeof event.data === 'string' && event.data !== '') {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data && data.message) {
+                            meldung = data.message;
+                        }
+                    } catch (e) {
+                        // Rumpf unlesbar - bei der allgemeinen Meldung bleiben.
+                    }
+                }
+
+                this.handleError(new Error(meldung));
             }
         });
 

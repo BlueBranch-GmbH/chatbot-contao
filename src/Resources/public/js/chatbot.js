@@ -436,13 +436,32 @@ class ChatbotWidget {
             finish();
         });
 
-        eventSource.addEventListener('error', () => {
+        eventSource.addEventListener('error', (event) => {
             if (!bubble) {
                 typingRow.remove();
-                this.addMessage('bot', this.strings.requestError);
+                // Named SSE-Fehlerereignisse tragen einen Rumpf, echte Verbindungsabbrueche
+                // nicht. Wo die Gegenstelle einen Grund mitschickt - etwa ein erschoepftes
+                // Kontingent -, wird er angezeigt statt der allgemeinen Meldung.
+                this.addMessage('bot', this.messageFromError(event));
             }
             finish();
         });
+    }
+
+    /**
+     * Zieht die Begruendung aus einem SSE-Fehlerereignis, sonst die allgemeine Meldung.
+     */
+    messageFromError(event) {
+        if (!event || typeof event.data !== 'string' || event.data === '') {
+            return this.strings.requestError;
+        }
+
+        try {
+            const data = JSON.parse(event.data);
+            return data && data.message ? data.message : this.strings.requestError;
+        } catch (e) {
+            return this.strings.requestError;
+        }
     }
 
     appendSources(bubble, sources) {

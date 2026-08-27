@@ -100,10 +100,15 @@ class TrainedContentController extends AbstractBackendController
                 'no_api_key' => true,
                 'allowedLimits' => $allowedLimits,
                 'requestToken' => $streamToken,
+                'tier' => null,
             ];
             $response = $this->render('@Chatbot/Backend/trained_content.html.twig', $viewData);
             return $isLegacy ? $response->getContent() : $response;
         }
+
+        // Stufe des Zugangs. Bewusst vor dem Auflisten: Schlägt die Auskunft fehl, soll die
+        // Seite trotzdem erscheinen — der Hinweis entfällt dann einfach.
+        $tier = $this->resolveTier($pageId);
 
         // Fetch all chunks, then group in PHP — pagination/search handled client-side
         $response = $this->chatbotApi->listContent(5000, 0, $pageId);
@@ -119,6 +124,7 @@ class TrainedContentController extends AbstractBackendController
                 'error' => $response['message'] ?? 'Unbekannter API Fehler',
                 'allowedLimits' => $allowedLimits,
                 'requestToken' => $streamToken,
+                'tier' => $tier,
             ];
             $response = $this->render('@Chatbot/Backend/trained_content.html.twig', $viewData);
             return $isLegacy ? $response->getContent() : $response;
@@ -151,6 +157,7 @@ class TrainedContentController extends AbstractBackendController
             'error' => null,
             'allowedLimits' => $allowedLimits,
             'requestToken' => $streamToken,
+            'tier' => $tier,
         ];
 
         $response = $this->render('@Chatbot/Backend/trained_content.html.twig', $viewData);
@@ -206,5 +213,23 @@ class TrainedContentController extends AbstractBackendController
             'parameter_bag' => \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class,
             'request_stack' => \Symfony\Component\HttpFoundation\RequestStack::class,
         ]);
+    }
+
+    /**
+     * Holt die Nutzungsstufe des Zugangs.
+     *
+     * Faellt die Auskunft aus - alte API-Fassung, Netzproblem, abgelaufener Schluessel -,
+     * liefert die Methode null und die Seite erscheint ohne Hinweis. Ein Fehler beim
+     * Nachschlagen der Stufe darf die Uebersicht der trainierten Inhalte nicht blockieren.
+     */
+    private function resolveTier($pageId): ?array
+    {
+        $tier = $this->chatbotApi->getTier($pageId);
+
+        if (!empty($tier['success']) && isset($tier['tier'])) {
+            return $tier;
+        }
+
+        return null;
     }
 }

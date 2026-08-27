@@ -11,6 +11,23 @@
         <p class="chatbot-admin__subtitle">Übersicht der für den Chatbot trainierten Seiten und Inhalte je Website.</p>
     </div>
 
+    {#
+      Stufe und Kontingent kommen vollstaendig von der API (GET /user/me/tier), samt
+      fertigem Hinweistext. Hier steht bewusst keine Zahl und keine Anschrift: Aendert sich
+      das Kontingent, genuegt ein Deployment der API - diese Erweiterung bleibt, wie sie ist.
+    #}
+    {% if tier is defined and tier and tier.notice %}
+        <div class="chatbot-admin__notice chatbot-admin__notice--tier">
+            <span class="chatbot-admin__tier-badge">{{ tier.notice.title }}</span>
+            {{ tier.notice.text }}
+        </div>
+    {% elseif tier is defined and tier and tier.isPremium %}
+        <div class="chatbot-admin__notice chatbot-admin__notice--premium">
+            <span class="chatbot-admin__tier-badge chatbot-admin__tier-badge--premium">Premium</span>
+            {{ tier.requestsPerMinute }} Anfragen je Minute.
+        </div>
+    {% endif %}
+
     {% if error is defined and error %}
         <div class="chatbot-admin__notice chatbot-admin__notice--error">
             <strong>Hinweis:</strong> {{ error }}
@@ -390,6 +407,35 @@
         background: #fdf1f0;
         border-color: #d9534f;
         color: #7d2b26;
+    }
+
+    .chatbot-admin__notice--tier {
+        background: #fff8e6;
+        border-color: #e0a800;
+        color: #6b5000;
+    }
+
+    .chatbot-admin__notice--premium {
+        background: #eef7ee;
+        border-color: #3c8c40;
+        color: #24541f;
+    }
+
+    .chatbot-admin__tier-badge {
+        display: inline-block;
+        margin-right: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #e0a800;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+
+    .chatbot-admin__tier-badge--premium {
+        background: #3c8c40;
     }
 
     .chatbot-admin__notice--warning {

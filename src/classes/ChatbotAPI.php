@@ -28,6 +28,21 @@ class ChatbotAPI
     }
 
     /**
+     * Fragt die Nutzungsstufe des hinterlegten API-Keys ab.
+     *
+     * Die Antwort enthaelt neben Stufe und Kontingent auch den fertigen Hinweistext unter
+     * `notice`. Beides wird hier bewusst **nicht** nachgebildet: Aendern sich Kontingent,
+     * Wortlaut oder Anschrift, genuegt ein Deployment der API - diese Erweiterung muss dafuer
+     * nicht neu ausgeliefert werden.
+     *
+     * @return array Stufe, Kontingent und Hinweis; bei Fehlern success=false
+     */
+    public function getTier($page = null): array
+    {
+        return $this->sendRequest("GET", "/api/v1/user/me/tier", $page);
+    }
+
+    /**
      * Lists all trained contents for the current user.
      */
     public function listContent(int $limit = 100, int $offset = 0, $page = null, array $options = []): array

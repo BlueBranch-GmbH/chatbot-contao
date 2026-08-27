@@ -59,6 +59,33 @@ Trainings- und Löschvorgang eine JSON-Datei unter `var/chatbot/` ab. Das ist zu
 Fehlersuche gedacht und nicht für den Dauerbetrieb: Ein Crawler-Lauf erzeugt eine Datei je
 Seite samt vollständigem Inhalt, und niemand räumt sie wieder weg.
 
+## Nutzungsstufen
+
+Ein Zugang ist entweder **Free** oder **Premium**. Der Unterschied liegt allein im
+Anfragekontingent der Antwort-Routen; Inhalte trainieren, Inhalte auflisten und API-Keys
+anlegen ist in beiden Stufen unbegrenzt.
+
+| | Free | Premium |
+|---|---|---|
+| Antworten je Minute | begrenzt | deutlich höher |
+| Inhalte trainieren | unbegrenzt | unbegrenzt |
+
+Die konkreten Zahlen stehen bewusst **nicht** in dieser Erweiterung. Sie kommen zur Laufzeit
+von `GET /api/v1/user/me/tier`, zusammen mit einem fertigen Hinweistext. Ändert sich das
+Kontingent, ändert sich die Anzeige mit — ohne dass eine neue Fassung der Erweiterung
+ausgeliefert werden muss.
+
+Im Backend unter *BlueBranch Chatbot → Trainierte Seiten* steht die aktuelle Stufe oben auf
+der Seite. Ist ein Zugang im Free Tier, nennt der Hinweis dort auch die Anschrift, an die
+sich Interessierte für eine Hochstufung wenden können.
+
+Ist das Kontingent erschöpft, antwortet die API mit **HTTP 429**. Besucher der Website sehen
+dann eine neutrale Meldung, sie sollten es gleich noch einmal versuchen; der ausführliche
+Grund samt Stufe landet im Log der Contao-Installation und nicht im Chatfenster.
+
+Ein Konto legt man über die Weboberfläche der Plattform selbst an. Neue Konten starten im
+Free Tier; die Hochstufung nimmt der Betreiber der Plattform vor.
+
 ## Bereiche vom Index ausnehmen
 
 Zwei Inhaltselemente grenzen Bereiche ab, die nicht in den Suchindex sollen:
