@@ -18,3 +18,6 @@ $GLOBALS['TL_LANG']['tl_settings']['chatbot_purge_interval_options'] = [
     1440 => 'Täglich',
     10080 => 'Wöchentlich',
 ];
+
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_debug_legend'] = 'Fehlersuche';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_debug'] = ['Debug-Dateien schreiben', 'Legt zu jedem Trainings- und Löschvorgang eine JSON-Datei unter var/chatbot/ ab. Nur zur Fehlersuche einschalten: Beim Crawler-Lauf entsteht eine Datei je Seite samt vollständigem Seiteninhalt, und das Verzeichnis wächst unbegrenzt.'];

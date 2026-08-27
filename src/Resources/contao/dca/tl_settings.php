@@ -2,7 +2,7 @@
 
 $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = str_replace(
     ';{chmod_legend}',
-    ';{chatbot_legend},chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chmod_legend}',
+    ';{chatbot_legend},chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
     $GLOBALS['TL_DCA']['tl_settings']['palettes']['default']
 );
 
@@ -53,6 +53,19 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_purge_enabled'] = [
     'inputType' => 'checkbox',
     'default'   => true,
     'eval'      => ['tl_class' => 'w50 m12', 'submitOnChange' => false],
+];
+
+/**
+ * Schreibt zu jedem Trainings- und Löschvorgang eine JSON-Datei nach var/chatbot/.
+ * Standardmäßig aus: Der Indexer legt sonst bei jedem Crawler-Lauf eine Datei je
+ * Seite an, inklusive des vollständigen Seiteninhalts, und das Verzeichnis wächst
+ * unbegrenzt.
+ */
+$GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_debug'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_debug'],
+    'inputType' => 'checkbox',
+    'default'   => false,
+    'eval'      => ['tl_class' => 'w50 m12'],
 ];
 
 $GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_purge_interval'] = [

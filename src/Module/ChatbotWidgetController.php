@@ -22,7 +22,7 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
 
     private ChatbotAPI $chatbotApi;
 
-    public function __construct(ChatbotAPI $chatbotApi = null)
+    public function __construct(?ChatbotAPI $chatbotApi = null)
     {
         $this->chatbotApi = $chatbotApi ?? \Contao\System::getContainer()->get(ChatbotAPI::class);
     }

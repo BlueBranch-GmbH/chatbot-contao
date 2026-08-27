@@ -3,7 +3,6 @@
 namespace Bluebranch\Chatbot\Controller;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
-use Contao\CoreBundle\Csrf\ContaoCsrfTokenManager;
 use Contao\PageModel;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,7 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 
@@ -28,23 +26,18 @@ class ChatbotAPIController extends AbstractController
         $this->httpClient = $httpClient;
     }
 
-    public static function getSubscribedServices(): array
-    {
-        return array_merge(parent::getSubscribedServices(), [
-            'contao.csrf.token_manager' => ContaoCsrfTokenManager::class,
-        ]);
-    }
-
     #[Route('/bluebranch/chatbot/api/v1/generate/search', name: 'bluebranch_chatbot_generate_seach', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => true])]
     #[Route('/bluebranch/chatbot/api/v1/be/generate/search', name: 'bluebranch_chatbot_generate_search_be', methods: ['POST'], defaults: ['_scope' => 'backend', '_token_check' => true])]
     public function generateSearch(Request $request): JsonResponse
     {
-        $tokenManager = $this->container->get('contao.csrf.token_manager');
-        $tokenValue = $request->headers->get('X-CSRF-Token');
-        $tokenId = $this->getParameter('contao.csrf_token_name');
-
-        if (!$tokenManager->isTokenValid(new CsrfToken($tokenId, $tokenValue))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+        // Contao überspringt die CSRF-Prüfung bei Anfragen ohne Cookie – es gibt dann
+        // keine Session, die zu schützen wäre. Für diesen Endpunkt reicht das nicht:
+        // über 'pageId' im Rumpf lässt sich die Root-Seite und damit der API-Schlüssel
+        // wählen, sodass ein Fremder ohne jeden Token Anfragen auf Kosten des
+        // Kontingents stellen könnte. Deshalb derselbe Session-Token wie bei den
+        // Stream-Routen; er setzt eine echte Sitzung voraus.
+        if (!$this->hasValidStreamToken($request)) {
+            return new JsonResponse(['success' => false, 'message' => 'Invalid token'], 403);
         }
 
         $content = $request->getContent();
@@ -210,11 +203,45 @@ class ChatbotAPIController extends AbstractController
                 return;
             }
 
-            foreach ($this->httpClient->stream($apiResponse) as $chunk) {
-                if (!$chunk->isLast()) {
-                    echo $chunk->getContent();
+            try {
+                // Den Status abfragen, bevor gestreamt wird: Bei 4xx/5xx wirft der
+                // HttpClient sonst erst beim Zugriff auf den ersten Chunk – da hat der
+                // Browser längst eine 200 mit text/event-stream erhalten und sieht nur
+                // noch einen Abriss ohne erkennbaren Grund.
+                $statusCode = $apiResponse->getStatusCode();
+
+                if ($statusCode >= 400) {
+                    $this->logger->error(sprintf('Chatbot API antwortete auf einen Stream-Aufruf mit HTTP %d.', $statusCode));
+
+                    echo "event: error\n";
+                    echo 'data: ' . json_encode(['message' => 'Upstream error', 'status' => $statusCode]) . "\n\n";
                     flush();
+
+                    return;
                 }
+
+                foreach ($this->httpClient->stream($apiResponse) as $chunk) {
+                    if ($chunk->isTimeout()) {
+                        continue;
+                    }
+
+                    // Auch der letzte Chunk kann noch Nutzdaten tragen; ihn pauschal zu
+                    // überspringen verschluckt im Zweifel das Ende der Antwort.
+                    $content = $chunk->getContent();
+
+                    if ('' !== $content) {
+                        echo $content;
+                        flush();
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logger->error('Fehler beim Streamen der Chatbot-Antwort: ' . $e->getMessage());
+
+                echo "event: error\n";
+                echo 'data: {"message": "Stream aborted"}' . "\n\n";
+                flush();
+
+                return;
             }
 
             // Send end of stream event

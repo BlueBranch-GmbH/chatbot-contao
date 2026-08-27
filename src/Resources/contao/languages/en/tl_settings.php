@@ -18,3 +18,6 @@ $GLOBALS['TL_LANG']['tl_settings']['chatbot_purge_interval_options'] = [
     1440 => 'Daily',
     10080 => 'Weekly',
 ];
+
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_debug_legend'] = 'Debugging';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_debug'] = ['Write debug files', 'Stores a JSON file under var/chatbot/ for every training and deletion request. Enable for troubleshooting only: a crawler run creates one file per page including its full content, and the directory grows without bound.'];

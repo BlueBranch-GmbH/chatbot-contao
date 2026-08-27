@@ -1,9 +1,10 @@
 {
   "name": "bluebranch/chatbot",
-  "description": "",
-  "keywords": ["contao", "ki", "ai", "alt", "chatbot", "support"],
+  "description": "KI-Chatbot und KI-Suche für Contao: indexiert die Seiteninhalte in einer Vektordatenbank und beantwortet Besucherfragen daraus – als Chat-Widget und als Zusammenfassung über der Trefferliste.",
+  "keywords": ["contao", "ki", "ai", "chatbot", "rag", "suche", "search", "support"],
   "type": "contao-bundle",
   "license": "MIT",
+  "homepage": "https://github.com/BlueBranch-GmbH/chatbot-contao",
   "authors": [
     {
       "name": "Lukas M. Beck",
@@ -12,12 +13,14 @@
     }
   ],
   "support": {
-
+    "issues": "https://github.com/BlueBranch-GmbH/chatbot-contao/issues",
+    "source": "https://github.com/BlueBranch-GmbH/chatbot-contao"
   },
   "require": {
-    "php": "^7.4 || ^8.0",
+    "php": "^8.0",
     "contao/core-bundle": "^4.13 || ^5.0",
-    "league/html-to-markdown": "^5.0"
+    "league/html-to-markdown": "^5.0",
+    "symfony/http-client": "^5.4 || ^6.0 || ^7.0"
   },
   "autoload": {
     "psr-4": {

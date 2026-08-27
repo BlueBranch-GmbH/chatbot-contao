@@ -4,6 +4,7 @@ namespace Bluebranch\Chatbot\EventListener;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\SearchUtil;
+use Contao\Config;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\Database;
@@ -81,11 +82,13 @@ class IndexPageListener
     #[AsCallback(table: 'tl_search', target: 'config.ondelete')]
     public function onDeleteSearchEntry(DataContainer $dc): void
     {
-        $this->writeDebugFile('delete_search_' . $dc->activeRecord->id . '.json', $dc->activeRecord->row());
-
+        // Erst prüfen, dann zugreifen: activeRecord kann null sein, und die Debug-Zeile
+        // hat den Datensatz zuvor bereits dereferenziert.
         if (!$dc->activeRecord) {
             return;
         }
+
+        $this->writeDebugFile('delete_search_' . $dc->activeRecord->id . '.json', $dc->activeRecord->row());
 
         try {
             $pageId = $dc->activeRecord->pid;
@@ -186,15 +189,23 @@ class IndexPageListener
 
     /**
      * Schreibt eine Debug-Datei in das Verzeichnis var/chatbot/.
+     *
+     * Nur aktiv, wenn die Einstellung `chatbot_debug` gesetzt ist. Ohne diesen Schalter
+     * legte der Indexer bei jedem Crawler-Lauf eine Datei je Seite an — mitsamt dem
+     * vollständigen Seiteninhalt und ohne dass irgendetwas sie wieder aufgeräumt hätte.
      */
     private function writeDebugFile(string $filename, array $data): void
     {
+        if (!Config::get('chatbot_debug')) {
+            return;
+        }
+
         try {
             $rootDir = dirname(__DIR__, 5); // Geht von extensions/bluebranch/chatbot/src/EventListener/IndexPageListener.php zum Projekt-Root
             $debugDir = $rootDir . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'chatbot';
 
             if (!is_dir($debugDir)) {
-                mkdir($debugDir, 0777, true);
+                mkdir($debugDir, 0775, true);
             }
 
             file_put_contents($debugDir . DIRECTORY_SEPARATOR . $filename, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));

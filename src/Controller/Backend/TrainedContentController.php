@@ -21,7 +21,7 @@ class TrainedContentController extends AbstractBackendController
     private ContaoFramework $framework;
     private ?ParameterBagInterface $parameterBag;
 
-    public function __construct(ChatbotAPI $chatbotApi = null, ContaoFramework $framework = null, ParameterBagInterface $parameterBag = null)
+    public function __construct(?ChatbotAPI $chatbotApi = null, ?ContaoFramework $framework = null, ?ParameterBagInterface $parameterBag = null)
     {
         $container = \Contao\System::getContainer();
 
@@ -35,7 +35,7 @@ class TrainedContentController extends AbstractBackendController
     }
 
     #[Route('/%contao.backend.route_prefix%/chatbot/trained-content', name: self::class, defaults: ['_scope' => 'backend', '_token_check' => true])]
-    public function generate(Request $request = null)
+    public function generate(?Request $request = null)
     {
         $isLegacy = ($request === null);
 

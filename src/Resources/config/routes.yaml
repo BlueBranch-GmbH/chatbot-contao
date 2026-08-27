@@ -1,9 +1,0 @@
-bluebranch_chatbot_api:
-  resource: ../../Controller/ChatbotAPIController.php
-  type: attribute
-  prefix: /
-
-bluebranch_chatbot_trained_content:
-  resource: ../../Controller/Backend/TrainedContentController.php
-  type: attribute
-  prefix: /
