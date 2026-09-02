@@ -3,6 +3,8 @@
 namespace Bluebranch\Chatbot\Module;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\StreamToken;
+use Bluebranch\Chatbot\classes\TypedQuestions;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
@@ -47,6 +49,7 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
 
         $template->query = $query;
         $template->queryParam = $queryParam;
+        $template->typedQuestions = TypedQuestions::fromModel($model);
 
         // Get the current page language
         $pageModel = $this->getPageModel();
@@ -81,14 +84,7 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
         $template->searchResultsCount = $nativeResults['count'];
         $template->searchResults = $nativeResults['results'];
 
-        // Generate a secure stream token, store in session so the API controller can validate it
-        $session = $request->getSession();
-        $streamToken = $session->get('_chatbot_stream_token');
-        if (!$streamToken) {
-            $streamToken = bin2hex(random_bytes(32));
-            $session->set('_chatbot_stream_token', $streamToken);
-        }
-        $template->requestToken = $streamToken;
+        $template->requestToken = StreamToken::forSession($request);
 
         return $template->getResponse();
     }

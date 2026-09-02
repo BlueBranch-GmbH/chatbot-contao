@@ -4,7 +4,7 @@ use Contao\BackendUser;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\DataContainer;
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param,chatbot_typed_questions;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'label'                   => &$GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'],
@@ -12,6 +12,20 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'inputType'               => 'text',
     'eval'                    => ['mandatory'=>true, 'maxlength'=>64, 'tl_class'=>'w50', 'nospace'=>true],
     'sql'                     => "varchar(64) NOT NULL default 'keywords'"
+];
+
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+
+/**
+ * Wird im Frontend Zeichen fuer Zeichen als Platzhalter ins Eingabefeld getippt.
+ * Ohne Eintrag bleibt der statische Platzhalter aus der Sprachdatei stehen.
+ */
+$GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_typed_questions'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_module']['chatbot_typed_questions'],
+    'exclude'   => true,
+    'inputType' => 'listWizard',
+    'eval'      => ['tl_class' => 'clr', 'allowHtml' => false],
+    'sql'       => "blob NULL",
 ];
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{config_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';

@@ -2,6 +2,8 @@
 
 $GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'] = ['Query Parameter', 'Geben Sie den Namen des Query-Parameters an (z.B. keywords).'];
 
+$GLOBALS['TL_LANG']['tl_module']['chatbot_typed_questions'] = ['Getippte Fragen', 'Werden im Frontend nacheinander Zeichen für Zeichen als Platzhalter ins Eingabefeld geschrieben. Ohne Eintrag bleibt der statische Platzhalter stehen.'];
+
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_position'] = ['Position', 'Wählen Sie, in welcher Ecke des Bildschirms der Chat-Button erscheinen soll.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_position_options'] = [
     'bottom-right' => 'Unten rechts',

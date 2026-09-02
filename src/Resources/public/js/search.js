@@ -31,7 +31,41 @@ class ChatbotSearch {
         this.startRequest();
     }
 
+    /**
+     * Stellt eine neue Frage im selben Container. Anders als init() ist das fuer
+     * wiederholte Aufrufe gedacht: Module ohne Seitenwechsel fragen mehrfach.
+     */
+    ask(query) {
+        if (!query || query.trim() === '') {
+            return;
+        }
+
+        this.query = query;
+        this.startRequest();
+    }
+
+    /**
+     * Raeumt die Anzeige der vorherigen Antwort ab.
+     */
+    reset() {
+        if (this.contentDiv) {
+            this.contentDiv.innerHTML = '';
+        }
+        if (this.sourcesList) {
+            this.sourcesList.innerHTML = '';
+        }
+        if (this.sourcesDiv) {
+            this.sourcesDiv.style.display = 'none';
+        }
+    }
+
     startRequest() {
+        if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+        }
+
+        this.reset();
         this.showLoading(true);
         if (this.loadingDiv) {
             this.loadingDiv.classList.remove('finished');
@@ -46,6 +80,7 @@ class ChatbotSearch {
         url.searchParams.append('token', this.requestToken);
 
         const eventSource = new EventSource(url.toString());
+        this.eventSource = eventSource;
         let fullAnswer = '';
         let renderPending = false;
 

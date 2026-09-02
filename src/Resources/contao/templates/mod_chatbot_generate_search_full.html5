@@ -7,7 +7,7 @@
     <form class="chatbot-search-form" method="get">
         <div class="widget widget-text">
             <label for="ctrl_chatbot_keywords_<?= $this->id ?>" class="invisible"><?= $GLOBALS['TL_LANG']['MSC']['keywords'] ?></label>
-            <input type="search" name="<?= $this->queryParam ?>" id="ctrl_chatbot_keywords_<?= $this->id ?>" class="text" value="<?= \Contao\StringUtil::specialchars($this->query) ?>">
+            <input type="search" name="<?= $this->queryParam ?>" id="ctrl_chatbot_keywords_<?= $this->id ?>" class="text chatbot-ask-input" value="<?= \Contao\StringUtil::specialchars($this->query) ?>">
         </div>
         <div class="widget widget-submit">
             <button type="submit" class="submit"><?= $GLOBALS['TL_LANG']['MSC']['searchLabel'] ?></button>
@@ -48,6 +48,18 @@
     </div>
 <?php endif; ?>
 </div>
+
+<?php if ($this->hasApiKey && $this->typedQuestions): ?>
+<script src="/bundles/chatbot/js/typed-placeholder.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const field = document.querySelector('#chatbot-search-<?= $this->id ?> .chatbot-ask-input');
+        if (field && field.value === '') {
+            new ChatbotTypedPlaceholder(field, <?= json_encode($this->typedQuestions) ?>).start();
+        }
+    });
+</script>
+<?php endif; ?>
 
 <?php if ($this->hasApiKey && $this->query): ?>
 <script src="/bundles/chatbot/js/marked.min.js"></script>

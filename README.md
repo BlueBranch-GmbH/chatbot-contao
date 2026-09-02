@@ -75,8 +75,24 @@ Unter *Themes → Frontend-Module* stehen zwei Module bereit:
 |---|---|
 | *Chatbot Widget* | Aufklappbarer Chat-Button, standardmäßig unten rechts |
 | *Chatbot Generate Search* | Zusammenfassende KI-Antwort über der Trefferliste der Suche |
+| *Chatbot Frage* | Eingabefeld mit getippten Fragen, Antwort direkt darunter |
 
-Beide werden wie gewohnt in ein Layout oder einen Artikel eingebunden.
+Alle drei werden wie gewohnt in ein Layout oder einen Artikel eingebunden.
+
+### Getippte Fragen
+
+*Chatbot Frage* und *Chatbot Generate Search* haben beide das Feld **Getippte Fragen** — eine
+Liste beliebig vieler Texte. Sie werden im Frontend nacheinander Zeichen für Zeichen als
+Platzhalter ins Eingabefeld geschrieben, gelöscht und durch den nächsten ersetzt. Bleibt die
+Liste leer, steht dort der statische Platzhalter.
+
+Die Animation ruht, sobald jemand das Feld anklickt oder etwas hineinschreibt, und im
+Hintergrund-Tab läuft sie gar nicht erst. Wer in seinem System *reduzierte Bewegung* eingestellt
+hat, sieht statt der Animation die erste Frage unbewegt stehen.
+
+*Chatbot Frage* ist für Startseiten gedacht: Eine eingegebene Frage geht ohne Seitenwechsel an
+die KI, die Antwort erscheint samt Quellen direkt darunter — wie beim Such-Modul, nur ohne die
+Trefferliste der Contao-Suche.
 
 ## Globale Einstellungen
 
@@ -293,8 +309,24 @@ Two front end modules are available under *Themes → Front end modules*:
 |---|---|
 | *Chatbot Widget* | Collapsible chat button, bottom right by default |
 | *Chatbot Generate Search* | Summarising AI answer above the search results |
+| *Chatbot Question* | Input field with typed questions, answer right below it |
 
-Both are added to a layout or an article as usual.
+All three are added to a layout or an article as usual.
+
+### Typed questions
+
+*Chatbot Question* and *Chatbot Generate Search* both offer the **Typed questions** field — a list
+of as many texts as you like. In the front end they are written into the input field as a
+placeholder, one character at a time, then deleted and replaced by the next one. If the list stays
+empty, the static placeholder remains.
+
+The animation pauses as soon as somebody clicks into the field or types something, and it does not
+run at all in a background tab. Anyone who has *reduced motion* enabled on their system sees the
+first question standing still instead of the animation.
+
+*Chatbot Question* is meant for home pages: a question is sent to the AI without a page reload and
+the answer appears right below it, sources included — like the search module, only without the
+Contao search results.
 
 ## Global settings
 
@@ -452,6 +484,14 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.1.0 - 2026-09-02
+
+- Neues Frontend-Modul *Chatbot Frage*: Eingabefeld für Startseiten, das die Frage ohne
+  Seitenwechsel an die KI schickt und die Antwort samt Quellen darunter anzeigt
+- Neues Feld *Getippte Fragen* an *Chatbot Frage* und *Chatbot Generate Search*: hinterlegte
+  Fragen werden Zeichen für Zeichen als Platzhalter ins Eingabefeld getippt
+- Die Animation ruht bei Fokus, Eingabe, im Hintergrund-Tab und bei reduzierter Bewegung
 
 ### 1.0.2 - 2026-09-02
 

@@ -5,4 +5,5 @@ $GLOBALS['TL_LANG']['MOD']['chatbot_trained_content'] = ['Trainierte Seiten', 'H
 
 $GLOBALS['TL_LANG']['FMD']['bluebranch_chatbot'] = 'BlueBranch Chatbot';
 $GLOBALS['TL_LANG']['FMD']['chatbot_generate_search'] = ['Chatbot Generate Search', 'Fügt eine Chatbot-Antwort basierend auf dem Suchbegriff ein.'];
+$GLOBALS['TL_LANG']['FMD']['chatbot_ask'] = ['Chatbot Frage', 'Fügt ein Eingabefeld ein, das die hinterlegten Fragen als Platzhalter tippt und die eingegebene Frage ohne Seitenwechsel von der KI beantworten lässt.'];
 $GLOBALS['TL_LANG']['FMD']['chatbot_widget'] = ['Chatbot Widget', 'Fügt einen aufklappbaren Chat-Button ein, über den Besucher direkt mit dem Chatbot chatten können. Der API-Key wird dabei nie an den Browser übertragen.'];
