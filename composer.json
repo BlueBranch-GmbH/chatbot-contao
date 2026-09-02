@@ -1,6 +1,6 @@
 {
   "name": "bluebranch/chatbot",
-  "description": "KI-Chatbot und KI-Suche für Contao: indexiert die Seiteninhalte in einer Vektordatenbank und beantwortet Besucherfragen daraus – als Chat-Widget und als Zusammenfassung über der Trefferliste.",
+  "description": "KI-Chatbot und KI-Suche für Contao: übergibt die Inhalte deiner Seiten beim Lauf des Suchindex an eine Chatbot-API und beantwortet die Fragen deiner Besucher daraus – als Chat-Widget und als Zusammenfassung über der Trefferliste der Suche.",
   "keywords": ["contao", "ki", "ai", "chatbot", "rag", "suche", "search", "support"],
   "type": "contao-bundle",
   "license": "MIT",

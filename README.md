@@ -430,6 +430,12 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.0.1 - 2026-09-02
+
+- Die Adresse der Chatbot-API aus den Voraussetzungen genommen; sie verweisen jetzt auf die
+  Seite, auf der man sich registriert und den Schlüssel erstellt
+- Beschreibung des Pakets mit dem Eintrag im Contao Extension Repository gleichgezogen
+
 ### 1.0.0 - 2026-09-02
 
 - Erste Veröffentlichung
