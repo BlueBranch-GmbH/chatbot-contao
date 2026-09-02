@@ -206,6 +206,18 @@ php vendor/bin/contao-console contao:migrate
 > hineinschreiben, und die Website antwortet nur noch mit 500 – ohne Eintrag im Anwendungslog,
 > weil der Fehler vor dem Framework passiert. Über den Contao Manager kann das nicht schiefgehen.
 
+## Datenschutz und Hosting
+
+- **Hosting in Deutschland.** Server und Datenverarbeitung liegen ausschließlich in Deutschland.
+- **Eigenes KI-Modell.** Die KI läuft auf eigener Infrastruktur. Deine Inhalte gehen nicht an
+  OpenAI, Anthropic oder andere Drittanbieter.
+- **Kein Training mit deinen Daten.** Weder Seiteninhalte noch Chatverläufe werden zum Trainieren
+  von Modellen verwendet.
+- **Auftragsverarbeitungsvertrag.** Ein AVV nach Art. 28 DSGVO ist möglich – auf Anfrage per
+  E-Mail an lb@bluebranch.de.
+- **Der API-Schlüssel bleibt auf dem Server.** Der Browser spricht ausschließlich mit Contao und
+  bekommt den Schlüssel zu keinem Zeitpunkt zu sehen.
+
 ## Vorteile für Redakteur:innen und Entwickler
 
 - Antworten aus dem eigenen Bestand: Die KI erfindet nichts, sie zitiert deine Seiten – mit Quellenangabe
@@ -213,7 +225,7 @@ php vendor/bin/contao-console contao:migrate
 - Der API-Schlüssel verlässt den Server nie – der Browser sieht ihn zu keinem Zeitpunkt
 - Redaktionelle Kontrolle: Einzelne Seiten und ganze Zweige lassen sich von den Antworten ausnehmen
 - Kein Server-Cronjob nötig: Die Bereinigung läuft über Contaos eigenes Cron-System
-- Das Widget weist Besucher auf private Chats und Hosting in Deutschland hin
+- DSGVO-konform: Verarbeitung ausschließlich in Deutschland, eigenes KI-Modell, AVV möglich
 
 # BlueBranch Chatbot – AI chat and AI search for Contao (EN)
 
@@ -407,6 +419,17 @@ php vendor/bin/contao-console contao:migrate
 > website answers with 500 only – without an entry in the application log, because the error
 > happens before the framework. This cannot go wrong via the Contao Manager.
 
+## Data protection and hosting
+
+- **Hosted in Germany.** Servers and data processing are located in Germany only.
+- **Our own AI model.** The AI runs on our own infrastructure. Your content is not passed on to
+  OpenAI, Anthropic or any other third party.
+- **No training on your data.** Neither page content nor chat histories are used to train models.
+- **Data processing agreement.** A DPA under Art. 28 GDPR is available on request by e-mail to
+  lb@bluebranch.de.
+- **The API key stays on the server.** The browser only ever talks to Contao and never gets to see
+  the key.
+
 ## Benefits for editors and developers
 
 - Answers from your own content: the AI invents nothing, it quotes your pages – with sources
@@ -414,7 +437,7 @@ php vendor/bin/contao-console contao:migrate
 - The API key never leaves the server – the browser never sees it
 - Editorial control: individual pages and whole branches can be excluded from answers
 - No server cronjob required: clean-up runs through Contao's own cron system
-- The widget tells visitors about private chats and hosting in Germany
+- GDPR-friendly: processing in Germany only, our own AI model, DPA available
 
 ## Vielen Dank
 
@@ -429,6 +452,11 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.0.2 - 2026-09-02
+
+- Abschnitt zu Datenschutz und Hosting aufgenommen: Verarbeitung in Deutschland, eigenes
+  KI-Modell, kein Training mit Kundendaten, AVV nach Art. 28 DSGVO auf Anfrage
 
 ### 1.0.1 - 2026-09-02
 
