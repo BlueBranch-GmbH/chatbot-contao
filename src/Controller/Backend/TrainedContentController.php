@@ -5,12 +5,12 @@ namespace Bluebranch\Chatbot\Controller\Backend;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Contao\BackendUser;
 use Contao\CoreBundle\Controller\AbstractBackendController;
-use Contao\CoreBundle\DependencyInjection\Attribute\AsController;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\PageModel;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
@@ -29,7 +29,10 @@ class TrainedContentController extends AbstractBackendController
         $this->framework = $framework ?? $container->get('contao.framework');
         $this->parameterBag = $parameterBag ?? ($container->has('parameter_bag') ? $container->get('parameter_bag') : null);
 
-        if (null === $this->container) {
+        // Use isset() rather than a null check: since Symfony 6 the property is
+        // typed, so reading it before setContainer() has run is a fatal error.
+        // isset() works for both Symfony 5.4 (untyped, null) and 6/7 (typed).
+        if (!isset($this->container)) {
             $this->setContainer($container);
         }
     }
