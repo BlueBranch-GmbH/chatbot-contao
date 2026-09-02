@@ -27,7 +27,7 @@ Fertig!
 
 - PHP 8.0 oder neuer
 - Contao 4.13 oder 5.x
-- Ein Zugang zur Chatbot-API (`https://api.chatbot.bluebranch.de`) mit API-Schlüssel
+- Ein Chatbot-Zugang mit API-Schlüssel von [chatbot.bluebranch.de](https://chatbot.bluebranch.de)
 
 ## Installation
 
@@ -243,7 +243,7 @@ That's it!
 
 - PHP 8.0 or newer
 - Contao 4.13 or 5.x
-- Access to the Chatbot API (`https://api.chatbot.bluebranch.de`) with an API key
+- A chatbot account with an API key from [chatbot.bluebranch.de](https://chatbot.bluebranch.de)
 
 ## Setup
 
