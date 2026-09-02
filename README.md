@@ -485,6 +485,11 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.1.1 - 2026-09-02
+
+- Fix: Die Antwort-Routen liefen in einen 500er, weil das Contao-Framework nicht initialisiert
+  war, bevor `PageModel` angefasst wurde. Betraf alle Stream-Routen, auch die des Such-Moduls
+
 ### 1.1.0 - 2026-09-02
 
 - Neues Frontend-Modul *Chatbot Frage*: Eingabefeld für Startseiten, das die Frage ohne

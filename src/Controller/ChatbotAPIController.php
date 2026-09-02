@@ -3,7 +3,9 @@
 namespace Bluebranch\Chatbot\Controller;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\PageModel;
+use Contao\System;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,18 +20,28 @@ class ChatbotAPIController extends AbstractController
     private ChatbotAPI $chatbotApi;
     private LoggerInterface $logger;
     private HttpClientInterface $httpClient;
+    private ContaoFramework $framework;
 
-    public function __construct(ChatbotAPI $chatbotApi, LoggerInterface $logger, HttpClientInterface $httpClient)
+    /**
+     * Das Framework ist bewusst optional: Nach einem Update laeuft die neue Klasse
+     * zunaechst gegen den alten, noch kompilierten Dienst-Container, der nur drei
+     * Argumente uebergibt. Ein Pflichtargument wuerde dort einen ArgumentCountError
+     * ausloesen, bis jemand den Cache leert -- und der Chatbot schwiege solange.
+     */
+    public function __construct(ChatbotAPI $chatbotApi, LoggerInterface $logger, HttpClientInterface $httpClient, ?ContaoFramework $framework = null)
     {
         $this->chatbotApi = $chatbotApi;
         $this->logger = $logger;
         $this->httpClient = $httpClient;
+        $this->framework = $framework ?? System::getContainer()->get('contao.framework');
     }
 
     #[Route('/bluebranch/chatbot/api/v1/generate/search', name: 'bluebranch_chatbot_generate_seach', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => true])]
     #[Route('/bluebranch/chatbot/api/v1/be/generate/search', name: 'bluebranch_chatbot_generate_search_be', methods: ['POST'], defaults: ['_scope' => 'backend', '_token_check' => true])]
     public function generateSearch(Request $request): JsonResponse
     {
+        $this->framework->initialize();
+
         // Contao überspringt die CSRF-Prüfung bei Anfragen ohne Cookie – es gibt dann
         // keine Session, die zu schützen wäre. Für diesen Endpunkt reicht das nicht:
         // über 'pageId' im Rumpf lässt sich die Root-Seite und damit der API-Schlüssel
@@ -66,6 +78,8 @@ class ChatbotAPIController extends AbstractController
     #[Route('/%contao.backend.route_prefix%/chatbot/api/v1/content', name: 'bluebranch_chatbot_delete_all_content_be', methods: ['DELETE'], defaults: ['_scope' => 'backend', '_token_check' => false])]
     public function deleteAllContent(Request $request): JsonResponse
     {
+        $this->framework->initialize();
+
         if (!$this->isAdmin()) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
@@ -89,6 +103,8 @@ class ChatbotAPIController extends AbstractController
     #[Route('/%contao.backend.route_prefix%/chatbot/api/v1/content/{externalId}', name: 'bluebranch_chatbot_delete_content_be', methods: ['DELETE'], defaults: ['_scope' => 'backend', '_token_check' => false])]
     public function deleteContent(Request $request, string $externalId): JsonResponse
     {
+        $this->framework->initialize();
+
         if (!$this->isAdmin()) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
@@ -119,6 +135,8 @@ class ChatbotAPIController extends AbstractController
     #[Route('/%contao.backend.route_prefix%/bluebranch/chatbot/generate/stream', name: 'bluebranch_chatbot_generate_stream_be', methods: ['GET', 'POST'], defaults: ['_scope' => 'backend', '_token_check' => false])]
     public function generateStream(Request $request): StreamedResponse
     {
+        $this->framework->initialize();
+
         if (!$this->hasValidStreamToken($request)) {
             $this->logger->error('Invalid stream token in generateStream');
 
@@ -134,6 +152,8 @@ class ChatbotAPIController extends AbstractController
     #[Route('/%contao.backend.route_prefix%/bluebranch/chatbot/chat/stream', name: 'bluebranch_chatbot_chat_stream_be', methods: ['GET', 'POST'], defaults: ['_scope' => 'backend', '_token_check' => false])]
     public function chatStream(Request $request): StreamedResponse
     {
+        $this->framework->initialize();
+
         if (!$this->hasValidStreamToken($request)) {
             $this->logger->error('Invalid stream token in chatStream');
 
