@@ -41,7 +41,8 @@
             questions: <?= json_encode($this->typedQuestions) ?>,
             requestToken: '<?= $this->requestToken ?>',
             language: '<?= $this->language ?>',
-            pageId: '<?= $this->pageId ?>'
+            pageId: '<?= $this->pageId ?>',
+            labelStop: <?= json_encode($this->labelStop) ?>
         });
         ask.init();
     });

@@ -23,18 +23,26 @@ class ChatbotWidget {
         this.suggestionsEl = this.container.querySelector('.chatbot-widget__suggestions');
         this.form = this.container.querySelector('.chatbot-widget__form');
         this.input = this.container.querySelector('.chatbot-widget__input');
+        this.sendButton = this.container.querySelector('.chatbot-widget__send');
+        // Das Pfeil-Symbol steht im Template; fuer den Wechsel zurueck aus dem
+        // Stopp-Zustand wird es hier festgehalten.
+        this.sendIcon = this.sendButton ? this.sendButton.innerHTML : '';
         this.badge = this.container.querySelector('.chatbot-widget__badge');
 
         this.storageKey = 'chatbot_widget_history_' + this.containerId;
         this.history = [];
         this.isOpen = false;
         this.isBusy = false;
+        this.abortRequest = null;
         this.hasGreeted = false;
         this.pendingSources = null;
         this.greeting = config.greeting || 'Wie kann ich heute helfen?';
         this.suggestions = Array.isArray(config.suggestions) ? config.suggestions.filter(Boolean) : [];
         this.showSummarize = config.showSummarize !== false;
         this.strings = Object.assign({
+            send: 'Nachricht senden',
+            stop: 'Antwort stoppen',
+            stopped: 'Antwort abgebrochen.',
             summarize: 'Inhalt zusammenfassen',
             summarizePrompt: 'Fasse ausschließlich den folgenden Seiteninhalt kurz und präzise zusammen. Nutze dafür keine anderen Quellen oder Seiten:',
             summarizeFallbackPrompt: 'Bitte fasse den Inhalt dieser Seite kurz zusammen.',
@@ -73,6 +81,13 @@ class ChatbotWidget {
 
         this.form.addEventListener('submit', (event) => {
             event.preventDefault();
+
+            // Waehrend der Antwort ist derselbe Knopf der Stopp-Knopf.
+            if (this.isBusy) {
+                this.stopRequest();
+                return;
+            }
+
             this.send();
         });
 
@@ -264,6 +279,47 @@ class ChatbotWidget {
         this.input.style.height = Math.min(this.input.scrollHeight, 120) + 'px';
     }
 
+    /**
+     * Sperrt Eingabe und Vorschlaege, solange eine Antwort laeuft, und macht aus
+     * dem Senden- einen Stopp-Knopf. Ohne das schickt ein zweiter Klick eine
+     * zweite Anfrage los, deren Stream in dieselbe Sprechblase schreibt.
+     */
+    setBusy(state) {
+        this.isBusy = state;
+        this.input.disabled = state;
+
+        if (this.sendButton) {
+            this.sendButton.innerHTML = state ? '&#9632;' : this.sendIcon;
+            this.sendButton.classList.toggle('chatbot-widget__send--stop', state);
+            this.sendButton.setAttribute('aria-label', state ? this.strings.stop : this.strings.send);
+            this.sendButton.setAttribute('title', state ? this.strings.stop : this.strings.send);
+        }
+
+        // Ein Leeren mitten im Stream wuerde die Sprechblase entfernen, in die
+        // gerade geschrieben wird.
+        if (this.clearButton) {
+            this.clearButton.disabled = state;
+        }
+
+        if (this.suggestionsEl) {
+            this.suggestionsEl.querySelectorAll('.chatbot-widget__suggestion').forEach((pill) => {
+                pill.disabled = state;
+            });
+        }
+
+        this.form.setAttribute('aria-busy', state ? 'true' : 'false');
+    }
+
+    /**
+     * Bricht die laufende Antwort ab. Was schon gestreamt wurde, bleibt stehen --
+     * es ist ja gelesen worden.
+     */
+    stopRequest() {
+        if (this.abortRequest) {
+            this.abortRequest();
+        }
+    }
+
     send() {
         const text = this.input.value.trim();
         if (!text || this.isBusy) return;
@@ -356,8 +412,7 @@ class ChatbotWidget {
     requestAnswer(prompt, options) {
         const includeContext = !options || options.includeContext !== false;
 
-        this.isBusy = true;
-        this.input.disabled = true;
+        this.setBusy(true);
 
         const typingRow = this.addTyping();
         let bubble = null;
@@ -382,17 +437,29 @@ class ChatbotWidget {
         const eventSource = new EventSource(url.toString());
 
         const finish = () => {
+            this.abortRequest = null;
             eventSource.close();
-            this.isBusy = false;
-            this.input.disabled = false;
+            this.setBusy(false);
             this.input.focus();
 
             if (fullAnswer) {
                 this.history.push({ role: 'bot', content: fullAnswer });
+                this.saveHistory();
+
                 if (!this.isOpen) {
                     this.setUnread(true);
                 }
             }
+        };
+
+        this.abortRequest = () => {
+            // Kam noch gar nichts an, bleibt sonst nur die Frage ohne Antwort stehen.
+            if (!bubble) {
+                typingRow.remove();
+                this.addMessage('bot', this.strings.stopped);
+            }
+
+            finish();
         };
 
         eventSource.onmessage = (event) => {

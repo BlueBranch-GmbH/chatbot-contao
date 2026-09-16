@@ -21,6 +21,14 @@ class ChatbotSearch {
 
         this.timerInterval = null;
         this.startTime = null;
+        this.isBusy = false;
+        this.wasStopped = false;
+
+        // Jede Anfrage bekommt eine Nummer. Ereignisse eines ueberholten Streams
+        // erkennen daran, dass sie nicht mehr die aktuelle ist, und halten sich
+        // aus der Anzeige heraus.
+        this.requestId = 0;
+        this.onBusyChange = typeof config.onBusyChange === 'function' ? config.onBusyChange : null;
     }
 
     init() {
@@ -37,6 +45,12 @@ class ChatbotSearch {
      */
     ask(query) {
         if (!query || query.trim() === '') {
+            return;
+        }
+
+        // Solange eine Antwort laeuft, startet keine zweite: zwei Streams im
+        // selben Antwortbereich wuerden sich gegenseitig ueberschreiben.
+        if (this.isBusy) {
             return;
         }
 
@@ -60,10 +74,11 @@ class ChatbotSearch {
     }
 
     startRequest() {
-        if (this.eventSource) {
-            this.eventSource.close();
-            this.eventSource = null;
-        }
+        this.closeStream();
+
+        const requestId = ++this.requestId;
+        this.wasStopped = false;
+        this.setBusy(true);
 
         this.reset();
         this.showLoading(true);
@@ -85,6 +100,8 @@ class ChatbotSearch {
         let renderPending = false;
 
         eventSource.onmessage = (event) => {
+            if (requestId !== this.requestId) return;
+
             try {
                 const data = JSON.parse(event.data);
 
@@ -96,8 +113,10 @@ class ChatbotSearch {
                     if (!renderPending) {
                         renderPending = true;
                         requestAnimationFrame(() => {
-                            this.renderContent(fullAnswer);
                             renderPending = false;
+                            if (requestId !== this.requestId) return;
+
+                            this.renderContent(fullAnswer);
                         });
                     }
                 }
@@ -111,13 +130,15 @@ class ChatbotSearch {
         };
 
         eventSource.addEventListener('end', (event) => {
-            this.stopTimer();
-            eventSource.close();
+            if (requestId !== this.requestId) return;
+
+            this.finishRequest();
         });
 
         eventSource.addEventListener('error', (event) => {
-            this.stopTimer();
-            eventSource.close();
+            if (requestId !== this.requestId) return;
+
+            this.finishRequest();
 
             if (fullAnswer.length > 0) {
                 // If we already have content, treat as finished
@@ -140,10 +161,49 @@ class ChatbotSearch {
                 this.handleError(new Error(meldung));
             }
         });
+    }
 
-        // Wir brauchen einen Weg um das Ende des Streams zu erkennen, 
-        // falls die API kein spezielles "end" Event sendet.
-        // Die meisten SSE Implementierungen schließen den Stream wenn fertig.
+    /**
+     * Bricht die laufende Antwort auf Wunsch des Nutzers ab. Das bereits
+     * Gestreamte bleibt stehen -- es ist ja gelesen worden.
+     */
+    abort() {
+        if (!this.isBusy) {
+            return;
+        }
+
+        // Die Nummer hochzaehlen, damit noch unterwegs befindliche Ereignisse
+        // des abgebrochenen Streams nichts mehr in die Anzeige schreiben.
+        this.requestId++;
+        this.wasStopped = true;
+        this.finishRequest();
+    }
+
+    /**
+     * Beendet den laufenden Stream, stoppt die Uhr und gibt die Eingabe wieder frei.
+     */
+    finishRequest() {
+        this.stopTimer();
+        this.closeStream();
+        this.setBusy(false);
+    }
+
+    closeStream() {
+        if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+        }
+    }
+
+    /**
+     * Meldet den Zustand nach aussen, damit das Modul den Absenden-Knopf sperren kann.
+     */
+    setBusy(state) {
+        this.isBusy = state;
+
+        if (this.onBusyChange) {
+            this.onBusyChange(state);
+        }
     }
 
     handleResponse(data) {
@@ -204,6 +264,10 @@ class ChatbotSearch {
     }
 
     startTimer() {
+        // Eine alte Uhr koennte sonst weiterlaufen und die Anzeige der neuen
+        // Anfrage ueberschreiben.
+        this.clearTimer();
+
         this.startTime = Date.now();
         this.updateTimerDisplay(0);
 
@@ -214,9 +278,7 @@ class ChatbotSearch {
     }
 
     stopTimer() {
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-        }
+        this.clearTimer();
         
         // Ensure the final time is shown and stays visible
         if (this.loadingDiv) {
@@ -228,6 +290,13 @@ class ChatbotSearch {
         }
     }
 
+    clearTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+
     updateTimerDisplay(ms) {
         const seconds = Math.floor(ms / 1000);
         const milliseconds = Math.floor((ms % 1000) / 10);
@@ -236,7 +305,14 @@ class ChatbotSearch {
         const timerText = `${seconds}:${formattedMs} sekunden`;
         
         if (this.loadingDiv) {
-            const label = this.loadingDiv.classList.contains('finished') ? 'Antwort generiert' : 'Antwort wird generiert...';
+            let label = 'Antwort wird generiert...';
+
+            if (this.wasStopped) {
+                label = 'Antwort abgebrochen';
+            } else if (this.loadingDiv.classList.contains('finished')) {
+                label = 'Antwort generiert';
+            }
+
             this.loadingDiv.textContent = `${label} (${timerText})`;
         }
     }

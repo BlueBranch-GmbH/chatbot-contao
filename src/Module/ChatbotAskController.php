@@ -60,6 +60,7 @@ class ChatbotAskController extends AbstractFrontendModuleController
 
         $template->labelQuestion = $lang['question'] ?? 'Ihre Frage';
         $template->labelSubmit = $lang['submit'] ?? 'Fragen';
+        $template->labelStop = $lang['stop'] ?? 'Stopp';
         $template->labelPlaceholder = $lang['placeholder'] ?? 'Stellen Sie Ihre Frage …';
         $template->labelSources = $lang['sources'] ?? 'Quellen:';
 

@@ -11,6 +11,12 @@ class ChatbotAsk {
 
         this.form = this.container.querySelector('.chatbot-ask-form');
         this.input = this.container.querySelector('.chatbot-ask-input');
+        this.submitButton = this.form ? this.form.querySelector('button[type="submit"], .submit') : null;
+
+        // Waehrend der Antwort wird aus dem Absenden- ein Stopp-Knopf. Die
+        // ursprüngliche Beschriftung steht im Template, sie wird hier gemerkt.
+        this.labelSubmit = this.submitButton ? this.submitButton.textContent : '';
+        this.labelStop = config.labelStop || 'Stopp';
         this.response = this.container.querySelector('.chatbot-response');
 
         this.search = new ChatbotSearch({
@@ -18,7 +24,8 @@ class ChatbotAsk {
             query: '',
             requestToken: config.requestToken,
             language: config.language,
-            pageId: config.pageId
+            pageId: config.pageId,
+            onBusyChange: (busy) => this.setBusy(busy)
         });
 
         this.placeholder = new ChatbotTypedPlaceholder(this.input, config.questions || []);
@@ -36,6 +43,14 @@ class ChatbotAsk {
     }
 
     submit() {
+        // Waehrend einer laufenden Antwort bricht derselbe Knopf sie ab, statt
+        // eine zweite Anfrage in denselben Antwortbereich zu schicken. Das gilt
+        // auch fuer die Eingabetaste im Feld, die hier ebenfalls ankommt.
+        if (this.search.isBusy) {
+            this.search.abort();
+            return;
+        }
+
         const question = this.input.value.trim();
 
         if (question === '') {
@@ -52,5 +67,20 @@ class ChatbotAsk {
         }
 
         this.search.ask(question);
+    }
+
+    /**
+     * Macht den Absenden-Knopf waehrend der Antwort zum Stopp-Knopf.
+     */
+    setBusy(busy) {
+        if (this.submitButton) {
+            this.submitButton.textContent = busy ? this.labelStop : this.labelSubmit;
+            this.submitButton.classList.toggle('is-stop', busy);
+        }
+
+        if (this.form) {
+            this.form.classList.toggle('is-busy', busy);
+            this.form.setAttribute('aria-busy', busy ? 'true' : 'false');
+        }
     }
 }

@@ -133,40 +133,56 @@
 <script src="/bundles/chatbot/js/search.js?v={{ "now"|date("U") }}"></script>
 {% if no_api_key is not defined or not no_api_key %}
 <script>
-    document.getElementById('chatbot-send').addEventListener('click', function() {
-        const prompt = document.getElementById('chatbot-prompt').value;
-        if (!prompt) return;
-
-        const contentDiv = document.querySelector('#chatbot-test-container .chatbot-content');
-        const sourcesDiv = document.querySelector('#chatbot-test-container .chatbot-sources');
-        const sourcesList = sourcesDiv.querySelector('ul');
-
-        contentDiv.innerHTML = '';
-        sourcesDiv.style.display = 'none';
-        sourcesList.innerHTML = '';
-
-        const route = document.querySelector('input[name="chatbot-route"]:checked').value;
+    (function () {
         const apiUrls = {
             search: '{{ path("bluebranch_chatbot_generate_stream_be") }}',
             chat: '{{ path("bluebranch_chatbot_chat_stream_be") }}'
         };
 
+        const sendButton = document.getElementById('chatbot-send');
+        const promptInput = document.getElementById('chatbot-prompt');
+        const labelSend = sendButton.textContent;
+        const labelStop = 'Stopp';
+
+        // Eine einzige Instanz fuer alle Testfragen. Frueher entstand bei jedem
+        // Klick eine neue, die parallel in denselben Antwortbereich schrieb --
+        // mehrere Streams ueberschrieben sich dann gegenseitig.
         const chatbot = new ChatbotSearch({
             containerId: 'chatbot-test-container',
-            query: prompt,
+            query: '',
             requestToken: '{{ requestToken }}',
-            apiUrl: apiUrls[route],
+            apiUrl: apiUrls.search,
             language: 'de',
-            pageId: '{{ selectedPageId }}'
+            pageId: '{{ selectedPageId }}',
+            onBusyChange: function (busy) {
+                sendButton.textContent = busy ? labelStop : labelSend;
+                sendButton.classList.toggle('chatbot-admin__btn--danger', busy);
+                promptInput.disabled = busy;
+            }
         });
-        chatbot.init();
-    });
 
-    document.getElementById('chatbot-prompt').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            document.getElementById('chatbot-send').click();
-        }
-    });
+        sendButton.addEventListener('click', function () {
+            // Waehrend der Antwort bricht derselbe Knopf sie ab.
+            if (chatbot.isBusy) {
+                chatbot.abort();
+                return;
+            }
+
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            // Die Route darf zwischen zwei Fragen wechseln; startRequest() liest
+            // die URL bei jedem Lauf neu. Das Leeren der Anzeige macht reset().
+            chatbot.apiUrl = apiUrls[document.querySelector('input[name="chatbot-route"]:checked').value];
+            chatbot.ask(prompt);
+        });
+
+        promptInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+    })();
 </script>
 {% endif %}
 

@@ -89,6 +89,11 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
         $template->labelFontInc = $lang['fontInc'] ?? 'Schrift vergrößern';
 
         $template->jsStrings = [
+            // Der Senden-Knopf wird waehrend des Streams zum Stopp-Knopf und
+            // braucht dafuer beide Beschriftungen im JavaScript.
+            'send' => $lang['send'] ?? 'Nachricht senden',
+            'stop' => $lang['stop'] ?? 'Antwort stoppen',
+            'stopped' => $lang['stopped'] ?? 'Antwort abgebrochen.',
             'summarize' => $lang['summarize'] ?? 'Inhalt zusammenfassen',
             'summarizePrompt' => $lang['summarizePrompt'] ?? 'Fasse ausschließlich den folgenden Seiteninhalt kurz und präzise zusammen. Nutze dafür keine anderen Quellen oder Seiten:',
             'summarizeFallbackPrompt' => $lang['summarizeFallbackPrompt'] ?? 'Bitte fasse den Inhalt dieser Seite kurz zusammen.',
