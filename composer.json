@@ -4,7 +4,7 @@
   "keywords": ["contao", "ki", "ai", "chatbot", "rag", "suche", "search", "support"],
   "type": "contao-bundle",
   "license": "MIT",
-  "homepage": "https://github.com/BlueBranch-GmbH/chatbot-contao",
+  "homepage": "https://chatbot.bluebranch.de/",
   "authors": [
     {
       "name": "Lukas M. Beck",
@@ -13,6 +13,7 @@
     }
   ],
   "support": {
+    "docs": "https://chatbot.bluebranch.de/anleitung/contao",
     "issues": "https://github.com/BlueBranch-GmbH/chatbot-contao/issues",
     "source": "https://github.com/BlueBranch-GmbH/chatbot-contao"
   },
