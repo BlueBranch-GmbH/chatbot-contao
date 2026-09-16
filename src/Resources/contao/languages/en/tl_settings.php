@@ -1,6 +1,7 @@
 <?php
 
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_legend'] = 'Chatbot settings';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_info'] = 'Access and an API key are available at <a href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">chatbot.bluebranch.de</a>; the <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">Contao guide</a> walks through the setup step by step. The key itself is stored on the website root page &ndash; this page only holds the defaults for all chat widgets.';
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_name'] = ['Chatbot name', 'Default name shown in the chat header when the module does not define its own name.'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_color'] = ['Accent color', 'Default accent color of the chat widget when the module does not define its own color.'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_icon'] = ['Icon (SVG)', 'Replaces the default AI icon on the chat button, if the module does not define its own icon.'];

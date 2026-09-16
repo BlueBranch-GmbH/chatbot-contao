@@ -1,6 +1,7 @@
 <?php
 
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_legend'] = 'Chatbot-Einstellungen';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_info'] = 'Zugang und API-Schlüssel gibt es auf <a href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">chatbot.bluebranch.de</a>; die <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">Anleitung für Contao</a> führt Schritt für Schritt durch die Einrichtung. Der Schlüssel selbst wird am Startpunkt der Website hinterlegt – hier stehen nur die Vorgaben für alle Chat-Widgets.';
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_name'] = ['Name des Chatbots', 'Standard-Name, der im Chat-Header angezeigt wird, wenn im Modul kein eigener Name hinterlegt ist.'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_color'] = ['Akzentfarbe', 'Standard-Akzentfarbe des Chat-Widgets, wenn im Modul keine eigene Farbe hinterlegt ist.'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_icon'] = ['Icon (SVG)', 'Ersetzt das Standard-KI-Icon im Chat-Button, wenn im Modul kein eigenes Icon hinterlegt ist.'];

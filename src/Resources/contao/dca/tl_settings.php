@@ -2,9 +2,23 @@
 
 $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = str_replace(
     ';{chmod_legend}',
-    ';{chatbot_legend},chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
+    ';{chatbot_legend},chatbot_info,chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
     $GLOBALS['TL_DCA']['tl_settings']['palettes']['default']
 );
+
+/*
+ * Ein reiner Hinweistext, kein Eingabefeld.
+ *
+ * Contao kennt das `explanation`-Widget nur im Frontend (TL_FFL), im Backend gibt es dafuer
+ * `input_field_callback`: Was der Rueckruf liefert, wird unveraendert in die Palette gesetzt.
+ * Weil dabei kein Widget entsteht, nimmt das Feld auch keinen Wert entgegen -- in der
+ * localconfig.php landet nichts.
+ */
+$GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_info'] = [
+    'input_field_callback' => static fn () => '<div class="widget clr"><p class="tl_info">'
+        . ($GLOBALS['TL_LANG']['tl_settings']['chatbot_info'] ?? '')
+        . '</p></div>',
+];
 
 $GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_default_name'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_default_name'],
