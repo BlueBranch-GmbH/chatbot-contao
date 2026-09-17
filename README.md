@@ -485,6 +485,12 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.2.2 - 2026-09-17
+
+- Paketbeschreibung gekürzt und mit dem Eintrag im Contao Extension Repository gleichgezogen:
+  kurze Einleitung, danach die Einrichtung in Stichpunkten
+- Keywords um `dsgvo` und `gdpr` ergänzt
+
 ### 1.1.1 - 2026-09-02
 
 - Fix: Die Antwort-Routen liefen in einen 500er, weil das Contao-Framework nicht initialisiert
