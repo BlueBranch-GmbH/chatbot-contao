@@ -1,7 +1,7 @@
 {
   "name": "bluebranch/chatbot",
-  "description": "KI-Chatbot und KI-Suche für Contao: übergibt die Inhalte deiner Seiten beim Lauf des Suchindex an eine Chatbot-API und beantwortet die Fragen deiner Besucher daraus – als Chat-Widget und als Zusammenfassung über der Trefferliste der Suche.",
-  "keywords": ["contao", "ki", "ai", "chatbot", "rag", "suche", "search", "support"],
+  "description": "KI-Chatbot und KI-Suche für Contao: beantwortet die Fragen deiner Besucher ausschließlich aus deinen eigenen Seiteninhalten – als Chat-Widget, als Antwort über der Trefferliste der Suche und als Frage-Modul. Kostenlose Stufe, Hosting in Deutschland, DSGVO-konform.",
+  "keywords": ["contao", "ki", "ai", "chatbot", "rag", "suche", "search", "dsgvo", "gdpr", "support"],
   "type": "contao-bundle",
   "license": "MIT",
   "homepage": "https://chatbot.bluebranch.de/",
