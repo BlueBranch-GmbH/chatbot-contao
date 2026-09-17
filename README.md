@@ -491,6 +491,20 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
   kurze Einleitung, danach die Einrichtung in Stichpunkten
 - Keywords um `dsgvo` und `gdpr` ergänzt
 
+### 1.2.1 - 2026-09-16
+
+- Hinweisfeld in den globalen Einstellungen: Es verweist auf Zugang und API-Schlüssel auf
+  chatbot.bluebranch.de sowie auf die Anleitung für Contao und stellt klar, dass der Schlüssel
+  selbst am Startpunkt der Website hinterlegt wird
+
+### 1.2.0 - 2026-09-16
+
+- Laufende Antworten lassen sich abbrechen: Stopp-Knopf im Chat-Widget, im Modul *Chatbot Frage*,
+  im Such-Modul und im Testfeld des Backend-Moduls
+- Solange eine Antwort läuft, werden weitere Anfragen unterbunden
+- `homepage` und der neue `docs`-Link in der composer.json zeigen auf chatbot.bluebranch.de
+  statt auf das Repository
+
 ### 1.1.1 - 2026-09-02
 
 - Fix: Die Antwort-Routen liefen in einen 500er, weil das Contao-Framework nicht initialisiert
