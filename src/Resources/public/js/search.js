@@ -87,6 +87,20 @@ class ChatbotSearch {
         }
         this.startTimer();
 
+        ChatbotStreamToken.get(this.requestToken).then((token) => {
+            if (requestId !== this.requestId) return;
+
+            this.requestToken = token;
+            this.openStream(requestId);
+        }).catch((error) => {
+            if (requestId !== this.requestId) return;
+
+            this.finishRequest();
+            this.handleError(error);
+        });
+    }
+
+    openStream(requestId) {
         // Use the configured apiUrl (might be backend or frontend scoped)
         const url = new URL(this.apiUrl, window.location.origin);
         url.searchParams.append('prompt', this.query);

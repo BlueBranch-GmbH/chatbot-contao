@@ -49,6 +49,23 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_noAnswers'] = [
 ];
 
 /*
+ * Trainingsstand je Seite, gepflegt von `TrainingState` - kein Formularfeld.
+ *
+ * Contao ruft den indexPage-Hook bei jedem indexierten Seitenaufruf auf, auch wenn sich nichts
+ * geaendert hat. Ohne diesen Stand ginge jeder Besuch als Trainingsauftrag an die API.
+ *
+ * `chatbot_checksum`: NULL = unbekannt (etwa vor dem Update trainiert), '' = nicht im Index,
+ * sonst die Pruefsumme des zuletzt uebertragenen Inhalts.
+ */
+$GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_checksum'] = [
+    'sql' => 'varchar(32) NULL default NULL',
+];
+
+$GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_trained_at'] = [
+    'sql' => 'int(10) unsigned NOT NULL default 0',
+];
+
+/*
  * Das Feld gehoert neben "Von der Suche ausschliessen" - dort sucht es der Redakteur, weil beide
  * dasselbe entscheiden: ob diese Seite als Quelle dient.
  *

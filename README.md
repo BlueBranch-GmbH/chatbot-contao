@@ -485,6 +485,19 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.2.3 - 2026-09-29
+
+- Sicherheitsfix: Der Suchbegriff wurde im Such-Modul ungefiltert in ein Skript geschrieben
+  und ließ sich über einen präparierten Link für Cross-Site-Scripting nutzen
+- Seiten werden nur noch an den KI-Index übertragen, wenn sich ihr Inhalt geändert hat
+  (spätestens nach sieben Tagen erneut), statt bei jedem Seitenaufruf; ausgeschlossene Seiten
+  lösen nicht mehr bei jedem Aufruf eine Löschung aus. Neue Spalten in `tl_page` – nach dem
+  Update die Datenbank aktualisieren
+- Die Chatbot-Module legen keine Session mehr beim Rendern an. Der Token für die Antworten wird
+  erst bei der ersten Frage geholt, Seiten mit Chatbot bleiben damit im HTTP-Cache
+- Skripte und Styles werden mit Versionsparameter eingebunden, damit Browser nach einem Update
+  nicht die alten Dateien weiterverwenden
+
 ### 1.2.2 - 2026-09-17
 
 - Paketbeschreibung gekürzt und mit dem Eintrag im Contao Extension Repository gleichgezogen:

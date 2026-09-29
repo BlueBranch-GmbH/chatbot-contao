@@ -420,25 +420,16 @@ class ChatbotWidget {
         let renderPending = false;
         this.pendingSources = null;
 
-        const url = new URL(this.apiUrl, window.location.origin);
-        url.searchParams.set('prompt', prompt);
-        url.searchParams.set('language', this.language);
-        url.searchParams.set('token', this.requestToken);
-
-        if (this.pageId) {
-            url.searchParams.set('pageId', this.pageId);
-        }
-
+        // Den Verlauf beim Absenden festhalten, nicht erst wenn der Token eingetroffen ist.
         const chatContext = includeContext ? this.buildChatContext() : '';
-        if (chatContext) {
-            url.searchParams.set('chat_context', chatContext);
-        }
-
-        const eventSource = new EventSource(url.toString());
+        let eventSource = null;
+        let aborted = false;
 
         const finish = () => {
             this.abortRequest = null;
-            eventSource.close();
+            if (eventSource) {
+                eventSource.close();
+            }
             this.setBusy(false);
             this.input.focus();
 
@@ -453,6 +444,8 @@ class ChatbotWidget {
         };
 
         this.abortRequest = () => {
+            aborted = true;
+
             // Kam noch gar nichts an, bleibt sonst nur die Frage ohne Antwort stehen.
             if (!bubble) {
                 typingRow.remove();
@@ -462,57 +455,91 @@ class ChatbotWidget {
             finish();
         };
 
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
+        const attachListeners = (eventSource) => {
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
 
-                if (data.answer) {
-                    if (!bubble) {
-                        typingRow.remove();
-                        bubble = this.addMessage('bot', '');
+                    if (data.answer) {
+                        if (!bubble) {
+                            typingRow.remove();
+                            bubble = this.addMessage('bot', '');
+                        }
+
+                        fullAnswer += data.answer;
+
+                        if (!renderPending) {
+                            renderPending = true;
+                            requestAnimationFrame(() => {
+                                bubble.innerHTML = typeof marked !== 'undefined' ? marked.parse(fullAnswer) : fullAnswer;
+                                this.scrollToBottom();
+                                renderPending = false;
+                            });
+                        }
                     }
 
-                    fullAnswer += data.answer;
-
-                    if (!renderPending) {
-                        renderPending = true;
-                        requestAnimationFrame(() => {
-                            bubble.innerHTML = typeof marked !== 'undefined' ? marked.parse(fullAnswer) : fullAnswer;
-                            this.scrollToBottom();
-                            renderPending = false;
-                        });
+                    if (data.sources && data.sources.length > 0) {
+                        this.pendingSources = data.sources;
                     }
+                } catch (e) {
+                    console.error('Error parsing SSE data', e);
                 }
+            };
 
-                if (data.sources && data.sources.length > 0) {
-                    this.pendingSources = data.sources;
+            eventSource.addEventListener('end', () => {
+                if (!bubble) {
+                    typingRow.remove();
+                    this.addMessage('bot', this.strings.noAnswer);
+                } else if (this.pendingSources) {
+                    this.appendSources(bubble, this.pendingSources);
+                    this.pendingSources = null;
                 }
-            } catch (e) {
-                console.error('Error parsing SSE data', e);
-            }
+                finish();
+            });
+
+            eventSource.addEventListener('error', (event) => {
+                if (!bubble) {
+                    typingRow.remove();
+                    // Named SSE-Fehlerereignisse tragen einen Rumpf, echte Verbindungsabbrueche
+                    // nicht. Wo die Gegenstelle einen Grund mitschickt - etwa ein erschoepftes
+                    // Kontingent -, wird er angezeigt statt der allgemeinen Meldung.
+                    this.addMessage('bot', this.messageFromError(event));
+                }
+                finish();
+            });
         };
 
-        eventSource.addEventListener('end', () => {
-            if (!bubble) {
-                typingRow.remove();
-                this.addMessage('bot', this.strings.noAnswer);
-            } else if (this.pendingSources) {
-                this.appendSources(bubble, this.pendingSources);
-                this.pendingSources = null;
-            }
-            finish();
-        });
+        ChatbotStreamToken.get(this.requestToken).then((token) => {
+            if (aborted) return;
 
-        eventSource.addEventListener('error', (event) => {
-            if (!bubble) {
-                typingRow.remove();
-                // Named SSE-Fehlerereignisse tragen einen Rumpf, echte Verbindungsabbrueche
-                // nicht. Wo die Gegenstelle einen Grund mitschickt - etwa ein erschoepftes
-                // Kontingent -, wird er angezeigt statt der allgemeinen Meldung.
-                this.addMessage('bot', this.messageFromError(event));
-            }
+            this.requestToken = token;
+            eventSource = this.openStream(prompt, chatContext);
+            attachListeners(eventSource);
+        }).catch((error) => {
+            if (aborted) return;
+
+            console.error('Chatbot token request failed', error);
+            typingRow.remove();
+            this.addMessage('bot', this.strings.requestError);
             finish();
         });
+    }
+
+    openStream(prompt, chatContext) {
+        const url = new URL(this.apiUrl, window.location.origin);
+        url.searchParams.set('prompt', prompt);
+        url.searchParams.set('language', this.language);
+        url.searchParams.set('token', this.requestToken);
+
+        if (this.pageId) {
+            url.searchParams.set('pageId', this.pageId);
+        }
+
+        if (chatContext) {
+            url.searchParams.set('chat_context', chatContext);
+        }
+
+        return new EventSource(url.toString());
     }
 
     /**

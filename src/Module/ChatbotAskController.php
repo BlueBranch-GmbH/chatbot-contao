@@ -3,7 +3,6 @@
 namespace Bluebranch\Chatbot\Module;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
-use Bluebranch\Chatbot\classes\StreamToken;
 use Bluebranch\Chatbot\classes\TypedQuestions;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
@@ -63,8 +62,6 @@ class ChatbotAskController extends AbstractFrontendModuleController
         $template->labelStop = $lang['stop'] ?? 'Stopp';
         $template->labelPlaceholder = $lang['placeholder'] ?? 'Stellen Sie Ihre Frage …';
         $template->labelSources = $lang['sources'] ?? 'Quellen:';
-
-        $template->requestToken = StreamToken::forSession($request);
 
         return $template->getResponse();
     }

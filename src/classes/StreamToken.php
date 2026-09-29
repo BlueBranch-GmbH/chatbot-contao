@@ -7,8 +7,9 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Der Sitzungs-Token, mit dem sich die Antwort-Routen gegen fremde Aufrufe schuetzen.
  *
- * Jedes Modul, das eine Antwort anfordert, legt ihn beim Rendern in die Session und
- * gibt ihn ins Template; ChatbotAPIController prueft ihn gegen genau diesen Wert.
+ * Die Frontend-Module holen ihn erst bei der ersten Frage ueber die Token-Route von
+ * ChatbotAPIController ab, damit Seiten ohne Session auskommen; derselbe Controller prueft
+ * die Antwort-Anfragen gegen genau diesen Wert.
  */
 class StreamToken
 {

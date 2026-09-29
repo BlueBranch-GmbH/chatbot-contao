@@ -3,6 +3,8 @@
 namespace Bluebranch\Chatbot\Controller;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\StreamToken;
+use Bluebranch\Chatbot\classes\TrainingState;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\PageModel;
 use Contao\System;
@@ -36,7 +38,24 @@ class ChatbotAPIController extends AbstractController
         $this->framework = $framework ?? System::getContainer()->get('contao.framework');
     }
 
-    #[Route('/bluebranch/chatbot/api/v1/generate/search', name: 'bluebranch_chatbot_generate_seach', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => true])]
+    /**
+     * Gibt den Sitzungs-Token fuer die Antwort-Routen heraus.
+     *
+     * Die Frontend-Module holen ihn erst bei der ersten Frage (stream-token.js). Stuende er
+     * im Seiten-HTML, braeuchte jede Seite mit Chatbot eine Session, und Contao liefert
+     * Antworten mit Session-Cookie nie aus dem HTTP-Cache. POST, damit weder Browser noch
+     * Proxy die Antwort zwischenspeichern oder vorab laden.
+     */
+    #[Route('/bluebranch/chatbot/api/v1/token', name: 'bluebranch_chatbot_token', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => false])]
+    public function token(Request $request): JsonResponse
+    {
+        $response = new JsonResponse(['token' => StreamToken::forSession($request)]);
+        $response->headers->set('Cache-Control', 'no-store, private');
+
+        return $response;
+    }
+
+    #[Route('/bluebranch/chatbot/api/v1/generate/search',name: 'bluebranch_chatbot_generate_seach', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => true])]
     #[Route('/bluebranch/chatbot/api/v1/be/generate/search', name: 'bluebranch_chatbot_generate_search_be', methods: ['POST'], defaults: ['_scope' => 'backend', '_token_check' => true])]
     public function generateSearch(Request $request): JsonResponse
     {
@@ -97,6 +116,12 @@ class ChatbotAPIController extends AbstractController
 
         $result = $this->chatbotApi->deleteAllContent($pageModel);
 
+        // Ohne diesen Schritt hielte der Trainingsstand die Seiten weiter fuer trainiert,
+        // und sie kaemen erst nach Ablauf von TrainingState::REFRESH_AFTER zurueck.
+        if (!empty($result['success'])) {
+            $this->resetTrainingStateForRoot($pageModel);
+        }
+
         return new JsonResponse($result);
     }
 
@@ -122,7 +147,33 @@ class ChatbotAPIController extends AbstractController
 
         $result = $this->chatbotApi->deleteContent($externalId, $pageModel);
 
+        $deletedPageId = TrainingState::pageIdFromExternalId($externalId);
+        if (null !== $deletedPageId && TrainingState::deleteSucceeded($result)) {
+            (new TrainingState())->markRemoved($deletedPageId);
+        }
+
         return new JsonResponse($result);
+    }
+
+    /**
+     * Setzt den Trainingsstand aller Seiten unter der Root-Seite zurueck, deren Schluessel
+     * gerade geleert wurde. Ohne Root-Seite galt der globale Schluessel - dann alle Seiten.
+     */
+    private function resetTrainingStateForRoot(?PageModel $pageModel): void
+    {
+        $state = new TrainingState();
+
+        if (!$pageModel instanceof PageModel) {
+            $state->markUnknown();
+
+            return;
+        }
+
+        $pageModel->loadDetails();
+        $rootId = (int) $pageModel->rootId;
+        $ids = array_map('intval', \Contao\Database::getInstance()->getChildRecords($rootId, 'tl_page'));
+
+        $state->markUnknown($rootId, ...$ids);
     }
 
     private function isAdmin(): bool

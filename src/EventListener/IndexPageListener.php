@@ -5,6 +5,7 @@ namespace Bluebranch\Chatbot\EventListener;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\PageEligibility;
 use Bluebranch\Chatbot\classes\SearchUtil;
+use Bluebranch\Chatbot\classes\TrainingState;
 use Contao\Config;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
@@ -19,18 +20,23 @@ class IndexPageListener
     private ChatbotAPI $chatbotApi;
     private SearchUtil $searchUtil;
     private PageEligibility $eligibility;
+    private TrainingState $trainingState;
     private LoggerInterface $logger;
 
     public function __construct(
         ChatbotAPI $chatbotApi,
         SearchUtil $searchUtil,
         PageEligibility $eligibility,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        // Optional wie in ChatbotAPIController: Nach einem Update ohne geleerten Cache
+        // uebergibt der alte Container dieses Argument noch nicht.
+        ?TrainingState $trainingState = null
     ) {
         $this->chatbotApi = $chatbotApi;
         $this->searchUtil = $searchUtil;
         $this->eligibility = $eligibility;
         $this->logger = $logger;
+        $this->trainingState = $trainingState ?? new TrainingState();
     }
 
     /**
@@ -51,7 +57,12 @@ class IndexPageListener
              * wieder ein, und der Ausschluss haelt genau bis dahin.
              */
             if ($this->eligibility->isExcludedFromAnswers($pageId)) {
-                $this->chatbotApi->deleteContent('page_' . $pageId, PageModel::findById($pageId));
+                // Nur loeschen, solange die Seite noch im Index liegen koennte - sonst loeste
+                // jeder Besuch einer ausgeschlossenen Seite erneut eine Loeschung aus.
+                if (!$this->trainingState->isKnownAbsent($pageId)) {
+                    $this->removeFromIndex($pageId);
+                }
+
                 return;
             }
 
@@ -82,10 +93,24 @@ class IndexPageListener
                 'type' => 'page'
             ];
 
+            // Unveraenderten Inhalt nicht erneut schicken: Der Hook laeuft bei jedem
+            // indexierten Seitenaufruf, nicht nur wenn sich etwas geaendert hat.
+            $checksum = $this->trainingState->checksum($payload);
+
+            if (!$this->trainingState->needsTraining($pageId, $checksum)) {
+                return;
+            }
+
             $this->writeDebugFile('train_' . $payload['externalId'] . '.json', $payload);
             $pageModel = PageModel::findById($pageId);
 
-            $this->chatbotApi->trainContent($payload, $pageModel);
+            $result = $this->chatbotApi->trainContent($payload, $pageModel);
+
+            // Nur bei Erfolg merken - ein Fehlschlag (etwa ein erschoepftes Kontingent)
+            // wird beim naechsten Aufruf wiederholt.
+            if (!empty($result['success'])) {
+                $this->trainingState->markTrained($pageId, $checksum);
+            }
 
         } catch (\Exception $e) {
             $this->logger->error('Fehler bei der Vorbereitung für die Vektor-Datenbank: ' . $e->getMessage(), [
@@ -117,8 +142,7 @@ class IndexPageListener
 
                 $this->writeDebugFile('delete_search_vector_' . $vectorId . '.json', ['id' => $vectorId, 'action' => 'delete', 'tstamp' => time()]);
 
-                $pageModel = PageModel::findById($pageId);
-                $this->chatbotApi->deleteContent($vectorId, $pageModel);
+                $this->removeFromIndex((int) $pageId);
             }
         } catch (\Exception $e) {
             $this->logger->error('Fehler beim Vormerken zum Löschen aus der Vektor-Datenbank (tl_search): ' . $e->getMessage());
@@ -205,7 +229,11 @@ class IndexPageListener
                     ['id' => $vectorId, 'action' => 'delete', 'reason' => 'not_eligible', 'tstamp' => time()]
                 );
 
-                $this->chatbotApi->deleteContent($vectorId, PageModel::findById($id));
+                if ($this->trainingState->isKnownAbsent($id)) {
+                    continue;
+                }
+
+                $this->removeFromIndex($id);
                 ++$entfernt;
             }
 
@@ -218,6 +246,19 @@ class IndexPageListener
             }
         } catch (\Exception $e) {
             $this->logger->error('Fehler beim Entfernen aus der Vektor-Datenbank nach dem Speichern (tl_page): ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Entfernt die Seite aus dem KI-Index und haelt das im Trainingsstand fest, damit sie
+     * nach einer erneuten Veroeffentlichung wieder trainiert wird.
+     */
+    private function removeFromIndex(int $pageId): void
+    {
+        $result = $this->chatbotApi->deleteContent('page_' . $pageId, PageModel::findById($pageId));
+
+        if (TrainingState::deleteSucceeded($result)) {
+            $this->trainingState->markRemoved($pageId);
         }
     }
 

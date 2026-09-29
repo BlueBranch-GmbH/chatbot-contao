@@ -3,7 +3,6 @@
 namespace Bluebranch\Chatbot\Module;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
-use Bluebranch\Chatbot\classes\StreamToken;
 use Bluebranch\Chatbot\classes\TypedQuestions;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
@@ -83,8 +82,6 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
         $nativeResults = $query !== '' ? $this->performNativeSearch($query, $pageModel) : ['count' => 0, 'results' => []];
         $template->searchResultsCount = $nativeResults['count'];
         $template->searchResults = $nativeResults['results'];
-
-        $template->requestToken = StreamToken::forSession($request);
 
         return $template->getResponse();
     }

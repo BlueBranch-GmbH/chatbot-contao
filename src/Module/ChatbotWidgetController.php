@@ -105,15 +105,6 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
         $template->pageId = $pageModel instanceof PageModel ? $pageModel->id : '';
         $template->language = $pageModel instanceof PageModel ? strtolower($pageModel->language) : 'de';
 
-        // Generate a secure stream token, store in session so the API controller can validate it
-        $session = $request->getSession();
-        $streamToken = $session->get('_chatbot_stream_token');
-        if (!$streamToken) {
-            $streamToken = bin2hex(random_bytes(32));
-            $session->set('_chatbot_stream_token', $streamToken);
-        }
-        $template->requestToken = $streamToken;
-
         return $template->getResponse();
     }
 

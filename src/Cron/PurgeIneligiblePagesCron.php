@@ -4,6 +4,7 @@ namespace Bluebranch\Chatbot\Cron;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\PageEligibility;
+use Bluebranch\Chatbot\classes\TrainingState;
 use Contao\Config;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCronJob;
 use Contao\Database;
@@ -32,12 +33,14 @@ class PurgeIneligiblePagesCron
     private ChatbotAPI $chatbotApi;
     private PageEligibility $eligibility;
     private LoggerInterface $logger;
+    private TrainingState $trainingState;
 
-    public function __construct(ChatbotAPI $chatbotApi, PageEligibility $eligibility, LoggerInterface $logger)
+    public function __construct(ChatbotAPI $chatbotApi, PageEligibility $eligibility, LoggerInterface $logger, ?TrainingState $trainingState = null)
     {
         $this->chatbotApi = $chatbotApi;
         $this->eligibility = $eligibility;
         $this->logger = $logger;
+        $this->trainingState = $trainingState ?? new TrainingState();
     }
 
     public function __invoke(): void
@@ -93,8 +96,20 @@ class PurgeIneligiblePagesCron
             $count = 0;
 
             foreach (array_keys($ids) as $id) {
+                // Was nachweislich nicht im Index liegt, muss nicht geloescht werden.
+                if ($this->trainingState->isKnownAbsent($id)) {
+                    continue;
+                }
+
                 $pageModel = PageModel::findById($id);
-                $this->chatbotApi->deleteContent('page_' . $id, $pageModel);
+                $result = $this->chatbotApi->deleteContent('page_' . $id, $pageModel);
+
+                // Festhalten, damit die Seite nach einer erneuten Veroeffentlichung wieder
+                // trainiert wird - ihr Inhalt hat sich ja womoeglich nicht geaendert.
+                if (TrainingState::deleteSucceeded($result)) {
+                    $this->trainingState->markRemoved($id);
+                }
+
                 $count++;
             }
 

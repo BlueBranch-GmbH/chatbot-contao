@@ -50,7 +50,7 @@
 </div>
 
 <?php if ($this->hasApiKey && $this->typedQuestions): ?>
-<script src="/bundles/chatbot/js/typed-placeholder.js"></script>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/typed-placeholder.js') ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const field = document.querySelector('#chatbot-search-<?= $this->id ?> .chatbot-ask-input');
@@ -62,16 +62,16 @@
 <?php endif; ?>
 
 <?php if ($this->hasApiKey && $this->query): ?>
-<script src="/bundles/chatbot/js/marked.min.js"></script>
-<script src="/bundles/chatbot/js/search.js"></script>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/marked.min.js') ?>"></script>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/stream-token.js') ?>"></script>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/search.js') ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const chatbot = new ChatbotSearch({
             containerId: 'chatbot-search-<?= $this->id ?>',
-            query: <?= json_encode($this->query) ?>,
-            requestToken: '<?= $this->requestToken ?>',
-            language: '<?= $this->language ?>',
-            pageId: '<?= $this->pageId ?>'
+            query: <?= json_encode((string) $this->query, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+            language: <?= json_encode((string) $this->language, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+            pageId: <?= json_encode((string) $this->pageId, JSON_HEX_TAG | JSON_HEX_AMP) ?>
         });
         chatbot.init();
     });
