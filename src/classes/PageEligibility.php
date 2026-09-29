@@ -22,6 +22,27 @@ class PageEligibility
      */
     private array $cache = [];
 
+    /** Merker fuer excludedFromSearchSql(): die Spalte aendert sich innerhalb eines Requests nicht. */
+    private static ?string $excludedFromSearchSql = null;
+
+    /**
+     * SQL-Bedingung fuer „von der Suche ausgeschlossen“, passend zur Contao-Version.
+     *
+     * Bis Contao 5.5 steht das in `noSearch`, ab 5.6 in `searchIndexer` (Wert `never_index`) -
+     * `noSearch` gibt es dort nicht mehr. Eine Abfrage auf die falsche Spalte scheitert, und
+     * weil die Aufrufer Fehler nur loggen, blieben unzulaessige Seiten still im Index.
+     */
+    public static function excludedFromSearchSql(): string
+    {
+        if (null === self::$excludedFromSearchSql) {
+            self::$excludedFromSearchSql = Database::getInstance()->fieldExists('searchIndexer', 'tl_page')
+                ? "searchIndexer='never_index'"
+                : "noSearch='1'";
+        }
+
+        return self::$excludedFromSearchSql;
+    }
+
     /**
      * Ob die Seite selbst oder einer ihrer Vorfahren von KI-Antworten ausgeschlossen ist.
      *
@@ -63,7 +84,7 @@ class PageEligibility
         }
 
         $row = Database::getInstance()
-            ->prepare('SELECT published, noSearch, start, stop FROM tl_page WHERE id=?')
+            ->prepare('SELECT published, start, stop, (' . self::excludedFromSearchSql() . ') AS excludedFromSearch FROM tl_page WHERE id=?')
             ->limit(1)
             ->execute($pageId);
 
@@ -73,7 +94,7 @@ class PageEligibility
 
         $jetzt = time();
 
-        if (!$row->published || $row->noSearch) {
+        if (!$row->published || $row->excludedFromSearch) {
             return false;
         }
 

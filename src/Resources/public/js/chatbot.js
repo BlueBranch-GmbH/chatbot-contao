@@ -2,7 +2,7 @@
  * Chatbot Widget — floating chat button + dialogue window
  */
 
-class ChatbotWidget {
+window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     constructor(config) {
         this.containerId = config.containerId;
         this.requestToken = config.requestToken;
@@ -379,8 +379,8 @@ class ChatbotWidget {
         const bubble = document.createElement('div');
         bubble.className = 'chatbot-widget__bubble';
 
-        if (role === 'bot' && typeof marked !== 'undefined') {
-            bubble.innerHTML = marked.parse(text);
+        if (role === 'bot') {
+            bubble.innerHTML = ChatbotMarkdown.toHtml(text);
         } else {
             bubble.textContent = text;
         }
@@ -422,13 +422,13 @@ class ChatbotWidget {
 
         // Den Verlauf beim Absenden festhalten, nicht erst wenn der Token eingetroffen ist.
         const chatContext = includeContext ? this.buildChatContext() : '';
-        let eventSource = null;
+        let stream = null;
         let aborted = false;
 
         const finish = () => {
             this.abortRequest = null;
-            if (eventSource) {
-                eventSource.close();
+            if (stream) {
+                stream.close();
             }
             this.setBusy(false);
             this.input.focus();
@@ -455,8 +455,8 @@ class ChatbotWidget {
             finish();
         };
 
-        const attachListeners = (eventSource) => {
-            eventSource.onmessage = (event) => {
+        const handlers = {
+            message: (event) => {
                 try {
                     const data = JSON.parse(event.data);
 
@@ -471,7 +471,7 @@ class ChatbotWidget {
                         if (!renderPending) {
                             renderPending = true;
                             requestAnimationFrame(() => {
-                                bubble.innerHTML = typeof marked !== 'undefined' ? marked.parse(fullAnswer) : fullAnswer;
+                                bubble.innerHTML = ChatbotMarkdown.toHtml(fullAnswer);
                                 this.scrollToBottom();
                                 renderPending = false;
                             });
@@ -484,9 +484,8 @@ class ChatbotWidget {
                 } catch (e) {
                     console.error('Error parsing SSE data', e);
                 }
-            };
-
-            eventSource.addEventListener('end', () => {
+            },
+            end: () => {
                 if (!bubble) {
                     typingRow.remove();
                     this.addMessage('bot', this.strings.noAnswer);
@@ -495,26 +494,24 @@ class ChatbotWidget {
                     this.pendingSources = null;
                 }
                 finish();
-            });
-
-            eventSource.addEventListener('error', (event) => {
+            },
+            error: (event) => {
                 if (!bubble) {
                     typingRow.remove();
-                    // Named SSE-Fehlerereignisse tragen einen Rumpf, echte Verbindungsabbrueche
+                    // Fehlerereignisse der Gegenstelle tragen einen Rumpf, echte Verbindungsabbrueche
                     // nicht. Wo die Gegenstelle einen Grund mitschickt - etwa ein erschoepftes
                     // Kontingent -, wird er angezeigt statt der allgemeinen Meldung.
                     this.addMessage('bot', this.messageFromError(event));
                 }
                 finish();
-            });
+            },
         };
 
         ChatbotStreamToken.get(this.requestToken).then((token) => {
             if (aborted) return;
 
             this.requestToken = token;
-            eventSource = this.openStream(prompt, chatContext);
-            attachListeners(eventSource);
+            stream = this.openStream(prompt, chatContext, handlers);
         }).catch((error) => {
             if (aborted) return;
 
@@ -525,21 +522,29 @@ class ChatbotWidget {
         });
     }
 
-    openStream(prompt, chatContext) {
-        const url = new URL(this.apiUrl, window.location.origin);
-        url.searchParams.set('prompt', prompt);
-        url.searchParams.set('language', this.language);
-        url.searchParams.set('token', this.requestToken);
+    /**
+     * POST statt EventSource: Frage, Chatverlauf und Token gehoeren nicht in die URL
+     * (Access-Logs, Browserverlauf, Referer).
+     */
+    openStream(prompt, chatContext, handlers) {
+        const body = {
+            prompt: prompt,
+            language: this.language,
+        };
 
         if (this.pageId) {
-            url.searchParams.set('pageId', this.pageId);
+            body.pageId = this.pageId;
         }
 
         if (chatContext) {
-            url.searchParams.set('chat_context', chatContext);
+            body.chat_context = chatContext;
         }
 
-        return new EventSource(url.toString());
+        return ChatbotStream.open(this.apiUrl, {
+            token: this.requestToken,
+            body: body,
+            handlers: handlers,
+        });
     }
 
     /**
@@ -585,4 +590,4 @@ class ChatbotWidget {
     scrollToBottom() {
         this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
     }
-}
+};

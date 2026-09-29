@@ -67,7 +67,7 @@ class PurgeIneligiblePagesCron
             $now = time();
 
             $result = Database::getInstance()->execute(
-                "SELECT id FROM tl_page WHERE published != '1' OR noSearch = '1'"
+                "SELECT id FROM tl_page WHERE published != '1' OR " . PageEligibility::excludedFromSearchSql()
                 . " OR (start != '' AND start > $now)"
                 . " OR (stop != '' AND stop != '0' AND stop < $now)"
             );

@@ -44,7 +44,7 @@ if ($this->iconUrl) {
 <link rel="stylesheet" href="<?= \Bluebranch\Chatbot\classes\Asset::url('css/chatbot.css') ?>">
 <?php endif; ?>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/marked.min.js') ?>"></script>
-<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/stream-token.js') ?>"></script>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot-common.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot.js') ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {

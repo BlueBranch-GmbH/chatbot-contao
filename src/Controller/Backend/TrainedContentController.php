@@ -3,6 +3,7 @@
 namespace Bluebranch\Chatbot\Controller\Backend;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\StreamToken;
 use Contao\BackendUser;
 use Contao\CoreBundle\Controller\AbstractBackendController;
 use Contao\CoreBundle\Framework\ContaoFramework;
@@ -92,8 +93,7 @@ class TrainedContentController extends AbstractBackendController
 
         // Check for API Key
         if (empty($selectedPage['has_api_key'])) {
-            $streamToken = bin2hex(random_bytes(32));
-            $session->set('_chatbot_stream_token', $streamToken);
+            $streamToken = StreamToken::forSession($request);
             $viewData = [
                 'content' => [],
                 'limit' => $limit,
@@ -117,8 +117,7 @@ class TrainedContentController extends AbstractBackendController
         $response = $this->chatbotApi->listContent(5000, 0, $pageId);
 
         if (isset($response['success']) && $response['success'] === false) {
-            $streamToken = bin2hex(random_bytes(32));
-            $session->set('_chatbot_stream_token', $streamToken);
+            $streamToken = StreamToken::forSession($request);
             $viewData = [
                 'content' => [],
                 'limit' => $limit,
@@ -149,8 +148,9 @@ class TrainedContentController extends AbstractBackendController
 
         $groupedData = array_values($groupedData);
 
-        $streamToken = bin2hex(random_bytes(32));
-        $session->set('_chatbot_stream_token', $streamToken);
+        // Den Token der Sitzung wiederverwenden: Frontend und Backend teilen die Session, ein
+        // neuer Token machte den eines gleichzeitig offenen Chatbots ungueltig.
+        $streamToken = StreamToken::forSession($request);
 
         $viewData = [
             'content' => $groupedData,

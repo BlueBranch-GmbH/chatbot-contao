@@ -69,7 +69,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_trained_at'] = [
  * Das Feld gehoert neben "Von der Suche ausschliessen" - dort sucht es der Redakteur, weil beide
  * dasselbe entscheiden: ob diese Seite als Quelle dient.
  *
- * Eingefuegt wird ueber alle Paletten, die `noSearch` fuehren, statt ueber eine feste Liste:
+ * Eingefuegt wird ueber alle Paletten, die `noSearch` (bis Contao 5.5) bzw. `searchIndexer` (ab 5.6) fuehren, statt ueber eine feste Liste:
  * Welche das sind, unterscheidet sich zwischen den Contao-Versionen, und eine vergessene Palette
  * faellt niemandem auf - das Feld fehlt dann still bei einem Seitentyp.
  */
@@ -78,13 +78,18 @@ foreach (array_keys($GLOBALS['TL_DCA']['tl_page']['palettes']) as $palette) {
         continue;
     }
 
-    if (!str_contains($GLOBALS['TL_DCA']['tl_page']['palettes'][$palette], 'noSearch')) {
-        continue;
-    }
+    // Bis Contao 5.5 heisst das Feld `noSearch`, ab 5.6 `searchIndexer`.
+    foreach (['searchIndexer', 'noSearch'] as $searchField) {
+        if (!preg_match('/[,;]' . $searchField . '[,;]/', ',' . $GLOBALS['TL_DCA']['tl_page']['palettes'][$palette] . ',')) {
+            continue;
+        }
 
-    PaletteManipulator::create()
-        ->addField('chatbot_noAnswers', 'noSearch', PaletteManipulator::POSITION_AFTER)
-        ->applyToPalette($palette, 'tl_page');
+        PaletteManipulator::create()
+            ->addField('chatbot_noAnswers', $searchField, PaletteManipulator::POSITION_AFTER)
+            ->applyToPalette($palette, 'tl_page');
+
+        break;
+    }
 }
 
 // Hinweis: onDeletePage/onSubmitPage werden bereits über die #[AsCallback]-Attribute

@@ -85,10 +85,11 @@ class ChatbotAPIController extends AbstractController
 
         $result = $this->chatbotApi->generateSearch($payload, $pageModel);
 
-        $this->logger->info('Chatbot Search Request', [
-            'payload' => $payload,
-            'ip' => $request->getClientIp(),
-            'ua' => $request->headers->get('User-Agent')
+        // Bewusst ohne Frage, IP und User-Agent: Das waeren personenbezogene Daten der
+        // Besucher, die im Anwendungs-Log nichts zu suchen haben.
+        $this->logger->debug('Chatbot Search Request', [
+            'success' => $result['success'] ?? false,
+            'statusCode' => $result['statusCode'] ?? null,
         ]);
 
         return new JsonResponse($result);

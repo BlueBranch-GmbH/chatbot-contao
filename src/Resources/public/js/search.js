@@ -2,7 +2,7 @@
  * Chatbot Search Helper Functions
  */
 
-class ChatbotSearch {
+window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
     constructor(config) {
         this.containerId = config.containerId;
         this.query = config.query;
@@ -101,79 +101,81 @@ class ChatbotSearch {
     }
 
     openStream(requestId) {
-        // Use the configured apiUrl (might be backend or frontend scoped)
-        const url = new URL(this.apiUrl, window.location.origin);
-        url.searchParams.append('prompt', this.query);
-        url.searchParams.append('language', this.language);
-        url.searchParams.append('pageId', this.pageId);
-        url.searchParams.append('token', this.requestToken);
-
-        const eventSource = new EventSource(url.toString());
-        this.eventSource = eventSource;
         let fullAnswer = '';
         let renderPending = false;
 
-        eventSource.onmessage = (event) => {
-            if (requestId !== this.requestId) return;
+        // POST statt EventSource: Frage und Token gehoeren nicht in die URL (Access-Logs,
+        // Browserverlauf, Referer). Die Route ist je nach Aufruf Frontend oder Backend.
+        this.stream = ChatbotStream.open(this.apiUrl, {
+            token: this.requestToken,
+            body: {
+                prompt: this.query,
+                language: this.language,
+                pageId: this.pageId,
+            },
+            handlers: {
+                message: (event) => {
+                    if (requestId !== this.requestId) return;
 
-            try {
-                const data = JSON.parse(event.data);
-
-                if (data.answer) {
-                    fullAnswer += data.answer;
-                    // Throttle DOM updates to animation frames so the browser
-                    // can paint each incremental chunk instead of batching all
-                    // events that arrive in the same event-loop tick.
-                    if (!renderPending) {
-                        renderPending = true;
-                        requestAnimationFrame(() => {
-                            renderPending = false;
-                            if (requestId !== this.requestId) return;
-
-                            this.renderContent(fullAnswer);
-                        });
-                    }
-                }
-
-                if (data.sources) {
-                    this.renderSources(data.sources);
-                }
-            } catch (e) {
-                console.error("Error parsing SSE data", e);
-            }
-        };
-
-        eventSource.addEventListener('end', (event) => {
-            if (requestId !== this.requestId) return;
-
-            this.finishRequest();
-        });
-
-        eventSource.addEventListener('error', (event) => {
-            if (requestId !== this.requestId) return;
-
-            this.finishRequest();
-
-            if (fullAnswer.length > 0) {
-                // If we already have content, treat as finished
-            } else {
-                // Named SSE-Fehlerereignisse tragen einen Rumpf mit Begruendung, echte
-                // Verbindungsabbrueche nicht.
-                let meldung = 'SSE Connection failed';
-
-                if (event && typeof event.data === 'string' && event.data !== '') {
                     try {
                         const data = JSON.parse(event.data);
-                        if (data && data.message) {
-                            meldung = data.message;
+
+                        if (data.answer) {
+                            fullAnswer += data.answer;
+                            // Throttle DOM updates to animation frames so the browser
+                            // can paint each incremental chunk instead of batching all
+                            // events that arrive in the same event-loop tick.
+                            if (!renderPending) {
+                                renderPending = true;
+                                requestAnimationFrame(() => {
+                                    renderPending = false;
+                                    if (requestId !== this.requestId) return;
+
+                                    this.renderContent(fullAnswer);
+                                });
+                            }
+                        }
+
+                        if (data.sources) {
+                            this.renderSources(data.sources);
                         }
                     } catch (e) {
-                        // Rumpf unlesbar - bei der allgemeinen Meldung bleiben.
+                        console.error("Error parsing SSE data", e);
                     }
-                }
+                },
+                end: () => {
+                    if (requestId !== this.requestId) return;
 
-                this.handleError(new Error(meldung));
-            }
+                    this.finishRequest();
+                },
+                error: (event) => {
+                    if (requestId !== this.requestId) return;
+
+                    this.finishRequest();
+
+                    if (fullAnswer.length > 0) {
+                        // If we already have content, treat as finished
+                        return;
+                    }
+
+                    // Fehlerereignisse der Gegenstelle tragen einen Rumpf mit Begruendung,
+                    // echte Verbindungsabbrueche nicht.
+                    let meldung = null;
+
+                    if (event && typeof event.data === 'string' && event.data !== '') {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (data && data.message) {
+                                meldung = data.message;
+                            }
+                        } catch (e) {
+                            // Rumpf unlesbar - bei der allgemeinen Meldung bleiben.
+                        }
+                    }
+
+                    this.handleError(new Error(meldung || 'SSE Connection failed'), meldung);
+                },
+            },
         });
     }
 
@@ -203,9 +205,9 @@ class ChatbotSearch {
     }
 
     closeStream() {
-        if (this.eventSource) {
-            this.eventSource.close();
-            this.eventSource = null;
+        if (this.stream) {
+            this.stream.close();
+            this.stream = null;
         }
     }
 
@@ -231,9 +233,11 @@ class ChatbotSearch {
         }
     }
 
-    handleError(error) {
+    handleError(error, serverMessage) {
         console.error('Chatbot Error:', error);
-        this.renderError('Es ist ein Fehler bei der Anfrage aufgetreten.');
+        // Eine Begruendung der Gegenstelle (etwa ein erschoepftes Kontingent) sagt mehr
+        // als die allgemeine Meldung.
+        this.renderError(serverMessage || 'Es ist ein Fehler bei der Anfrage aufgetreten.');
     }
 
     showLoading(show) {
@@ -243,8 +247,8 @@ class ChatbotSearch {
     }
 
     renderContent(markdown) {
-        if (this.contentDiv && typeof marked !== 'undefined') {
-            this.contentDiv.innerHTML = marked.parse(markdown);
+        if (this.contentDiv) {
+            this.contentDiv.innerHTML = ChatbotMarkdown.toHtml(markdown);
         }
     }
 
@@ -260,6 +264,7 @@ class ChatbotSearch {
                 const a = document.createElement('a');
                 a.href = source.url;
                 a.target = '_blank';
+                a.rel = 'noopener';
                 a.textContent = source.title || source.url;
                 li.appendChild(a);
             } else {
@@ -273,7 +278,11 @@ class ChatbotSearch {
 
     renderError(message) {
         if (this.contentDiv) {
-            this.contentDiv.innerHTML = `<p class="error">${message}</p>`;
+            // Als Text, nicht als HTML: Die Meldung kann von der Gegenstelle stammen.
+            const p = document.createElement('p');
+            p.className = 'error';
+            p.textContent = message;
+            this.contentDiv.replaceChildren(p);
         }
     }
 
@@ -330,4 +339,4 @@ class ChatbotSearch {
             this.loadingDiv.textContent = `${label} (${timerText})`;
         }
     }
-}
+};

@@ -123,7 +123,7 @@ niemand räumt sie wieder weg.
 
 ## Seiten von den KI-Antworten ausschließen
 
-In den Seiteneinstellungen steht neben *Von der Suche ausschließen* das Feld
+In den Seiteneinstellungen steht neben *Von der Suche ausschließen* (ab Contao 5.6: *Suchindexierung*) das Feld
 **Aus den KI-Antworten ausschließen**. Beide entscheiden dasselbe – ob eine Seite als Quelle
 dient – nur für zwei verschiedene Suchen, und sie sind voneinander unabhängig:
 
@@ -184,7 +184,9 @@ Der Browser ruft ausschließlich Contao-Routen auf, die ihrerseits die API anspr
 | `/bluebranch/chatbot/api/v1/generate/stream` | Antwort im Such-Modus (ausführlich) |
 | `/bluebranch/chatbot/api/v1/generate/search` | Antwort ohne Streaming |
 
-Alle drei verlangen einen Sitzungs-Token, den die Module beim Rendern in die Session legen. Die
+Alle drei verlangen einen Sitzungs-Token. Die Module holen ihn erst bei der ersten Frage über
+`POST /bluebranch/chatbot/api/v1/token` – Seiten mit Chatbot kommen so ohne Session aus und
+bleiben im HTTP-Cache. Frage und Token gehen per POST im Rumpf bzw. Header, nicht in der URL. Die
 Antworten kommen als Server-Sent Events zurück: zuerst ein `sources`-Ereignis mit den verwendeten
 Seiten, danach die Antwort in Stücken, zum Schluss ein `end`-Ereignis.
 
@@ -356,7 +358,7 @@ cleans them up.
 
 ## Excluding pages from AI answers
 
-Next to *Exclude from search* the page settings offer **Exclude from AI answers**. Both decide
+Next to *Exclude from search* (Contao 5.6 and later: *Search indexing*) the page settings offer **Exclude from AI answers**. Both decide
 the same thing – whether a page serves as a source – but for two different searches, and they are
 independent of each other:
 
@@ -415,7 +417,9 @@ The browser only ever calls Contao routes, which in turn talk to the API:
 | `/bluebranch/chatbot/api/v1/generate/stream` | Answer in search mode (detailed) |
 | `/bluebranch/chatbot/api/v1/generate/search` | Answer without streaming |
 
-All three require a session token that the modules put into the session while rendering. Answers
+All three require a session token. The modules only fetch it with the first question via
+`POST /bluebranch/chatbot/api/v1/token`, so pages with a chatbot need no session and stay in the
+HTTP cache. Question and token are sent via POST in the body and header, not in the URL. Answers
 come back as server-sent events: first a `sources` event listing the pages used, then the answer
 in chunks, and finally an `end` event.
 
@@ -484,6 +488,27 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.2.4 - 2026-09-29
+
+- Contao 5.6 und neuer: Die Erweiterung fragte noch das dort entfernte Feld `noSearch` ab. Der
+  Bereinigungs-Cronjob scheiterte dadurch bei jedem Lauf, unveröffentlichte Seiten blieben im
+  KI-Index, und die Checkbox *Aus den KI-Antworten ausschließen* fehlte im Backend. Jetzt wird je
+  nach Version `noSearch` oder `searchIndexer` verwendet
+- Antworten der KI werden vor der Anzeige bereinigt: nur harmlose HTML-Elemente, keine
+  Skript-Attribute, keine `javascript:`-Links
+- Frage, Chatverlauf und Token gehen per POST statt als URL-Parameter und landen damit nicht mehr
+  in Access-Logs, Browserverlauf und Referer
+- Suchanfragen werden nicht mehr mit Frage, IP-Adresse und User-Agent ins Log geschrieben
+- Zeitlimits für alle Anfragen an die Chatbot-API; eine hängende Gegenstelle blockiert keine
+  PHP-Prozesse mehr
+- Die Übersicht der trainierten Inhalte erzeugt keinen neuen Token mehr bei jedem Aufruf – ein
+  gleichzeitig offener Chatbot im selben Browser blieb sonst ohne Antwort. Titel und URLs werden
+  dort als Text statt als HTML eingesetzt
+- Der Hinweis auf einen fehlenden API-Schlüssel erscheint nur noch für eingeloggte Redakteure
+- Die Such- und Frage-Module zeigen die Begründung der API an statt einer allgemeinen Meldung
+- Skripte dürfen mehrfach auf einer Seite eingebunden sein (Frage- und Such-Modul zusammen)
+- Nicht mehr genutzten Code entfernt; getestet mit Contao 4.13 (PHP 8.1) und 5.7 (PHP 8.3)
 
 ### 1.2.3 - 2026-09-29
 

@@ -12,6 +12,7 @@ use Contao\CoreBundle\DependencyInjection\Attribute\AsHook;
 use Contao\Database;
 use Contao\DataContainer;
 use Contao\PageModel;
+use Contao\System;
 use Psr\Log\LoggerInterface;
 
 #[AsHook('indexPage')]
@@ -276,7 +277,7 @@ class IndexPageListener
         }
 
         try {
-            $rootDir = dirname(__DIR__, 5); // Geht von extensions/bluebranch/chatbot/src/EventListener/IndexPageListener.php zum Projekt-Root
+            $rootDir = System::getContainer()->getParameter('kernel.project_dir');
             $debugDir = $rootDir . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'chatbot';
 
             if (!is_dir($debugDir)) {

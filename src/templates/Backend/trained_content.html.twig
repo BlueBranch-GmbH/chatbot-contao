@@ -130,6 +130,7 @@
 </div>
 
 <script src="/bundles/chatbot/js/marked.min.js"></script>
+<script src="/bundles/chatbot/js/chatbot-common.js?v={{ "now"|date("U") }}"></script>
 <script src="/bundles/chatbot/js/search.js?v={{ "now"|date("U") }}"></script>
 {% if no_api_key is not defined or not no_api_key %}
 <script>
@@ -211,23 +212,31 @@
             + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
     }
 
+    // Titel und URLs stammen aus den Seiten und damit von Redakteuren - als Text einsetzen,
+    // nicht als HTML.
+    function esc(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function renderRow(item) {
         const tr = document.createElement('tr');
         tr.className = 'chatbot-admin__row';
         tr.dataset.externalId = item.externalId || '';
         tr.innerHTML =
             '<td>' +
-                '<div class="chatbot-admin__cell-title">' + (item.title || '') + '</div>' +
-                '<div class="chatbot-admin__cell-url">' + (item.url || '') + '</div>' +
+                '<div class="chatbot-admin__cell-title">' + esc(item.title) + '</div>' +
+                '<div class="chatbot-admin__cell-url">' + esc(item.url) + '</div>' +
             '</td>' +
-            '<td class="chatbot-admin__cell-muted">' + (item.externalId || '') + '</td>' +
-            '<td><span class="chatbot-admin__badge">' + (item.chunkCount || 1) + '</span></td>' +
-            '<td class="chatbot-admin__cell-muted">' + (item.language || '') + '</td>' +
+            '<td class="chatbot-admin__cell-muted">' + esc(item.externalId) + '</td>' +
+            '<td><span class="chatbot-admin__badge">' + esc(item.chunkCount || 1) + '</span></td>' +
+            '<td class="chatbot-admin__cell-muted">' + esc(item.language) + '</td>' +
             '<td class="chatbot-admin__cell-muted">' + formatDate(item.createdAt) + '</td>' +
             '<td class="chatbot-admin__cell-actions">' +
                 '<button class="chatbot-admin__btn chatbot-admin__btn--danger chatbot-admin__btn--small chatbot-delete-btn" ' +
-                    'data-external-id="' + (item.externalId || '') + '" ' +
-                    'data-title="' + (item.title || '').replace(/"/g, '&quot;') + '">' +
+                    'data-external-id="' + esc(item.externalId) + '" ' +
+                    'data-title="' + esc(item.title) + '">' +
                     'Löschen' +
                 '</button>' +
             '</td>';

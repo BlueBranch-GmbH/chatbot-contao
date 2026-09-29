@@ -4,7 +4,7 @@
  * Wird von zwei Modulen genutzt (chatbot_ask und dem Suchfeld von
  * chatbot_generate_search), deshalb kennt die Klasse nur das Feld und die Fragen.
  */
-class ChatbotTypedPlaceholder {
+window.ChatbotTypedPlaceholder = window.ChatbotTypedPlaceholder || class ChatbotTypedPlaceholder {
     constructor(input, questions, options = {}) {
         this.input = input;
         this.questions = Array.isArray(questions) ? questions.filter(q => typeof q === 'string' && q.trim() !== '') : [];
@@ -132,4 +132,4 @@ class ChatbotTypedPlaceholder {
 
         this.schedule(this.deleteDelay);
     }
-}
+};

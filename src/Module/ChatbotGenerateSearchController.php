@@ -76,6 +76,9 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
 
         // Check if API key is present
         $template->hasApiKey = !empty($this->chatbotApi->getApiKey($pageModel));
+        // Den Hinweis auf einen fehlenden API-Schluessel sehen nur eingeloggte Redakteure;
+        // Besuchern bleibt das Modul dann einfach leer.
+        $template->showConfigHint = System::getContainer()->get('contao.security.token_checker')->hasBackendUser();
 
         // Native Contao search results (used by the "full" template variant, which
         // shows the search field, the chat answer and the regular search results)

@@ -52,6 +52,9 @@ class ChatbotAskController extends AbstractFrontendModuleController
         $pageModel = $this->getPageModel();
 
         $template->hasApiKey = !empty($this->chatbotApi->getApiKey($pageModel));
+        // Den Hinweis auf einen fehlenden API-Schluessel sehen nur eingeloggte Redakteure;
+        // Besuchern bleibt das Modul dann einfach leer.
+        $template->showConfigHint = System::getContainer()->get('contao.security.token_checker')->hasBackendUser();
         $template->typedQuestions = TypedQuestions::fromModel($model);
 
         $template->language = $this->resolveLanguageName($pageModel);

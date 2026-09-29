@@ -15,9 +15,11 @@
     </form>
 
 <?php if (!$this->hasApiKey): ?>
+    <?php if ($this->showConfigHint): ?>
     <div class="chatbot-error-message" style="background: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">
         <strong>Hinweis:</strong> Der Chatbot ist derzeit nicht konfiguriert (API-Key fehlt).
     </div>
+    <?php endif; ?>
 <?php elseif ($this->query): ?>
     <div class="chatbot-response">
         <div class="chatbot-loading" style="display:none;">Antwort wird generiert...</div>
@@ -63,7 +65,7 @@
 
 <?php if ($this->hasApiKey && $this->query): ?>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/marked.min.js') ?>"></script>
-<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/stream-token.js') ?>"></script>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot-common.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/search.js') ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {

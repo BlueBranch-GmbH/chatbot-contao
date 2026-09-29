@@ -4,7 +4,7 @@
  * Die Antwort selbst rendert ChatbotSearch -- gleicher Stream, gleiche Darstellung
  * wie beim Such-Modul, nur ohne Trefferliste der Contao-Suche.
  */
-class ChatbotAsk {
+window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
     constructor(config) {
         this.container = document.getElementById(config.containerId);
         if (!this.container) return;
@@ -83,4 +83,4 @@ class ChatbotAsk {
             this.form.setAttribute('aria-busy', busy ? 'true' : 'false');
         }
     }
-}
+};

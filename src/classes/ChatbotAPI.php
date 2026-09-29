@@ -13,6 +13,18 @@ class ChatbotAPI
     private LoggerInterface $logger;
     private string $apiUrl = 'https://api.chatbot.bluebranch.de';
 
+    /**
+     * Zeitlimits fuer die API. Ohne sie wartet PHP bei einer haengenden Gegenstelle bis zum
+     * Standard-Timeout von 60 s je Leseversuch - ein Stream sogar unbegrenzt - und haelt so
+     * lange einen PHP-Worker belegt.
+     */
+    private const TIMEOUT = 30;
+    private const STREAM_IDLE_TIMEOUT = 60;
+    private const STREAM_MAX_DURATION = 300;
+
+    /** API-Schluessel je Root-Seite, damit nicht jeder Aufruf die Seitenhierarchie laedt. */
+    private array $apiKeyCache = [];
+
     public function __construct(HttpClientInterface $httpClient, LoggerInterface $logger)
     {
         $this->httpClient = $httpClient;
@@ -110,6 +122,8 @@ class ChatbotAPI
                 'Accept' => 'text/event-stream',
             ],
             'buffer' => false,
+            'timeout' => self::STREAM_IDLE_TIMEOUT,
+            'max_duration' => self::STREAM_MAX_DURATION,
         ];
 
         if (!empty($payload['chat_context'])) {
@@ -145,6 +159,8 @@ class ChatbotAPI
                 'x-api-key' => $apiToken, // Einige Endpunkte nutzen eventuell x-api-key
                 'Accept' => 'application/json',
             ]);
+
+            $options['timeout'] = $options['timeout'] ?? self::TIMEOUT;
 
             $response = $this->httpClient->request($method, $this->apiUrl . $endpoint, $options);
             $statusCode = $response->getStatusCode();
@@ -197,10 +213,15 @@ class ChatbotAPI
         if ($pageModel instanceof PageModel) {
             // loadDetails() stellt sicher, dass rootId (und andere Details) geladen werden
             $pageModel->loadDetails();
-            $objRootPage = PageModel::findById($pageModel->rootId);
+            $rootId = (int) $pageModel->rootId;
 
-            if ($objRootPage instanceof PageModel && !empty($objRootPage->chatbot_api_key)) {
-                return (string)$objRootPage->chatbot_api_key;
+            if (!\array_key_exists($rootId, $this->apiKeyCache)) {
+                $objRootPage = PageModel::findById($rootId);
+                $this->apiKeyCache[$rootId] = $objRootPage instanceof PageModel ? (string) $objRootPage->chatbot_api_key : '';
+            }
+
+            if ('' !== $this->apiKeyCache[$rootId]) {
+                return $this->apiKeyCache[$rootId];
             }
         }
 
