@@ -11,6 +11,9 @@ Contao-Suche.
 Der API-Schlüssel bleibt dabei auf dem Server: Der Browser spricht ausschließlich mit Contao,
 Contao spricht mit der API.
 
+
+> Stand der Entwicklung und offene ToDos: [docs/stand-und-todos.md](docs/stand-und-todos.md)
+
 ## So funktioniert die Contao-Integration
 
 Nach der Installation brauchst du nur einen API-Schlüssel – und kannst direkt loslegen:
