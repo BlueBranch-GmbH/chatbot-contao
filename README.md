@@ -151,6 +151,49 @@ Für die KI-Wissensbasis werden diese Markierungen bewusst **ignoriert**, damit 
 Nachrichtenlisten und ähnliche dynamische Bereiche beantwortbar bleiben. Sie wirken auf die
 klassische Contao-Suche.
 
+## Fragen, Antworten und Feedback
+
+**Speichern:** Unter *System → Einstellungen → Fragen und Antworten* lässt sich einschalten, dass
+jede Frage samt Antwort in der Tabelle `tl_chatbot_log` landet – für spätere Auswertungen. Es
+wird **keine** IP-Adresse, kein User-Agent und keine Sitzungskennung gespeichert; E-Mail-Adressen,
+Telefonnummern und IBANs in Fragen und Kommentaren werden maskiert. Die Aufbewahrung ist
+einstellbar (Standard 180 Tage, 0 = unbegrenzt).
+
+**Feedback:** Unter *System → Einstellungen → Fragen, Antworten und Feedback* steht die Vorgabe
+*Feedback zu Antworten abfragen*; in jedem Modul (Widget, Frage, Suche) lässt sie sich mit
+*Feedback abfragen* auf „An“ oder „Aus“ setzen.
+Unter jeder Antwort erscheinen dann 👍/👎; beim Daumen nach unten kann der Besucher kurz angeben,
+was nicht gepasst hat (max. 1.000 Zeichen, ohne HTML). Eine bewertete Antwort wird auch dann
+samt Frage gespeichert, wenn das Speichern aller Fragen aus ist.
+
+**Ansehen und exportieren:** *BlueBranch Chatbot → Fragen & Feedback* listet die Einträge mit
+Filtern (Bewertung, Quelle, Website, Suche), Löschen und **CSV-Export** (UTF-8, Semikolon,
+Excel-tauglich; Formeln werden entschärft).
+
+## Chat exportieren und Verlauf
+
+Besucher können ihren Chat über das Download-Symbol im Kopf des Widgets als **Text (.txt)** oder
+**WebVTT (.vtt)** herunterladen – die Datei entsteht im Browser. Der Verlauf im `localStorage`
+enthält jetzt auch die Antworten samt Quellen und Bewertung; eine Antwort, die beim Seitenwechsel
+noch lief, steht danach mit dem Hinweis „Antwort unterbrochen“ da.
+
+## Zusatzinhalte
+
+*BlueBranch Chatbot → Zusatzinhalte* nimmt Inhalte ohne eigene Seite auf: **Texte** für
+Meta-Infos (Öffnungszeiten, Ansprechpartner, Hinweise) und **Dateien** (TXT, MD, CSV, PDF, DOCX,
+ODT, HTML; max. 20 MB). Der Text wird auf dem eigenen Server ausgelesen (PDF über
+`smalot/pdfparser`), an die API geht **nur Text** – nie die Datei – und keine URL. Solche Inhalte
+erscheinen deshalb nicht als Link unter den Antworten. Speichern überträgt, Deaktivieren und
+Löschen entfernt; eine im Dateimanager ersetzte Datei wird automatisch neu übertragen.
+
+## Zeitgesteuerte Inhalte
+
+Läuft eine Seite, ein Artikel oder ein Inhaltselement über *Anzeigen ab/bis* an oder ab, prüft
+ein Cronjob das alle 15 Minuten: Nicht mehr sichtbare Seiten verlassen sofort den KI-Index, bei
+geänderten Seiten wird die Seite einmal abgerufen und neu trainiert. Vorher geschah das erst beim
+nächsten Besuch der Seite bzw. beim täglichen Bereinigungslauf. Der Abruf braucht, dass der
+Server seine eigene Domain erreicht; sonst bleibt es beim nächsten Besuch.
+
 ## Trainierte Inhalte einsehen
 
 Das Backend-Modul *BlueBranch Chatbot → Trainierte Seiten* zeigt, was die Wissensbasis
@@ -385,6 +428,22 @@ Two content elements delimit areas that should stay out of the search index:
 These markers are deliberately **ignored** for the AI knowledge base, so that news lists and
 similar dynamic areas remain answerable. They apply to the classic Contao search.
 
+## Questions, answers and feedback
+
+- **Storing** (*System → Settings → Questions and answers*): every question and answer is saved to
+  `tl_chatbot_log` – no IP address, user agent or session ID; e-mail addresses, phone numbers and
+  IBANs are masked. Retention is configurable (default 180 days).
+- **Feedback** (checkbox *Ask for feedback* in each module): 👍/👎 below every answer, a short
+  comment on 👎. A rated answer is stored even when storing is switched off.
+- **Back end** *BlueBranch Chatbot → Questions & feedback*: filters, deletion and CSV export.
+- **Chat export**: visitors download their chat as `.txt` or `.vtt`. Answers now survive page
+  changes in the browser history.
+- **Additional content** (*BlueBranch Chatbot → Additional content*): texts and files (TXT, MD,
+  CSV, PDF, DOCX, ODT, HTML) are converted to text locally; only text is sent to the API, never a
+  file and never a URL.
+- **Scheduled content**: a cron job (every 15 minutes) removes expired pages and refreshes pages
+  whose articles or content elements started or stopped.
+
 ## Reviewing trained content
 
 The back end module *BlueBranch Chatbot → Trained pages* shows what the knowledge base actually
@@ -488,6 +547,49 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.3.0 - 2026-10-06
+
+- Fragen und Antworten optional in `tl_chatbot_log` speichern (ohne Nutzerdaten, mit Maskierung
+  von E-Mail, Telefon und IBAN, einstellbare Aufbewahrung)
+- Feedback 👍/👎: Vorgabe unter *Einstellungen*, je Modul „Standard / An / Aus“, bei 👎 mit kurzem Kommentar; neue Route
+  `POST /bluebranch/chatbot/api/v1/feedback`, abgesichert über den Sitzungs-Token und eine
+  zufällige Kennung je Antwort
+- Backend-Modul *Fragen & Feedback* mit Filtern, Löschen und CSV-Export
+- Chat-Export als `.txt` oder `.vtt` im Widget; der Verlauf speichert dafür Beginn und Ende jeder
+  Antwort, die VTT-Datei trägt die echte Uhrzeit je Cue, Markdown wird zu reinem Text
+- Antworten (mit Quellen und Bewertung) bleiben über Seitenwechsel im Verlauf, auch wenn sie
+  mitten im Stream verlassen wurden
+- Backend-Modul *Zusatzinhalte*: Texte und Dateien (TXT, MD, CSV, PDF, DOCX, ODT, HTML), lokal in
+  Text umgewandelt; neue Abhängigkeit `smalot/pdfparser`
+- Quellen ohne URL werden unter Antworten nicht mehr angezeigt
+- Cronjob für zeitgesteuerte Seiten, Artikel und Inhaltselemente (alle 15 Minuten)
+- Zusatzinhalte bleiben mit dem Index im Gleichstand: geänderte Datei (auch per FTP ersetzt) →
+  neu übertragen, Datei gelöscht → aus dem Index, Eintrag wiederhergestellt oder alte Version
+  zurückgespielt → neu übertragen; der Wechsel der Art im Formular überträgt nichts mehr
+- Backend-Seiten *Trainierte Seiten* und *Fragen & Feedback* im Dark-Mode lesbar (Contaos
+  Farbvariablen statt fester Farben)
+- API-Adresse für Test- und Staging-Umgebungen über `CHATBOT_API_URL` einstellbar (`http://` nur für
+  lokale Ziele)
+- **Sicherheit** (Review vom 06.10.2026):
+  - Geschützte Seiten (Mitgliederbereiche, auch geerbt) kommen nicht mehr in den KI-Index und werden
+    entfernt – bisher landeten sie dort, sobald „Geschützte Seiten indexieren“ aktiv war
+  - Seite und Modul einer Anfrage sind per HMAC an die gerenderte Seite gebunden; eine fremde
+    `pageId` wählt nicht mehr den API-Key einer anderen Website. **Nach dem Update den Seiten-Cache
+    leeren**, sonst fehlt die Signatur in zwischengespeicherten Seiten
+  - Ratenlimit je Client und global für Token, Antworten und Feedback; Längengrenzen für Frage
+    (4.000 Zeichen) und Verlauf (8.000); Streams höchstens 180 s
+  - Backend-Stream-Routen nur für Administratoren; Token nicht mehr als URL-Parameter
+  - CSV-Export: Ausbruch aus Zellen über `\"` verhindert (leeres Escape-Zeichen)
+  - Bot-Name und Icon-Pfad im Widget-HTML escaped
+  - Nicht-Stream-Route gibt nur Antwort und Quellen zurück und reicht nur bekannte Felder an die API
+  - Antworten werden im Protokoll ebenfalls maskiert; `summarize` nur für echte Zusammenfassungen
+  - Verlauf im Browser nach 24 h ohne neue Nachricht verworfen
+  - Fehlerhafte Zusatzdateien werden nicht alle 15 Minuten erneut geparst; PDF-Speicherlimit
+  - Cron ruft nur Seiten mit eingetragener Domain ab (kein Host-Header-SSRF)
+  - „Alle neu übertragen“ nur mit Anfrage-Token; Debug-Dateien ohne API-Key
+- Nach dem Update: `composer update` (für `smalot/pdfparser`), dann `contao:migrate` – neue
+  Tabellen `tl_chatbot_log`, `tl_chatbot_content` und Feld `tl_module.chatbot_feedback`
 
 ### 1.2.4 - 2026-09-29
 

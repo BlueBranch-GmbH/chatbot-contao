@@ -20,7 +20,7 @@ class ChatbotAPI
      */
     private const TIMEOUT = 30;
     private const STREAM_IDLE_TIMEOUT = 60;
-    private const STREAM_MAX_DURATION = 300;
+    private const STREAM_MAX_DURATION = 180;
 
     /** API-Schluessel je Root-Seite, damit nicht jeder Aufruf die Seitenhierarchie laedt. */
     private array $apiKeyCache = [];
@@ -29,14 +29,22 @@ class ChatbotAPI
     {
         $this->httpClient = $httpClient;
         $this->logger = $logger;
+
+        // Fuer Test- und Staging-Umgebungen: eine andere API ueber die Umgebungsvariable
+        // CHATBOT_API_URL (z. B. in der .env.local). Ohne sie gilt die produktive Adresse.
+        $url = $_SERVER['CHATBOT_API_URL'] ?? $_ENV['CHATBOT_API_URL'] ?? '';
+        // http nur fuer lokale Ziele: Der API-Key ginge sonst im Klartext ueber die Leitung.
+        if (\is_string($url) && (preg_match('~^https://~', $url) || preg_match('~^http://(localhost|127\.0\.0\.1|\[::1\]|[^/:]+\.(test|localhost))(:\d+)?(/|$)~', $url))) {
+            $this->apiUrl = rtrim($url, '/');
+        }
     }
 
     /**
      * Train new content for the chatbot.
      */
-    public function trainContent(array $payload, $page = null): array
+    public function trainContent(array $payload, $page = null, array $options = []): array
     {
-        return $this->sendRequest('POST', '/api/v1/chatbot-ai/content', $page, ['json' => $payload]);
+        return $this->sendRequest('POST', '/api/v1/chatbot-ai/content', $page, array_merge($options, ['json' => $payload]));
     }
 
     /**
@@ -72,7 +80,7 @@ class ChatbotAPI
      */
     public function deleteContent(string $id, $page = null, array $options = []): array
     {
-        return $this->sendRequest('DELETE', '/api/v1/chatbot-ai/content/' . $id, $page, $options);
+        return $this->sendRequest('DELETE', '/api/v1/chatbot-ai/content/' . rawurlencode($id), $page, $options);
     }
 
     /**

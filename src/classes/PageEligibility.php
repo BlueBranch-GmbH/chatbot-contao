@@ -22,6 +22,9 @@ class PageEligibility
      */
     private array $cache = [];
 
+    /** Merker fuer isPublic(), aus demselben Grund. */
+    private array $publicCache = [];
+
     /** Merker fuer excludedFromSearchSql(): die Spalte aendert sich innerhalb eines Requests nicht. */
     private static ?string $excludedFromSearchSql = null;
 
@@ -106,7 +109,34 @@ class PageEligibility
             return false;
         }
 
-        return !$this->isExcludedFromAnswers($pageId);
+        return $this->isPublic($pageId) && !$this->isExcludedFromAnswers($pageId);
+    }
+
+    /**
+     * Ob die Seite ohne Anmeldung sichtbar ist - also weder sie noch ein Vorfahr geschuetzt ist.
+     * Geschuetzte Seiten duerfen nie in den oeffentlich abfragbaren KI-Index.
+     */
+    public function isPublic(int $pageId): bool
+    {
+        if ($pageId < 1) {
+            return true;
+        }
+
+        if (isset($this->publicCache[$pageId])) {
+            return $this->publicCache[$pageId];
+        }
+
+        $ids = array_merge([$pageId], $this->parentIds($pageId));
+
+        $result = Database::getInstance()
+            ->prepare(
+                'SELECT COUNT(*) AS anzahl FROM tl_page WHERE id IN ('
+                . implode(',', array_fill(0, \count($ids), '?'))
+                . ") AND protected='1'"
+            )
+            ->execute(...$ids);
+
+        return $this->publicCache[$pageId] = ((int) $result->anzahl) === 0;
     }
 
     /**
@@ -160,6 +190,7 @@ class PageEligibility
     public function reset(): void
     {
         $this->cache = [];
+        $this->publicCache = [];
     }
 
     /**

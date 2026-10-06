@@ -189,7 +189,7 @@
 
 <script>
 (function() {
-    const allItems = {{ content|json_encode|raw }};
+    const allItems = {{ content|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
     const streamToken = '{{ requestToken }}';
     const pageId = '{{ selectedPageId }}';
     const deleteUrlTemplate = '{{ path("bluebranch_chatbot_delete_content_be", {"externalId": "__EID__"}) }}';
@@ -395,12 +395,24 @@
 </script>
 
 <style>
+    /*
+     * Farben ueber Contaos Backend-Variablen (--text, --content-bg, ...): Die wechseln im
+     * Dark-Mode (html[data-color-scheme="dark"]) mit. Feste Werte bleiben nur als Rueckfall
+     * fuer Contao-Versionen ohne diese Variablen.
+     */
     .chatbot-admin {
         --chatbot-admin-accent: #2563eb;
-        --chatbot-admin-text: #1f2430;
-        --chatbot-admin-muted: #6b7280;
-        --chatbot-admin-border: #e5e7eb;
-        --chatbot-admin-bg-subtle: #f8f9fb;
+        --chatbot-admin-text: var(--text, #1f2430);
+        --chatbot-admin-muted: var(--gray, #6b7280);
+        --chatbot-admin-border: var(--content-border, #e5e7eb);
+        --chatbot-admin-bg-subtle: var(--table-header, #f8f9fb);
+        --chatbot-admin-card: var(--content-bg, #fff);
+        --chatbot-admin-error-bg: #fdf1f0;
+        --chatbot-admin-error-text: #7d2b26;
+        --chatbot-admin-warn-bg: #fff8e6;
+        --chatbot-admin-warn-text: #6b5000;
+        --chatbot-admin-ok-bg: #eef7ee;
+        --chatbot-admin-ok-text: #24541f;
         color: var(--chatbot-admin-text);
         max-width: 1200px;
     }
@@ -428,22 +440,32 @@
         font-size: 0.9rem;
     }
 
+    html[data-color-scheme="dark"] .chatbot-admin {
+        --chatbot-admin-accent: #4f8cff;
+        --chatbot-admin-error-bg: rgb(204 51 51 / 18%);
+        --chatbot-admin-error-text: #f3b2ae;
+        --chatbot-admin-warn-bg: rgb(224 168 0 / 15%);
+        --chatbot-admin-warn-text: #f0d48a;
+        --chatbot-admin-ok-bg: rgb(88 155 14 / 18%);
+        --chatbot-admin-ok-text: #b7e08a;
+    }
+
     .chatbot-admin__notice--error {
-        background: #fdf1f0;
+        background: var(--chatbot-admin-error-bg);
         border-color: #d9534f;
-        color: #7d2b26;
+        color: var(--chatbot-admin-error-text);
     }
 
     .chatbot-admin__notice--tier {
-        background: #fff8e6;
+        background: var(--chatbot-admin-warn-bg);
         border-color: #e0a800;
-        color: #6b5000;
+        color: var(--chatbot-admin-warn-text);
     }
 
     .chatbot-admin__notice--premium {
-        background: #eef7ee;
+        background: var(--chatbot-admin-ok-bg);
         border-color: #3c8c40;
-        color: #24541f;
+        color: var(--chatbot-admin-ok-text);
     }
 
     .chatbot-admin__tier-badge {
@@ -464,9 +486,9 @@
     }
 
     .chatbot-admin__notice--warning {
-        background: #fff8e6;
+        background: var(--chatbot-admin-warn-bg);
         border-color: #e0a800;
-        color: #6b5000;
+        color: var(--chatbot-admin-warn-text);
     }
 
     .chatbot-admin__notice a {
@@ -475,7 +497,7 @@
     }
 
     .chatbot-admin__card {
-        background: #fff;
+        background: var(--chatbot-admin-card);
         border: 1px solid var(--chatbot-admin-border);
         border-radius: 10px;
         padding: 20px;

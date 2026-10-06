@@ -22,6 +22,7 @@
 </div>
 </div>
 
+<?php if ($this->feedback): ?><link rel="stylesheet" href="<?= \Bluebranch\Chatbot\classes\Asset::url('css/chatbot.css') ?>"><?php endif; ?>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/marked.min.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot-common.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/search.js') ?>"></script>
@@ -31,7 +32,11 @@
             containerId: 'chatbot-search-<?= $this->id ?>',
             query: <?= json_encode((string) $this->query, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
             language: <?= json_encode((string) $this->language, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
-            pageId: <?= json_encode((string) $this->pageId, JSON_HEX_TAG | JSON_HEX_AMP) ?>
+            pageId: <?= json_encode((string) $this->pageId, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+            moduleId: <?= (int) $this->moduleId ?>,
+            sig: <?= json_encode((string) $this->sig) ?>,
+            feedback: <?= $this->feedback ? 'true' : 'false' ?>,
+            strings: <?= json_encode($this->feedbackStrings, JSON_HEX_TAG | JSON_HEX_AMP) ?>
         });
         chatbot.init();
     });

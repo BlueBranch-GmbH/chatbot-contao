@@ -2,7 +2,7 @@
 
 $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = str_replace(
     ';{chmod_legend}',
-    ';{chatbot_legend},chatbot_info,chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
+    ';{chatbot_legend},chatbot_info,chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_log_legend},chatbot_feedback_default,chatbot_log_enabled,chatbot_log_retention;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
     $GLOBALS['TL_DCA']['tl_settings']['palettes']['default']
 );
 
@@ -89,4 +89,29 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_purge_interval'] = [
     'reference' => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_purge_interval_options'],
     'default'   => 1440,
     'eval'      => ['tl_class' => 'w50', 'includeBlankOption' => false],
+];
+
+/*
+ * Fragen und Antworten der Besucher in tl_chatbot_log festhalten. Ohne diesen Schalter entsteht
+ * eine Zeile nur, wenn ein Besucher eine Antwort bewertet (Feedback im Modul).
+ */
+$GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_log_enabled'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_enabled'],
+    'inputType' => 'checkbox',
+    'eval'      => ['tl_class' => 'w50 m12'],
+];
+
+$GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_log_retention'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_retention'],
+    'inputType' => 'text',
+    'eval'      => ['tl_class' => 'w50', 'rgxp' => 'natural', 'maxlength' => 5],
+];
+
+/*
+ * Vorgabe fuer alle Chatbot-Module; im Modul laesst sie sich je Modul an- oder abschalten.
+ */
+$GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_feedback_default'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_feedback_default'],
+    'inputType' => 'checkbox',
+    'eval'      => ['tl_class' => 'w50 m12'],
 ];

@@ -4,7 +4,7 @@ use Contao\BackendUser;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\DataContainer;
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param,chatbot_typed_questions;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param,chatbot_typed_questions,chatbot_feedback;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'label'                   => &$GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'],
@@ -14,7 +14,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'sql'                     => "varchar(64) NOT NULL default 'keywords'"
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions,chatbot_feedback;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 /**
  * Wird im Frontend Zeichen fuer Zeichen als Platzhalter ins Eingabefeld getippt.
@@ -28,7 +28,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_typed_questions'] = [
     'sql'       => "blob NULL",
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{config_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{config_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer,chatbot_feedback;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_widget_name'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_name'],
@@ -101,5 +101,22 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_widget_unstyled'] = [
     'exclude'   => true,
     'inputType' => 'checkbox',
     'eval'      => ['tl_class' => 'w50 m12'],
+    'sql'       => "char(1) NOT NULL default ''",
+];
+
+/*
+ * Daumen hoch/runter unter jeder Antwort. Eine Bewertung legt in tl_chatbot_log eine Zeile mit
+ * Frage und Antwort an - auch wenn das Speichern in den Einstellungen aus ist.
+ *
+ * '' = Vorgabe aus den Einstellungen, '1' = an, '0' = aus. Bis 1.3.0 war das eine Checkbox
+ * mit '1'/'' - beide Werte behalten ihre Bedeutung, solange die Vorgabe aus ist.
+ */
+$GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_feedback'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'],
+    'exclude'   => true,
+    'inputType' => 'select',
+    'options'   => ['1', '0'],
+    'reference' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'],
+    'eval'      => ['includeBlankOption' => true, 'blankOptionLabel' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'], 'tl_class' => 'w50'],
     'sql'       => "char(1) NOT NULL default ''",
 ];

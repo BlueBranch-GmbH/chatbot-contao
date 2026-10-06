@@ -23,3 +23,7 @@ $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_summarize'] = ['"Inhalt zu
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_disclaimer'] = ['Datenschutz-Hinweis ausblenden', 'Blendet den Hinweis "Private Chats & Hosted in Germany" am unteren Rand des Chat-Fensters für dieses Modul aus, auch wenn er global aktiviert ist.'];
 
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_unstyled'] = ['Kein Standard-Styling', 'Lädt kein CSS der Erweiterung. Der Chat bleibt voll funktionsfähig, das Erscheinungsbild muss dann vollständig über eigenes CSS gestaltet werden.'];
+
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'] = ['Feedback abfragen', 'Zeigt unter jeder Antwort Daumen hoch/runter; beim Daumen nach unten kann der Besucher kurz angeben, was nicht gepasst hat. Bewertete Antworten werden samt Frage gespeichert (Backend: „Fragen & Feedback“). Standard: die Vorgabe aus System → Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'] = ['1' => 'An', '0' => 'Aus'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'] = 'Standard (wie in den Einstellungen)';

@@ -1,0 +1,150 @@
+<div id="tl_buttons">
+    <a href="{{ path('contao_backend') }}" class="header_back"
+       title="{{ 'MSC.backBT'|trans([], 'contao_default') }}"
+       accesskey="b">{{ 'MSC.backBT'|trans([], 'contao_default') }}</a>
+</div>
+
+{#
+  Alles hier ist Besuchereingabe oder Modellausgabe und laeuft durch Twigs Autoescape.
+  Kein |raw in dieser Datei.
+#}
+<div class="chatbot-log">
+    <div class="chatbot-log__header">
+        <h2>Chatbot &ndash; Fragen &amp; Feedback</h2>
+        <p class="chatbot-log__subtitle">
+            {{ stats.total }} Einträge &middot; {{ stats.up }} × 👍 &middot; {{ stats.down }} × 👎
+            {% if not logEnabled %}
+                &middot; Speichern aller Fragen ist aus – hier stehen nur bewertete Antworten
+                (einschaltbar unter Einstellungen → Fragen und Antworten).
+            {% endif %}
+        </p>
+    </div>
+
+    <form method="get" class="chatbot-log__filter">
+        {% if baseQuery.do is defined %}<input type="hidden" name="do" value="{{ baseQuery.do }}">{% endif %}
+        <label>Bewertung
+            <select name="rating" class="tl_select">
+                <option value="any" {% if filter.rating == 'any' %}selected{% endif %}>Alle</option>
+                <option value="down" {% if filter.rating == 'down' %}selected{% endif %}>👎 Nicht hilfreich</option>
+                <option value="up" {% if filter.rating == 'up' %}selected{% endif %}>👍 Hilfreich</option>
+                <option value="none" {% if filter.rating == 'none' %}selected{% endif %}>Ohne Bewertung</option>
+            </select>
+        </label>
+        <label>Quelle
+            <select name="source" class="tl_select">
+                <option value="">Alle</option>
+                {% for s in sources %}
+                    <option value="{{ s }}" {% if filter.source == s %}selected{% endif %}>{{ {'widget': 'Chat-Widget', 'ask': 'Frage-Modul', 'search': 'Suche'}[s] ?? s }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% if roots|length > 1 %}
+        <label>Website
+            <select name="root" class="tl_select">
+                <option value="">Alle</option>
+                {% for r in roots %}
+                    <option value="{{ r.id }}" {% if filter.root == r.id %}selected{% endif %}>{{ r.title }}{% if r.dns %} ({{ r.dns }}){% endif %}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% endif %}
+        <label class="chatbot-log__search">Suche
+            <input type="search" name="q" value="{{ filter.q }}" class="tl_text" placeholder="Frage, Antwort oder Kommentar …">
+        </label>
+        <button type="submit" class="tl_submit">Filtern</button>
+        <a class="tl_submit chatbot-log__export" href="{{ path('bluebranch_chatbot_log_export', exportQuery) }}">CSV exportieren</a>
+    </form>
+
+    <form method="post" class="chatbot-log__list">
+        <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+
+        {% if rows is empty %}
+            <p class="chatbot-log__empty">Keine Einträge.</p>
+        {% else %}
+        <table class="chatbot-log__table">
+            <thead>
+            <tr>
+                <th><input type="checkbox" aria-label="Alle auswählen" onclick="this.closest('table').querySelectorAll('tbody input[type=checkbox]').forEach(function (c) { c.checked = this.checked; }, this)"></th>
+                <th>Datum</th>
+                <th>Frage &amp; Antwort</th>
+                <th>Bewertung</th>
+                <th>Seite</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td><input type="checkbox" name="ids[]" value="{{ row.id }}" aria-label="Eintrag {{ row.id }} auswählen"></td>
+                    <td class="chatbot-log__date">{{ row.tstamp|date('d.m.Y H:i') }}<br><small>{{ {'widget': 'Chat-Widget', 'ask': 'Frage-Modul', 'search': 'Suche'}[row.source] ?? row.source }}</small></td>
+                    <td>
+                        <div class="chatbot-log__question">{{ row.question }}</div>
+                        <details>
+                            <summary>Antwort anzeigen</summary>
+                            <div class="chatbot-log__answer">{{ row.answer }}</div>
+                            {% if row.sources is not empty %}
+                                <ul class="chatbot-log__sources">
+                                    {% for source in row.sources %}
+                                        <li>{{ source.title ?: source.url }}{% if source.url %} – <code>{{ source.url }}</code>{% endif %}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </details>
+                    </td>
+                    <td class="chatbot-log__rating">
+                        {% if row.rating == 'up' %}👍{% elseif row.rating == 'down' %}👎{% else %}–{% endif %}
+                        {% if row.comment %}<div class="chatbot-log__comment">{{ row.comment }}</div>{% endif %}
+                    </td>
+                    <td>{{ row.page_title }}{% if roots|length > 1 and row.root_title %}<br><small>{{ row.root_title }}</small>{% endif %}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <div class="chatbot-log__actions">
+            {% if rows is not empty %}
+                <button type="submit" class="tl_submit" onclick="return confirm('Ausgewählte Einträge löschen?')">Ausgewählte löschen</button>
+            {% endif %}
+            {% if stats.total > 0 %}
+                <button type="submit" name="delete_all" value="1" class="tl_submit chatbot-log__danger" onclick="return confirm('Wirklich alle Einträge löschen?')">Alle löschen</button>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if pages > 1 %}
+        <nav class="chatbot-log__pagination" aria-label="Seiten">
+            {% for p in 1..pages %}
+                {% if p == page %}
+                    <strong>{{ p }}</strong>
+                {% elseif p <= 2 or p > pages - 2 or (p >= page - 2 and p <= page + 2) %}
+                    <a href="?{{ baseQuery|merge({'page': p})|url_encode }}">{{ p }}</a>
+                {% elseif p == 3 or p == pages - 2 %}
+                    <span>…</span>
+                {% endif %}
+            {% endfor %}
+        </nav>
+    {% endif %}
+</div>
+
+<style>
+    .chatbot-log { padding: 15px; }
+    .chatbot-log__header h2 { margin: 0 0 4px; font-size: 1.3em; }
+    .chatbot-log__subtitle { margin: 0 0 16px; color: var(--gray, #6b7280); }
+    .chatbot-log__filter { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 16px; }
+    .chatbot-log__filter label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+    .chatbot-log__search input { min-width: 240px; }
+    .chatbot-log__export { text-decoration: none; }
+    .chatbot-log__table { width: 100%; border-collapse: collapse; }
+    .chatbot-log__table th, .chatbot-log__table td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--content-border, #e5e7eb); }
+    .chatbot-log__date { white-space: nowrap; }
+    .chatbot-log__question { font-weight: 600; white-space: pre-wrap; margin-bottom: 4px; }
+    .chatbot-log__answer, .chatbot-log__comment { white-space: pre-wrap; }
+    .chatbot-log__answer { margin-top: 6px; padding: 8px; background: var(--table-header, #f3f4f6); border-radius: 4px; }
+    .chatbot-log__comment { margin-top: 6px; font-style: italic; max-width: 320px; }
+    .chatbot-log__rating { font-size: 1.1em; }
+    .chatbot-log__sources { margin: 6px 0 0 18px; }
+    .chatbot-log__actions { display: flex; gap: 10px; margin-top: 12px; }
+    .chatbot-log__danger { color: #b42318 !important; }
+    .chatbot-log__pagination { display: flex; gap: 8px; margin-top: 16px; }
+    .chatbot-log__empty { padding: 20px 0; color: var(--gray, #6b7280); }
+</style>

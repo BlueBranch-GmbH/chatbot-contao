@@ -25,6 +25,10 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
             requestToken: config.requestToken,
             language: config.language,
             pageId: config.pageId,
+            moduleId: config.moduleId,
+            sig: config.sig,
+            feedback: config.feedback,
+            strings: config.strings,
             onBusyChange: (busy) => this.setBusy(busy)
         });
 

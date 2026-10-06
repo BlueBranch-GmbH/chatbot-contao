@@ -8,6 +8,10 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         this.requestToken = config.requestToken;
         this.language = config.language || 'de';
         this.pageId = config.pageId || '';
+        this.moduleId = config.moduleId || '';
+        this.sig = config.sig || '';
+        this.feedback = config.feedback === true;
+        this.botName = config.botName || 'Chat';
         this.apiUrl = config.apiUrl || '/bluebranch/chatbot/api/v1/chat/stream';
 
         this.container = document.getElementById(this.containerId);
@@ -28,6 +32,8 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         // Stopp-Zustand wird es hier festgehalten.
         this.sendIcon = this.sendButton ? this.sendButton.innerHTML : '';
         this.badge = this.container.querySelector('.chatbot-widget__badge');
+        this.exportButton = this.container.querySelector('.chatbot-widget__export');
+        this.exportMenu = this.container.querySelector('.chatbot-widget__export-menu');
 
         this.storageKey = 'chatbot_widget_history_' + this.containerId;
         this.history = [];
@@ -49,6 +55,8 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             noAnswer: 'Entschuldigung, es konnte keine Antwort generiert werden.',
             requestError: 'Es ist ein Fehler bei der Anfrage aufgetreten.',
             source: 'Quelle',
+            interrupted: 'Antwort unterbrochen.',
+            you: 'Sie',
         }, config.strings || {});
 
         this.fontSizeSteps = [13, 14, 15, 16, 17, 18, 19, 20];
@@ -100,10 +108,33 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
 
         this.input.addEventListener('input', () => this.autoGrow());
 
+        if (this.exportButton && this.exportMenu) {
+            this.exportButton.addEventListener('click', () => this.toggleExportMenu());
+            this.exportMenu.querySelectorAll('[data-format]').forEach((item) => {
+                item.addEventListener('click', () => {
+                    this.toggleExportMenu(false);
+                    this.exportChat(item.getAttribute('data-format'));
+                });
+            });
+            document.addEventListener('click', (event) => {
+                if (!this.exportMenu.hidden && !this.exportMenu.contains(event.target) && event.target !== this.exportButton) {
+                    this.toggleExportMenu(false);
+                }
+            });
+        }
+
         this.renderSuggestions();
     }
 
+    /**
+     * Stellt den Verlauf wieder her - Fragen und Antworten samt Quellen und Bewertung.
+     *
+     * Eine Antwort, die beim Verlassen der Seite noch lief (`pending`), steht mit dem bis dahin
+     * gestreamten Text und einem Hinweis da; fortsetzen laesst sich der Stream nicht.
+     */
     loadHistory() {
+        let changed = false;
+
         try {
             const raw = localStorage.getItem(this.storageKey);
             if (!raw) return;
@@ -111,10 +142,25 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             const stored = JSON.parse(raw);
             if (!Array.isArray(stored)) return;
 
+            // Nach 24 Stunden ohne neue Nachricht beginnt der Chat leer: Auf einem geteilten Rechner
+            // soll der naechste Besucher nicht lesen, was der vorige gefragt hat.
+            const last = stored.length ? stored[stored.length - 1] : null;
+            if (last && typeof last.time === 'number' && Date.now() - last.time > 24 * 3600 * 1000) {
+                localStorage.removeItem(this.storageKey);
+                return;
+            }
+
             stored.forEach((entry) => {
                 if (!entry || (entry.role !== 'user' && entry.role !== 'bot') || typeof entry.content !== 'string') return;
+
+                if (entry.pending) {
+                    entry.pending = false;
+                    entry.interrupted = true;
+                    changed = true;
+                }
+
                 this.history.push(entry);
-                this.addMessage(entry.role, entry.content);
+                this.renderEntry(entry);
             });
 
             if (this.history.length > 0) {
@@ -122,6 +168,28 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             }
         } catch (e) {
             // localStorage unavailable (private mode, quota, ...) - just start fresh
+        }
+
+        if (changed) {
+            this.saveHistory();
+        }
+    }
+
+    renderEntry(entry) {
+        const bubble = this.addMessage(entry.role, entry.content);
+
+        if (entry.role !== 'bot') return;
+
+        if (entry.interrupted) {
+            this.appendNote(bubble, this.strings.interrupted);
+        }
+
+        if (entry.sources) {
+            this.appendSources(bubble, entry.sources);
+        }
+
+        if (entry.ref && this.feedback) {
+            this.appendFeedback(bubble, entry);
         }
     }
 
@@ -168,6 +236,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     }
 
     clearChat() {
+        this.toggleExportMenu(false);
         this.history = [];
         this.hasGreeted = false;
         this.pendingSources = null;
@@ -222,7 +291,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         setTimeout(() => {
             typingRow.remove();
             this.addMessage('bot', this.greeting);
-            this.history.push({ role: 'bot', content: this.greeting });
+            this.history.push({ role: 'bot', content: this.greeting, time: Date.now() });
             this.saveHistory();
         }, 800);
     }
@@ -334,7 +403,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         if (!text || this.isBusy) return;
 
         this.addMessage('user', text);
-        this.history.push({ role: 'user', content: text });
+        this.history.push({ role: 'user', content: text, time: Date.now() });
         this.saveHistory();
 
         this.requestAnswer(text);
@@ -350,10 +419,11 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             : this.strings.summarizeFallbackPrompt;
 
         this.addMessage('user', displayText);
-        this.history.push({ role: 'user', content: displayText });
+        this.history.push({ role: 'user', content: displayText, time: Date.now() });
         this.saveHistory();
 
-        this.requestAnswer(prompt, { includeContext: false });
+        // Gespeichert wird statt des langen Seitentexts nur ein Platzhalter.
+        this.requestAnswer(prompt, { includeContext: false, summarize: true });
     }
 
     extractPageContent() {
@@ -411,6 +481,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
 
     requestAnswer(prompt, options) {
         const includeContext = !options || options.includeContext !== false;
+        const summarize = !!(options && options.summarize);
 
         this.setBusy(true);
 
@@ -418,6 +489,9 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         let bubble = null;
         let fullAnswer = '';
         let renderPending = false;
+        let entry = null;
+        let saveTimer = null;
+        let ref = null;
         this.pendingSources = null;
 
         // Den Verlauf beim Absenden festhalten, nicht erst wenn der Token eingetroffen ist.
@@ -425,16 +499,36 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         let stream = null;
         let aborted = false;
 
+        /*
+         * Die Antwort steht schon waehrend des Streams im Verlauf (`pending`) und wird
+         * gedrosselt gesichert. Wer mitten in der Antwort die Seite wechselt, findet sie danach
+         * bis zu diesem Punkt wieder - vorher ging sie ganz verloren.
+         */
+        const scheduleSave = () => {
+            if (saveTimer) return;
+            saveTimer = setTimeout(() => {
+                saveTimer = null;
+                this.saveHistory();
+            }, 400);
+        };
+
         const finish = () => {
             this.abortRequest = null;
             if (stream) {
                 stream.close();
             }
+            if (saveTimer) {
+                clearTimeout(saveTimer);
+                saveTimer = null;
+            }
             this.setBusy(false);
             this.input.focus();
 
-            if (fullAnswer) {
-                this.history.push({ role: 'bot', content: fullAnswer });
+            if (entry) {
+                entry.content = fullAnswer;
+                entry.pending = false;
+                // Ende der Antwort - fuer die Anzeigedauer im Untertitel-Export.
+                entry.end = Date.now();
                 this.saveHistory();
 
                 if (!this.isOpen) {
@@ -464,9 +558,13 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
                         if (!bubble) {
                             typingRow.remove();
                             bubble = this.addMessage('bot', '');
+                            entry = { role: 'bot', content: '', time: Date.now(), pending: true };
+                            this.history.push(entry);
                         }
 
                         fullAnswer += data.answer;
+                        entry.content = fullAnswer;
+                        scheduleSave();
 
                         if (!renderPending) {
                             renderPending = true;
@@ -479,20 +577,45 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
                     }
 
                     if (data.sources && data.sources.length > 0) {
-                        this.pendingSources = data.sources;
+                        this.pendingSources = ChatbotSources.linkable(data.sources)
+                            .slice(0, 3)
+                            .map((source) => ({ title: source.title || '', url: source.url }));
                     }
                 } catch (e) {
                     console.error('Error parsing SSE data', e);
+                }
+            },
+            meta: (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && typeof data.ref === 'string' && /^[a-f0-9]{32}$/.test(data.ref)) {
+                        ref = data.ref;
+                    }
+                } catch (e) {
+                    // Ohne Kennung gibt es eben kein Feedback.
                 }
             },
             end: () => {
                 if (!bubble) {
                     typingRow.remove();
                     this.addMessage('bot', this.strings.noAnswer);
-                } else if (this.pendingSources) {
-                    this.appendSources(bubble, this.pendingSources);
-                    this.pendingSources = null;
+                } else {
+                    // Der letzte Chunk kann noch im Animationsframe stecken.
+                    bubble.innerHTML = ChatbotMarkdown.toHtml(fullAnswer);
+
+                    if (this.pendingSources && this.pendingSources.length > 0) {
+                        entry.sources = this.pendingSources;
+                        this.appendSources(bubble, this.pendingSources);
+                    }
+
+                    if (ref) {
+                        entry.ref = ref;
+                        if (this.feedback) {
+                            this.appendFeedback(bubble, entry);
+                        }
+                    }
                 }
+                this.pendingSources = null;
                 finish();
             },
             error: (event) => {
@@ -511,7 +634,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             if (aborted) return;
 
             this.requestToken = token;
-            stream = this.openStream(prompt, chatContext, handlers);
+            stream = this.openStream(prompt, chatContext, handlers, summarize);
         }).catch((error) => {
             if (aborted) return;
 
@@ -526,7 +649,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
      * POST statt EventSource: Frage, Chatverlauf und Token gehoeren nicht in die URL
      * (Access-Logs, Browserverlauf, Referer).
      */
-    openStream(prompt, chatContext, handlers) {
+    openStream(prompt, chatContext, handlers, summarize) {
         const body = {
             prompt: prompt,
             language: this.language,
@@ -534,6 +657,18 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
 
         if (this.pageId) {
             body.pageId = this.pageId;
+        }
+
+        if (this.moduleId) {
+            body.moduleId = this.moduleId;
+        }
+
+        if (this.sig) {
+            body.sig = this.sig;
+        }
+
+        if (summarize) {
+            body.summarize = true;
         }
 
         if (chatContext) {
@@ -564,27 +699,56 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     }
 
     appendSources(bubble, sources) {
-        const list = document.createElement('ul');
-        list.className = 'chatbot-widget__sources';
+        const list = ChatbotSources.list(sources, 'chatbot-widget__sources', 3);
 
-        sources.slice(0, 3).forEach((source) => {
-            const li = document.createElement('li');
+        if (list) {
+            bubble.appendChild(list);
+        }
+    }
 
-            if (source.url) {
-                const a = document.createElement('a');
-                a.href = source.url;
-                a.target = '_blank';
-                a.rel = 'noopener';
-                a.textContent = source.title || source.url;
-                li.appendChild(a);
-            } else {
-                li.textContent = source.title || this.strings.source;
-            }
+    appendNote(bubble, text) {
+        const note = document.createElement('p');
+        note.className = 'chatbot-widget__note';
+        note.textContent = text;
+        bubble.appendChild(note);
+    }
 
-            list.appendChild(li);
+    appendFeedback(bubble, entry) {
+        ChatbotFeedback.render(bubble, {
+            ref: entry.ref,
+            rating: entry.rating || '',
+            strings: this.strings,
+            requestToken: this.requestToken,
+            onChange: (rating) => {
+                entry.rating = rating;
+                this.saveHistory();
+            },
         });
+    }
 
-        bubble.appendChild(list);
+    toggleExportMenu(state) {
+        if (!this.exportMenu || !this.exportButton) return;
+
+        const open = typeof state === 'boolean' ? state : this.exportMenu.hidden;
+        this.exportMenu.hidden = !open;
+        this.exportButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    /**
+     * Laedt den Verlauf als Text- oder WebVTT-Datei herunter - im Browser erzeugt, ohne
+     * Serveraufruf.
+     */
+    exportChat(format) {
+        const entries = this.history.filter((entry) => entry && typeof entry.content === 'string' && entry.content !== '');
+
+        if (entries.length === 0) return;
+
+        const speaker = (entry) => (entry.role === 'user' ? this.strings.you : this.botName);
+        const vtt = format === 'vtt';
+        const content = vtt ? ChatbotExport.vtt(entries, speaker) : ChatbotExport.txt(entries, speaker, this.botName);
+        const date = new Date().toISOString().slice(0, 10);
+
+        ChatbotExport.download('chat-' + date + (vtt ? '.vtt' : '.txt'), content, vtt ? 'text/vtt' : 'text/plain');
     }
 
     scrollToBottom() {

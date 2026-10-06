@@ -7,22 +7,30 @@ if ($this->color) {
     $styleVars[] = '--chatbot-widget-accent-contrast: ' . $this->colorContrast;
 }
 if ($this->iconUrl) {
-    $styleVars[] = "--chatbot-widget-icon: url('" . $this->iconUrl . "')";
+    // Pfadsegmente kodiert: Ein ' oder ) im Dateinamen beendete sonst die CSS-URL.
+    $styleVars[] = "--chatbot-widget-icon: url('" . implode('/', array_map('rawurlencode', explode('/', $this->iconUrl))) . "')";
 }
 ?>
-<div class="chatbot-widget" id="chatbot-widget-<?= $this->id ?>" data-position="<?= $this->position ?>"<?php if ($styleVars): ?> style="<?= implode('; ', $styleVars) ?>;"<?php endif; ?>>
-    <button type="button" class="chatbot-widget__toggle" aria-expanded="false" aria-controls="chatbot-widget-panel-<?= $this->id ?>" aria-label="<?= $this->botName ?>">
+<div class="chatbot-widget" id="chatbot-widget-<?= $this->id ?>" data-position="<?= $this->position ?>"<?php if ($styleVars): ?> style="<?= \Contao\StringUtil::specialchars(implode('; ', $styleVars)) ?>;"<?php endif; ?>>
+    <button type="button" class="chatbot-widget__toggle" aria-expanded="false" aria-controls="chatbot-widget-panel-<?= $this->id ?>" aria-label="<?= \Contao\StringUtil::specialchars($this->botName) ?>">
         <span class="chatbot-widget__toggle-icon" aria-hidden="true"></span>
         <span class="chatbot-widget__badge" hidden></span>
     </button>
 
     <div class="chatbot-widget__panel" id="chatbot-widget-panel-<?= $this->id ?>" hidden>
         <div class="chatbot-widget__header">
-            <span class="chatbot-widget__header-title"><?= $this->botName ?></span>
+            <span class="chatbot-widget__header-title"><?= \Contao\StringUtil::specialchars($this->botName) ?></span>
             <div class="chatbot-widget__header-actions">
                 <div class="chatbot-widget__font-controls">
                     <button type="button" class="chatbot-widget__font-btn chatbot-widget__font-btn--inc" aria-label="<?= $this->labelFontInc ?>" title="<?= $this->labelFontInc ?>">A</button>
                     <button type="button" class="chatbot-widget__font-btn chatbot-widget__font-btn--dec" aria-label="<?= $this->labelFontDec ?>" title="<?= $this->labelFontDec ?>">A</button>
+                </div>
+                <div class="chatbot-widget__export-wrap">
+                    <button type="button" class="chatbot-widget__export" aria-haspopup="true" aria-expanded="false" aria-controls="chatbot-widget-export-<?= $this->id ?>" aria-label="<?= $this->labelExport ?>" title="<?= $this->labelExport ?>">&#10515;</button>
+                    <div class="chatbot-widget__export-menu" id="chatbot-widget-export-<?= $this->id ?>" hidden>
+                        <button type="button" data-format="txt"><?= $this->labelExportTxt ?></button>
+                        <button type="button" data-format="vtt"><?= $this->labelExportVtt ?></button>
+                    </div>
                 </div>
                 <button type="button" class="chatbot-widget__clear" aria-label="<?= $this->labelClear ?>" title="<?= $this->labelClear ?>">&#8635;</button>
                 <button type="button" class="chatbot-widget__close" aria-label="<?= $this->labelClose ?>">&times;</button>
@@ -52,6 +60,10 @@ if ($this->iconUrl) {
             'containerId' => 'chatbot-widget-' . $this->id,
             'language' => $this->language,
             'pageId' => $this->pageId,
+            'moduleId' => $this->moduleId,
+            'sig' => $this->sig,
+            'feedback' => $this->feedback,
+            'botName' => \Contao\StringUtil::decodeEntities($this->botName),
             'greeting' => $this->greeting,
             'suggestions' => $this->suggestions,
             'showSummarize' => $this->showSummarize,

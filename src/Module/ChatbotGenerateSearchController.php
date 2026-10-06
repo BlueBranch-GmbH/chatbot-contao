@@ -3,6 +3,9 @@
 namespace Bluebranch\Chatbot\Module;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\ChatLog;
+use Bluebranch\Chatbot\classes\RequestSignature;
+use Bluebranch\Chatbot\classes\FeedbackStrings;
 use Bluebranch\Chatbot\classes\TypedQuestions;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
@@ -85,6 +88,11 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
         $nativeResults = $query !== '' ? $this->performNativeSearch($query, $pageModel) : ['count' => 0, 'results' => []];
         $template->searchResultsCount = $nativeResults['count'];
         $template->searchResults = $nativeResults['results'];
+        $template->moduleId = (int) $model->id;
+        $template->feedback = ChatLog::feedbackEnabled($model);
+        // Bindet Seite und Modul an diese Ausgabe (siehe RequestSignature).
+        $template->sig = RequestSignature::sign((int) ($this->getPageModel() instanceof PageModel ? $this->getPageModel()->id : 0), (int) $model->id);
+        $template->feedbackStrings = FeedbackStrings::get();
 
         return $template->getResponse();
     }

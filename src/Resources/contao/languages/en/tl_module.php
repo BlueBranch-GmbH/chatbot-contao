@@ -22,3 +22,7 @@ $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_summarize'] = ['Hide "Summ
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_disclaimer'] = ['Hide privacy notice', 'Hides the "Private chats & Hosted in Germany" notice at the bottom of the chat window for this module, even if it is enabled globally.'];
 
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_unstyled'] = ['No default styling', 'Does not load the extension\'s CSS. The chat stays fully functional, but its appearance then needs to be styled entirely via your own CSS.'];
+
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'] = ['Ask for feedback', 'Shows thumbs up/down below every answer; with thumbs down the visitor can briefly say what was wrong. Rated answers are stored together with the question (back end: "Questions & feedback"). Default: the setting under System → Settings.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'] = ['1' => 'On', '0' => 'Off'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'] = 'Default (as in the settings)';

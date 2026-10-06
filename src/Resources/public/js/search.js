@@ -9,6 +9,10 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         this.requestToken = config.requestToken;
         this.language = config.language;
         this.pageId = config.pageId;
+        this.moduleId = config.moduleId || '';
+        this.sig = config.sig || '';
+        this.feedback = config.feedback === true;
+        this.strings = config.strings || {};
         this.apiUrl = config.apiUrl || '/bluebranch/chatbot/api/v1/generate/stream';
 
         this.container = document.getElementById(this.containerId);
@@ -18,6 +22,7 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         this.loadingDiv = this.container.querySelector('.chatbot-loading');
         this.sourcesDiv = this.container.querySelector('.chatbot-sources');
         this.sourcesList = this.sourcesDiv ? this.sourcesDiv.querySelector('ul') : null;
+        this.feedbackDiv = null;
 
         this.timerInterval = null;
         this.startTime = null;
@@ -71,6 +76,28 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         if (this.sourcesDiv) {
             this.sourcesDiv.style.display = 'none';
         }
+        if (this.feedbackDiv) {
+            this.feedbackDiv.remove();
+            this.feedbackDiv = null;
+        }
+    }
+
+    /**
+     * Daumen hoch/runter unter der Antwort - nur wenn das Modul es will und der Server eine
+     * Kennung fuer diese Antwort geschickt hat.
+     */
+    renderFeedback(ref) {
+        if (!this.feedback || !ref || !this.contentDiv) return;
+
+        this.feedbackDiv = document.createElement('div');
+        this.feedbackDiv.className = 'chatbot-feedback-wrap';
+        (this.sourcesDiv || this.contentDiv).after(this.feedbackDiv);
+
+        ChatbotFeedback.render(this.feedbackDiv, {
+            ref: ref,
+            strings: this.strings,
+            requestToken: this.requestToken,
+        });
     }
 
     startRequest() {
@@ -103,16 +130,26 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
     openStream(requestId) {
         let fullAnswer = '';
         let renderPending = false;
+        let ref = null;
+        const body = {
+            prompt: this.query,
+            language: this.language,
+            pageId: this.pageId,
+        };
+
+        if (this.moduleId) {
+            body.moduleId = this.moduleId;
+        }
+
+        if (this.sig) {
+            body.sig = this.sig;
+        }
 
         // POST statt EventSource: Frage und Token gehoeren nicht in die URL (Access-Logs,
         // Browserverlauf, Referer). Die Route ist je nach Aufruf Frontend oder Backend.
         this.stream = ChatbotStream.open(this.apiUrl, {
             token: this.requestToken,
-            body: {
-                prompt: this.query,
-                language: this.language,
-                pageId: this.pageId,
-            },
+            body: body,
             handlers: {
                 message: (event) => {
                     if (requestId !== this.requestId) return;
@@ -143,10 +180,28 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
                         console.error("Error parsing SSE data", e);
                     }
                 },
+                meta: (event) => {
+                    if (requestId !== this.requestId) return;
+
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data && typeof data.ref === 'string' && /^[a-f0-9]{32}$/.test(data.ref)) {
+                            ref = data.ref;
+                        }
+                    } catch (e) {
+                        // Ohne Kennung gibt es eben kein Feedback.
+                    }
+                },
                 end: () => {
                     if (requestId !== this.requestId) return;
 
+                    // Der letzte Chunk kann noch im Animationsframe stecken.
+                    if (fullAnswer) {
+                        this.renderContent(fullAnswer);
+                    }
+
                     this.finishRequest();
+                    this.renderFeedback(ref);
                 },
                 error: (event) => {
                     if (requestId !== this.requestId) return;
@@ -256,23 +311,15 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         if (!this.sourcesList || !this.sourcesDiv) return;
 
         this.sourcesList.innerHTML = '';
-        const sourcesToShow = sources.slice(0, 3);
+        const list = ChatbotSources.list(sources, '', 3);
 
-        sourcesToShow.forEach(source => {
-            const li = document.createElement('li');
-            if (source.url) {
-                const a = document.createElement('a');
-                a.href = source.url;
-                a.target = '_blank';
-                a.rel = 'noopener';
-                a.textContent = source.title || source.url;
-                li.appendChild(a);
-            } else {
-                li.textContent = source.title || 'Quelle';
-            }
-            this.sourcesList.appendChild(li);
-        });
+        // Nur Quellen mit Adresse; Zusatzinhalte ohne Seite erscheinen nicht.
+        if (!list) {
+            this.sourcesDiv.style.display = 'none';
+            return;
+        }
 
+        Array.prototype.slice.call(list.children).forEach((li) => this.sourcesList.appendChild(li));
         this.sourcesDiv.style.display = 'block';
     }
 

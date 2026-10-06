@@ -85,7 +85,8 @@ class PurgeIneligiblePagesCron
              * Seitenbaum, nicht an einer Spalte. Ohne diesen Schritt bliebe ein Zweig im Index,
              * dessen Ueberseite laengst abgehakt ist.
              */
-            $markiert = Database::getInstance()->execute("SELECT id FROM tl_page WHERE chatbot_noAnswers='1'");
+            // Ebenso geschuetzte Seiten: Der Schutz gilt auch fuer alle Unterseiten.
+            $markiert = Database::getInstance()->execute("SELECT id FROM tl_page WHERE chatbot_noAnswers='1' OR protected='1'");
 
             while ($markiert->next()) {
                 foreach ($this->eligibility->branchIds((int) $markiert->id) as $id) {

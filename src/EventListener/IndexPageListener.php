@@ -67,6 +67,21 @@ class IndexPageListener
                 return;
             }
 
+            /*
+             * Geschuetzte Seiten (nur fuer Mitglieder) gehoeren nie in den KI-Index: Er ist
+             * oeffentlich, jeder Besucher kann den Chatbot danach fragen. Contao ruft den Hook fuer
+             * solche Seiten auf, sobald „Geschützte Seiten indexieren“ aktiv ist - und rendert sie
+             * dabei mit den Daten des angemeldeten Mitglieds. Die Contao-Suche filtert die Treffer
+             * spaeter nach Gruppen, der Chatbot kann das nicht.
+             */
+            if (!empty($pageData['protected']) || !$this->eligibility->isPublic($pageId)) {
+                if (!$this->trainingState->isKnownAbsent($pageId)) {
+                    $this->removeFromIndex($pageId);
+                }
+
+                return;
+            }
+
             // Für die Vektor-Datenbank ignorieren wir die indexer::stop Markierungen,
             // damit auch Newslisten etc. erfasst werden.
             $ignoreIndexerMarkers = true;
@@ -212,7 +227,8 @@ class IndexPageListener
              * Der stuendliche Cronjob wuerde sie zwar auch erwischen, aber eine Sperre, die erst
              * in einer Stunde wirkt, ist keine - der Redakteur haelt die Seite fuer erledigt.
              */
-            $betroffen = $this->eligibility->isExcludedFromAnswers($pageId)
+            // Ausschluss und Zugriffsschutz vererben sich auf die Unterseiten.
+            $betroffen = $this->eligibility->isExcludedFromAnswers($pageId) || !$this->eligibility->isPublic($pageId)
                 ? $this->eligibility->branchIds($pageId)
                 : [$pageId];
 
@@ -275,6 +291,9 @@ class IndexPageListener
         if (!Config::get('chatbot_debug')) {
             return;
         }
+
+        // Datensaetze aus tl_page (etwa beim Loeschen einer Startseite) tragen den API-Key.
+        unset($data['chatbot_api_key']);
 
         try {
             $rootDir = System::getContainer()->getParameter('kernel.project_dir');

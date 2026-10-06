@@ -23,3 +23,6 @@ services:
     Bluebranch\Chatbot\classes\ContentIndexerCallbackListener:
         public: true
 
+
+    Bluebranch\Chatbot\EventListener\ExtraContentListener:
+        public: true

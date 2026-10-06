@@ -3,6 +3,9 @@
 namespace Bluebranch\Chatbot\Module;
 
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\ChatLog;
+use Bluebranch\Chatbot\classes\RequestSignature;
+use Bluebranch\Chatbot\classes\FeedbackStrings;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
@@ -87,6 +90,13 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
         $template->labelClose = $lang['close'] ?? 'Chat schließen';
         $template->labelFontDec = $lang['fontDec'] ?? 'Schrift verkleinern';
         $template->labelFontInc = $lang['fontInc'] ?? 'Schrift vergrößern';
+        $template->labelExport = $lang['export'] ?? 'Chat exportieren';
+        $template->labelExportTxt = $lang['exportTxt'] ?? 'Als Text (.txt)';
+        $template->labelExportVtt = $lang['exportVtt'] ?? 'Als WebVTT (.vtt)';
+        $template->moduleId = (int) $model->id;
+        $template->feedback = ChatLog::feedbackEnabled($model);
+        // Bindet Seite und Modul an diese Ausgabe (siehe RequestSignature).
+        $template->sig = RequestSignature::sign((int) ($this->getPageModel() instanceof PageModel ? $this->getPageModel()->id : 0), (int) $model->id);
 
         $template->jsStrings = [
             // Der Senden-Knopf wird waehrend des Streams zum Stopp-Knopf und
@@ -100,7 +110,9 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
             'noAnswer' => $lang['noAnswer'] ?? 'Entschuldigung, es konnte keine Antwort generiert werden.',
             'requestError' => $lang['requestError'] ?? 'Es ist ein Fehler bei der Anfrage aufgetreten.',
             'source' => $lang['source'] ?? 'Quelle',
-        ];
+            'interrupted' => $lang['interrupted'] ?? 'Antwort unterbrochen.',
+            'you' => $lang['you'] ?? 'Sie',
+        ] + FeedbackStrings::get();
 
         $template->pageId = $pageModel instanceof PageModel ? $pageModel->id : '';
         $template->language = $pageModel instanceof PageModel ? strtolower($pageModel->language) : 'de';

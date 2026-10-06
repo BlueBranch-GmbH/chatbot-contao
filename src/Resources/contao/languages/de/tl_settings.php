@@ -22,3 +22,8 @@ $GLOBALS['TL_LANG']['tl_settings']['chatbot_purge_interval_options'] = [
 
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_debug_legend'] = 'Fehlersuche';
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_debug'] = ['Debug-Dateien schreiben', 'Legt zu jedem Trainings- und Löschvorgang eine JSON-Datei unter var/chatbot/ ab. Nur zur Fehlersuche einschalten: Beim Crawler-Lauf entsteht eine Datei je Seite samt vollständigem Seiteninhalt, und das Verzeichnis wächst unbegrenzt.'];
+
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_legend'] = 'Fragen, Antworten und Feedback';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_enabled'] = ['Fragen und Antworten speichern', 'Speichert jede Frage mit der Antwort für spätere Auswertungen (Backend: „Fragen & Feedback“). Ohne IP-Adresse, Browserdaten oder Sitzungskennung; E-Mail-Adressen und Telefonnummern in Fragen werden maskiert. Auch ohne diesen Schalter wird eine Antwort gespeichert, wenn ein Besucher sie bewertet (Feedback im Modul aktivieren).'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_retention'] = ['Aufbewahrung (Tage)', 'Ältere Einträge werden täglich gelöscht. 0 = unbegrenzt.'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_feedback_default'] = ['Feedback zu Antworten abfragen', 'Vorgabe für alle Chatbot-Module: Unter jeder Antwort erscheinen Daumen hoch/runter, beim Daumen nach unten ein kurzes Textfeld. Im Modul lässt sich das je Modul an- oder abschalten.'];

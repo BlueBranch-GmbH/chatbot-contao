@@ -22,3 +22,8 @@ $GLOBALS['TL_LANG']['tl_settings']['chatbot_purge_interval_options'] = [
 
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_debug_legend'] = 'Debugging';
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_debug'] = ['Write debug files', 'Stores a JSON file under var/chatbot/ for every training and deletion request. Enable for troubleshooting only: a crawler run creates one file per page including its full content, and the directory grows without bound.'];
+
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_legend'] = 'Questions, answers and feedback';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_enabled'] = ['Store questions and answers', 'Stores every question with its answer for later analysis (back end: "Questions & feedback"). No IP address, browser data or session ID; e-mail addresses and phone numbers in questions are masked. Even without this switch an answer is stored when a visitor rates it (enable feedback in the module).'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_log_retention'] = ['Retention (days)', 'Older entries are deleted daily. 0 = unlimited.'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_feedback_default'] = ['Ask for feedback on answers', 'Default for all chatbot modules: thumbs up/down below every answer, a short text field on thumbs down. Can be switched on or off per module.'];

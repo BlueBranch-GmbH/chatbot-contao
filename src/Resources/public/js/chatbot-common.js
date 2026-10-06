@@ -244,3 +244,363 @@ window.ChatbotMarkdown = window.ChatbotMarkdown || (function () {
         },
     };
 })();
+
+/**
+ * Quellen, die als Link angezeigt werden duerfen.
+ *
+ * Quellen ohne Adresse - etwa Zusatzinhalte aus Dateien - werden gar nicht angezeigt: Ein
+ * Dateiname hilft Besuchern nicht weiter und verriete womoeglich interne Bezeichnungen.
+ */
+window.ChatbotSources = window.ChatbotSources || {
+    /** @returns {Array<{title: string, url: string}>} */
+    linkable(sources) {
+        if (!Array.isArray(sources)) {
+            return [];
+        }
+
+        return sources.filter((source) => source && typeof source.url === 'string' && /^(https?:\/\/|\/(?!\/))/i.test(source.url.trim()));
+    },
+
+    /** Baut die Liste; ohne verlinkbare Quelle null. */
+    list(sources, className, max) {
+        const linkable = this.linkable(sources).slice(0, max || 3);
+
+        if (linkable.length === 0) {
+            return null;
+        }
+
+        const list = document.createElement('ul');
+        list.className = className;
+
+        linkable.forEach((source) => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = source.url.trim();
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.textContent = source.title || source.url;
+            li.appendChild(a);
+            list.appendChild(li);
+        });
+
+        return list;
+    },
+};
+
+/**
+ * Daumen hoch/runter unter einer Antwort, beim Daumen nach unten ein kurzes Textfeld.
+ *
+ * Adressiert wird die Antwort ueber ihre zufaellige Kennung `ref` aus dem Ereignis `meta` des
+ * Antwortstroms. Alles, was hier angezeigt wird, geht ueber textContent.
+ */
+window.ChatbotFeedback = window.ChatbotFeedback || {
+    url: '/bluebranch/chatbot/api/v1/feedback',
+    maxLength: 1000,
+
+    /**
+     * @param {HTMLElement} target   Element, an das die Leiste angehaengt wird
+     * @param {Object} options       {ref, rating, strings, requestToken, onChange(rating)}
+     * @returns {HTMLElement}
+     */
+    render(target, options) {
+        const strings = Object.assign({
+            feedbackQuestion: 'War die Antwort hilfreich?',
+            feedbackUp: 'Hilfreich',
+            feedbackDown: 'Nicht hilfreich',
+            feedbackPlaceholder: 'Was hat nicht gepasst? (optional)',
+            feedbackHint: 'Bitte keine persönlichen Daten eingeben.',
+            feedbackSend: 'Senden',
+            feedbackThanks: 'Danke für Ihr Feedback!',
+            feedbackError: 'Feedback konnte nicht gesendet werden.',
+        }, options.strings || {});
+
+        const bar = document.createElement('div');
+        bar.className = 'chatbot-feedback';
+
+        const label = document.createElement('span');
+        label.className = 'chatbot-feedback__label';
+        label.textContent = strings.feedbackQuestion;
+        bar.appendChild(label);
+
+        const status = document.createElement('p');
+        status.className = 'chatbot-feedback__thanks';
+        status.setAttribute('role', 'status');
+        status.hidden = true;
+
+        let form = null;
+
+        const button = (rating, text, symbol) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chatbot-feedback__btn chatbot-feedback__btn--' + rating;
+            btn.setAttribute('aria-label', text);
+            btn.setAttribute('title', text);
+            btn.setAttribute('aria-pressed', options.rating === rating ? 'true' : 'false');
+            btn.textContent = symbol;
+            btn.addEventListener('click', () => choose(rating));
+            bar.appendChild(btn);
+            return btn;
+        };
+
+        const showStatus = (text, isError) => {
+            status.textContent = text;
+            status.classList.toggle('chatbot-feedback__thanks--error', !!isError);
+            status.hidden = false;
+        };
+
+        const send = (rating, comment) => this.send(options.ref, rating, comment, options.requestToken)
+            .then(() => {
+                if (typeof options.onChange === 'function') {
+                    options.onChange(rating);
+                }
+                return true;
+            })
+            .catch(() => {
+                showStatus(strings.feedbackError, true);
+                return false;
+            });
+
+        const up = button('up', strings.feedbackUp, '👍');
+        const down = button('down', strings.feedbackDown, '👎');
+
+        const choose = (rating) => {
+            up.setAttribute('aria-pressed', rating === 'up' ? 'true' : 'false');
+            down.setAttribute('aria-pressed', rating === 'down' ? 'true' : 'false');
+            status.hidden = true;
+
+            if (form) {
+                form.remove();
+                form = null;
+            }
+
+            send(rating, '').then((ok) => {
+                if (!ok) return;
+
+                if (rating === 'up') {
+                    showStatus(strings.feedbackThanks);
+                    return;
+                }
+
+                form = this.commentForm(strings, (comment) => {
+                    send('down', comment).then((sent) => {
+                        if (sent && form) {
+                            form.remove();
+                            form = null;
+                            showStatus(strings.feedbackThanks);
+                        }
+                    });
+                });
+                bar.after(form);
+                form.querySelector('textarea').focus();
+            });
+        };
+
+        target.appendChild(bar);
+        target.appendChild(status);
+
+        return bar;
+    },
+
+    commentForm(strings, onSubmit) {
+        const form = document.createElement('form');
+        form.className = 'chatbot-feedback__form';
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'chatbot-feedback__input';
+        textarea.rows = 2;
+        textarea.maxLength = this.maxLength;
+        textarea.placeholder = strings.feedbackPlaceholder;
+        textarea.setAttribute('aria-label', strings.feedbackPlaceholder);
+
+        const hint = document.createElement('small');
+        hint.className = 'chatbot-feedback__hint';
+        hint.textContent = strings.feedbackHint;
+
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'chatbot-feedback__send';
+        submit.textContent = strings.feedbackSend;
+
+        form.appendChild(textarea);
+        form.appendChild(hint);
+        form.appendChild(submit);
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const comment = textarea.value.trim().slice(0, this.maxLength);
+
+            if (comment === '') {
+                form.remove();
+                return;
+            }
+
+            submit.disabled = true;
+            onSubmit(comment);
+        });
+
+        return form;
+    },
+
+    send(ref, rating, comment, preset) {
+        return ChatbotStreamToken.get(preset).then((token) => fetch(this.url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': token,
+            },
+            body: JSON.stringify({ ref: ref, rating: rating, comment: comment || '' }),
+        })).then((response) => {
+            if (!response.ok) {
+                throw new Error('Feedback failed (' + response.status + ')');
+            }
+            return response.json();
+        });
+    },
+};
+
+/**
+ * Chatverlauf als Datei: Text oder WebVTT.
+ *
+ * Eintraege: {role, content, time?, end?}. `time` ist der Beginn einer Nachricht, `end` bei
+ * Antworten der Zeitpunkt, zu dem sie fertig war. Eintraege ohne Zeitstempel (Verlaeufe von vor
+ * 1.3.0) werden einzeln ueberbrueckt - im Abstand einer Sekunde zum Nachbarn -, statt die Zeiten
+ * der ganzen Datei aufzugeben.
+ */
+window.ChatbotExport = window.ChatbotExport || {
+    /** Beginn je Eintrag in ms, aufsteigend. */
+    times(entries) {
+        const valid = (entry) => entry && typeof entry.time === 'number' && entry.time > 0;
+        const firstTimed = entries.findIndex(valid);
+        const anchor = firstTimed === -1 ? Date.now() : entries[firstTimed].time;
+        const times = [];
+
+        entries.forEach((entry, i) => {
+            if (firstTimed === -1 || i < firstTimed) {
+                times.push(anchor - ((firstTimed === -1 ? entries.length : firstTimed) - i) * 1000);
+                return;
+            }
+
+            const previous = i > 0 ? times[i - 1] : null;
+            times.push(valid(entry) && (previous === null || entry.time >= previous) ? entry.time : previous + 1000);
+        });
+
+        return times;
+    },
+
+    /**
+     * Wie lange ein Untertitel steht: das Ende der Antwort plus Lesezeit (50 ms je Zeichen,
+     * mindestens 2, hoechstens 20 Sekunden), aber nicht ueber den Beginn der naechsten Nachricht
+     * hinaus - sonst stapeln Player die Zeilen uebereinander.
+     */
+    cueEnds(entries, times) {
+        return entries.map((entry, i) => {
+            const shown = typeof entry.end === 'number' && entry.end >= times[i] ? entry.end : times[i];
+            const reading = Math.min(20000, Math.max(2000, entry.content.length * 50));
+            let end = shown + reading;
+
+            if (i + 1 < times.length && times[i + 1] < end) {
+                end = times[i + 1];
+            }
+
+            return Math.max(end, times[i] + 500);
+        });
+    },
+
+    pad(value, length) {
+        return String(value).padStart(length || 2, '0');
+    },
+
+    /**
+     * Markdown der Antworten als lesbarer Text: Links als „Text (URL)“, Hervorhebungen,
+     * Ueberschriften- und Codezeichen entfernt, Listen mit „- “.
+     */
+    plain(text) {
+        return String(text)
+            .replace(/```[a-z]*\n?/gi, '')
+            .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+            .replace(/\[([^\]]+)\]\(([^)\s]+)[^)]*\)/g, '$1 ($2)')
+            .replace(/(\*\*|__)(.+?)\1/g, '$2')
+            .replace(/(^|[^*\w])[*_]([^*_\n]+)[*_](?=[^*\w]|$)/g, '$1$2')
+            .replace(/`([^`]+)`/g, '$1')
+            .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+            .replace(/^\s*[*+]\s+/gm, '- ')
+            .replace(/^\s{0,3}>\s?/gm, '');
+    },
+
+    clock(ms) {
+        const date = new Date(ms);
+        return this.pad(date.getHours()) + ':' + this.pad(date.getMinutes()) + ':' + this.pad(date.getSeconds());
+    },
+
+    txt(entries, speaker, title) {
+        const times = this.times(entries);
+        const lines = [title + ' – ' + new Date(times[0]).toLocaleString(), ''];
+
+        entries.forEach((entry, i) => {
+            lines.push('[' + this.clock(times[i]) + '] ' + speaker(entry) + ': ' + this.plain(entry.content).trim());
+            lines.push('');
+        });
+
+        return lines.join('\r\n');
+    },
+
+    vttTime(ms) {
+        const hours = Math.floor(ms / 3600000);
+        const minutes = Math.floor((ms % 3600000) / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+
+        return this.pad(hours) + ':' + this.pad(minutes) + ':' + this.pad(seconds) + '.' + this.pad(ms % 1000, 3);
+    },
+
+    /**
+     * Cue-Text darf weder „-->“ noch Leerzeilen enthalten (beides beendet den Cue), und `<`/`&`
+     * leiten Tags bzw. Entitaeten ein.
+     */
+    vttText(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\r\n?/g, '\n')
+            .replace(/\n\s*\n+/g, '\n')
+            .trim();
+    },
+
+    /**
+     * Zeitachse ab Beginn des Chats, wie Untertitel es verlangen. Die echte Uhrzeit steht als
+     * Kennung ueber jedem Cue und das Startdatum in einer NOTE am Anfang.
+     */
+    vtt(entries, speaker) {
+        const times = this.times(entries);
+        const ends = this.cueEnds(entries, times);
+        const start = times[0];
+        const blocks = ['WEBVTT', '', 'NOTE Chat vom ' + new Date(start).toLocaleString(), ''];
+
+        entries.forEach((entry, i) => {
+            const name = this.vttText(speaker(entry)).replace(/\n/g, ' ');
+
+            blocks.push((i + 1) + ' ' + this.clock(times[i]));
+            blocks.push(this.vttTime(times[i] - start) + ' --> ' + this.vttTime(ends[i] - start));
+            blocks.push('<v ' + name + '>' + this.vttText(this.plain(entry.content)));
+            blocks.push('');
+        });
+
+        return blocks.join('\n');
+    },
+
+    download(filename, content, type) {
+        const blob = new Blob(['﻿' + content], { type: type + ';charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = filename;
+        link.rel = 'noopener';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+};
