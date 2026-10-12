@@ -15,7 +15,12 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
 
         // Waehrend der Antwort wird aus dem Absenden- ein Stopp-Knopf. Die
         // ursprüngliche Beschriftung steht im Template, sie wird hier gemerkt.
-        this.labelSubmit = this.submitButton ? this.submitButton.textContent : '';
+        // Hat der Knopf ein eigenes Beschriftungs-Element (z. B. neben einem Icon in
+        // einem angepassten Template), wird nur dieses getauscht, nicht der ganze Inhalt.
+        this.submitLabel = this.submitButton
+            ? (this.submitButton.querySelector('.chatbot-ask-submit-label') || this.submitButton)
+            : null;
+        this.labelSubmit = this.submitLabel ? this.submitLabel.textContent : '';
         this.labelStop = config.labelStop || 'Stopp';
         this.response = this.container.querySelector('.chatbot-response');
 
@@ -78,7 +83,7 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
      */
     setBusy(busy) {
         if (this.submitButton) {
-            this.submitButton.textContent = busy ? this.labelStop : this.labelSubmit;
+            this.submitLabel.textContent = busy ? this.labelStop : this.labelSubmit;
             this.submitButton.classList.toggle('is-stop', busy);
         }
 
