@@ -1,6 +1,6 @@
 # Stand und offene ToDos
 
-Stand: 06.10.2026, Version **1.3.0** (Tag `1.3.0`, Commit `0a44c5e`).
+Stand: 12.10.2026, Version **1.4.0** (Tag `1.4.0`, Commit `6f93c09`, auf Packagist).
 Anforderungen, Entscheidungen und Testprotokoll des Ausbaus: [ausbau-2026-10.md](ausbau-2026-10.md).
 Die Pfade dort beziehen sich auf das Testprojekt `contao57` (`extensions/bluebranch/chatbot`).
 
@@ -9,9 +9,18 @@ Zusammenspiel der Repositories:
 | Repository | Stand | Dokument |
 |---|---|---|
 | `BlueBranch-GmbH/chatbot-contao` (dieses) | 1.4.0 | dieses Dokument |
-| `BlueBranch-GmbH/chatbot-wordpress` | 1.2.0 | `docs/stand-und-todos.md` |
+| `BlueBranch-GmbH/chatbot-wordpress` | 1.2.1 | `docs/stand-und-todos.md` |
 | `spardorf-chatbot-api` | 0.0.56 | `docs/11-stand-und-todos.md` |
 | `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
+
+## Was 1.4.0 enthält
+
+| Bereich | Stand | Getestet |
+|---|---|---|
+| *Trainierte Seiten*: Name der Stufe statt „Premium“, Verbrauch im laufenden Monat | fertig | Twig-Lint; **nicht im Browser** |
+| 429 mit `reason: monthly_quota` → Besucher lesen „später erneut versuchen“ | fertig | PHP-Lint |
+
+Braucht für die Verbrauchszeile API 0.0.56; mit älterer API entfällt sie. Keine Migration.
 
 ## Was 1.3.0 enthält
 
