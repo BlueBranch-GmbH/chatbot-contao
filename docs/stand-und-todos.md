@@ -1,6 +1,6 @@
 # Stand und offene ToDos
 
-Stand: 12.10.2026, Version **1.4.0** (Tag `1.4.0`, Commit `6f93c09`, auf Packagist).
+Stand: 12.10.2026, Version **1.4.1** (Tag `1.4.1`, Commit `dee101e`, auf Packagist).
 Anforderungen, Entscheidungen und Testprotokoll des Ausbaus: [ausbau-2026-10.md](ausbau-2026-10.md).
 Die Pfade dort beziehen sich auf das Testprojekt `contao57` (`extensions/bluebranch/chatbot`).
 
@@ -8,10 +8,19 @@ Zusammenspiel der Repositories:
 
 | Repository | Stand | Dokument |
 |---|---|---|
-| `BlueBranch-GmbH/chatbot-contao` (dieses) | 1.4.0 | dieses Dokument |
+| `BlueBranch-GmbH/chatbot-contao` (dieses) | 1.4.1 | dieses Dokument |
 | `BlueBranch-GmbH/chatbot-wordpress` | 1.2.1 | `docs/stand-und-todos.md` |
 | `spardorf-chatbot-api` | 0.0.56 | `docs/11-stand-und-todos.md` |
 | `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
+
+## Was 1.4.1 enthält
+
+| Bereich | Stand | Getestet |
+|---|---|---|
+| Frage-Modul: Stopp-Knopf tauscht nur `.chatbot-ask-submit-label`, Icons bleiben | fertig | Browser (Contao 4.13.50, angepasstes Template) |
+
+Anlass: Ein angepasstes `mod_chatbot_ask.html5` von vor 1.3.0 band `chatbot-common.js` nicht ein
+→ „ChatbotStreamToken is not defined“. Behoben im Projekt-Template; Hinweis im Changelog.
 
 ## Was 1.4.0 enthält
 
