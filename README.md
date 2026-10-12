@@ -556,6 +556,16 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.4.1 - 2026-10-12
+
+- Frage-Modul: Während einer Antwort tauscht der Stopp-Knopf nur das Element
+  `.chatbot-ask-submit-label`, falls der Knopf eines hat – Icons in angepassten Templates bleiben
+  stehen. Knöpfe ohne dieses Element verhalten sich wie bisher
+- Hinweis zu angepassten Templates (`templates/mod_chatbot_*.html5`): Seit 1.3.0 brauchen sie
+  `chatbot-common.js` vor `search.js`/`chatbot.js` sowie `sig`, `moduleId`, `feedback` und
+  `strings` in der Konfiguration – sonst bricht jede Frage mit „ChatbotStreamToken is not
+  defined“ ab. Am einfachsten Skripte und Konfiguration aus dem Template der Erweiterung übernehmen
+
 ### 1.4.0 - 2026-10-12
 
 - *Trainierte Seiten* zeigt neben der Nutzungsstufe den Verbrauch im laufenden Monat; statt
