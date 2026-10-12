@@ -178,7 +178,14 @@ class ChatbotAPIController extends AbstractController
         // Nach aussen nur Antwort und Quellen: Fehlertexte der API nennen Tarif und Kontakt des
         // Betreibers, Fehler des HTTP-Clients die interne API-Adresse.
         if (empty($result['success'])) {
-            return new JsonResponse(['success' => false, 'message' => 'Die Anfrage konnte nicht beantwortet werden.'], 429 === ($result['statusCode'] ?? 0) ? 429 : 502);
+            $istLimit = 429 === ($result['statusCode'] ?? 0);
+
+            return new JsonResponse([
+                'success' => false,
+                'message' => $istLimit
+                    ? $this->limitMeldung((string) ($result['reason'] ?? ''))
+                    : 'Die Anfrage konnte nicht beantwortet werden.',
+            ], $istLimit ? 429 : 502);
         }
 
         $sources = [];
@@ -534,24 +541,47 @@ class ChatbotAPIController extends AbstractController
     }
 
     /**
-     * Liest die Fehlermeldung der API aus einer abgelehnten Antwort - fuer das Log.
+     * Was Besucher lesen, wenn die API eine Frage wegen des Kontingents abweist.
+     *
+     * Die API nennt den Grund in `reason`: Ein volles Minutenlimit loest sich von selbst, ein
+     * erschoepftes Monatskontingent erst mit dem naechsten Monat - dort waere „in einer Minute
+     * erneut versuchen" falsch. Stufe, Preise und Anschrift stehen in keinem der beiden Texte;
+     * die gehoeren ins Log und ins Backend.
+     */
+    private function limitMeldung(string $grund): string
+    {
+        if ('monthly_quota' === $grund) {
+            return 'Der Chat steht im Moment nicht zur Verfügung. Bitte versuchen Sie es später erneut.';
+        }
+
+        return 'Zurzeit sind zu viele Anfragen offen. Bitte versuchen Sie es in einer Minute erneut.';
+    }
+
+    /**
+     * Liest Fehlermeldung (fuer das Log) und Grund (fuer den Besuchertext) aus einer
+     * abgelehnten Antwort der API.
      *
      * Bei einer nicht gepufferten Antwort kann der Rumpf bereits verworfen sein; dann bleibt
      * nur der Statuscode. Ein Fehlschlag hier darf den Ablauf nicht stoeren.
+     *
+     * @return array{meldung: string, grund: string}
      */
-    private function upstreamMeldung($apiResponse): string
+    private function upstreamFehler($apiResponse): array
     {
         try {
             $inhalt = $apiResponse->getContent(false);
             $daten = json_decode($inhalt, true);
+            $grund = is_array($daten) && isset($daten['reason']) && is_string($daten['reason']) ? $daten['reason'] : '';
 
             if (is_array($daten) && isset($daten['message'])) {
-                return is_array($daten['message']) ? json_encode($daten['message']) : (string) $daten['message'];
+                $meldung = is_array($daten['message']) ? json_encode($daten['message']) : (string) $daten['message'];
+
+                return ['meldung' => $meldung, 'grund' => $grund];
             }
 
-            return substr((string) $inhalt, 0, 300);
+            return ['meldung' => substr((string) $inhalt, 0, 300), 'grund' => $grund];
         } catch (\Throwable $e) {
-            return '(Rumpf nicht lesbar: ' . $e->getMessage() . ')';
+            return ['meldung' => '(Rumpf nicht lesbar: ' . $e->getMessage() . ')', 'grund' => ''];
         }
     }
 
@@ -581,16 +611,18 @@ class ChatbotAPIController extends AbstractController
                     // Den ausfuehrlichen Grund ins Log, nicht ins Chatfenster: Bei 429 nennt die
                     // API die Nutzungsstufe des Betreibers samt Kontaktadresse. Das gehoert in
                     // die Betriebsansicht, nicht vor die Augen der Website-Besucher.
+                    $fehler = $this->upstreamFehler($apiResponse);
+
                     $this->logger->error(sprintf(
                         'Chatbot API antwortete auf einen Stream-Aufruf mit HTTP %d: %s',
                         $statusCode,
-                        $this->upstreamMeldung($apiResponse)
+                        $fehler['meldung']
                     ));
 
                     echo "event: error\n";
                     echo 'data: ' . json_encode([
                         'message' => 429 === $statusCode
-                            ? 'Zurzeit sind zu viele Anfragen offen. Bitte versuchen Sie es in einer Minute erneut.'
+                            ? $this->limitMeldung($fehler['grund'])
                             : 'Die Anfrage konnte nicht beantwortet werden.',
                         'status' => $statusCode,
                     ]) . "\n\n";

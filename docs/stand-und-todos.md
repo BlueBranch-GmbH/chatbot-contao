@@ -8,10 +8,10 @@ Zusammenspiel der Repositories:
 
 | Repository | Stand | Dokument |
 |---|---|---|
-| `BlueBranch-GmbH/chatbot-contao` (dieses) | 1.3.0 | dieses Dokument |
-| `BlueBranch-GmbH/chatbot-wordpress` | 1.1.0 | `docs/stand-und-todos.md` |
-| `spardorf-chatbot-api` | 0.0.55 | `docs/11-stand-und-todos.md` |
-| `spardorf-chatbot-frontend` | 0.1.28 | `docs/stand-und-todos.md` |
+| `BlueBranch-GmbH/chatbot-contao` (dieses) | 1.4.0 | dieses Dokument |
+| `BlueBranch-GmbH/chatbot-wordpress` | 1.2.0 | `docs/stand-und-todos.md` |
+| `spardorf-chatbot-api` | 0.0.56 | `docs/11-stand-und-todos.md` |
+| `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
 
 ## Was 1.3.0 enthält
 

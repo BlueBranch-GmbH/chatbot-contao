@@ -207,18 +207,21 @@ ohne die Website zu öffnen.
 
 ## Nutzungsstufen
 
-Ein Zugang ist **Free**, **Pro** oder **Expert**. Der Unterschied liegt allein im
-Anfragekontingent der Antwort-Routen; Inhalte trainieren, Inhalte auflisten und API-Keys anlegen
-ist in allen Stufen unbegrenzt.
+Ein Zugang ist **Free**, **Pro**, **Expert** oder **Enterprise**. Der Unterschied liegt allein im
+Anfragekontingent der Antwort-Routen – je Minute und je Kalendermonat; Inhalte trainieren, Inhalte
+auflisten und API-Keys anlegen ist in allen Stufen unbegrenzt. Gebucht wird nicht über eine
+Website, sondern auf Anfrage an hello@bluebranch.de.
 
 Die konkreten Zahlen stehen bewusst **nicht** in dieser Erweiterung. Sie kommen zur Laufzeit von
 der API, zusammen mit einem fertigen Hinweistext. Ändert sich das Kontingent, ändert sich die
 Anzeige mit – ohne dass eine neue Fassung der Erweiterung ausgeliefert werden muss. Die aktuelle
-Stufe steht im Backend unter *BlueBranch Chatbot → Trainierte Seiten* oben auf der Seite.
+Stufe steht samt Verbrauch im laufenden Monat im Backend unter *BlueBranch Chatbot → Trainierte
+Seiten* oben auf der Seite.
 
-Ist das Kontingent erschöpft, antwortet die API mit **HTTP 429**. Besucher sehen dann eine
-neutrale Meldung, sie sollten es gleich noch einmal versuchen; der ausführliche Grund samt Stufe
-landet im Log der Contao-Installation und nicht im Chatfenster.
+Ist das Kontingent erschöpft, antwortet die API mit **HTTP 429** und nennt in `reason` den Grund.
+Besucher sehen dann eine neutrale Meldung: beim Minutenlimit (`rate_limit`), sie sollten es gleich
+noch einmal versuchen, beim Monatskontingent (`monthly_quota`), später. Der ausführliche Grund samt
+Stufe landet im Log der Contao-Installation und nicht im Chatfenster.
 
 ## Wie die Anfragen laufen
 
@@ -456,18 +459,20 @@ a question and check the answer including its sources without opening the websit
 
 ## Usage tiers
 
-An account is **Free**, **Pro** or **Expert**. The difference lies solely in the request quota of
-the answer routes; training content, listing content and creating API keys is unlimited in every
-tier.
+An account is **Free**, **Pro**, **Expert** or **Enterprise**. The difference lies solely in the
+request quota of the answer routes – per minute and per calendar month; training content, listing
+content and creating API keys is unlimited in every tier. Upgrades are not booked on a website but
+on request to hello@bluebranch.de.
 
 The actual numbers deliberately do **not** live in this extension. They come from the API at
 runtime, together with a ready-made note. If the quota changes, the display changes with it – no
-new release of the extension required. The current tier is shown under *BlueBranch Chatbot →
-Trained pages* at the top of the page.
+new release of the extension required. The current tier and this month's usage are shown under
+*BlueBranch Chatbot → Trained pages* at the top of the page.
 
-Once the quota is exhausted, the API answers with **HTTP 429**. Visitors then see a neutral
-message asking them to try again shortly; the detailed reason including the tier goes to the log
-of the Contao installation, not into the chat window.
+Once the quota is exhausted, the API answers with **HTTP 429** and names the cause in `reason`.
+Visitors then see a neutral message: try again shortly after the per-minute limit (`rate_limit`),
+try again later once the monthly quota is used up (`monthly_quota`). The detailed reason including
+the tier goes to the log of the Contao installation, not into the chat window.
 
 ## How the requests work
 
@@ -550,6 +555,14 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.4.0 - 2026-10-12
+
+- *Trainierte Seiten* zeigt neben der Nutzungsstufe den Verbrauch im laufenden Monat; statt
+  „Premium“ steht der Name der Stufe (Pro, Expert, Enterprise). Zahlen, Preise und Hinweistext
+  kommen weiterhin von der API
+- Ist das Monatskontingent erschöpft (`reason: monthly_quota`), lesen Besucher „später erneut
+  versuchen“ statt „in einer Minute“; Stufe und Anschrift bleiben im Log
 
 ### 1.3.0 - 2026-10-06
 

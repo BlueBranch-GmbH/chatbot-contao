@@ -16,15 +16,24 @@
       fertigem Hinweistext. Hier steht bewusst keine Zahl und keine Anschrift: Aendert sich
       das Kontingent, genuegt ein Deployment der API - diese Erweiterung bleibt, wie sie ist.
     #}
-    {% if tier is defined and tier and tier.notice %}
-        <div class="chatbot-admin__notice chatbot-admin__notice--tier">
-            <span class="chatbot-admin__tier-badge">{{ tier.notice.title }}</span>
-            {{ tier.notice.text }}
-        </div>
-    {% elseif tier is defined and tier and tier.isPremium %}
-        <div class="chatbot-admin__notice chatbot-admin__notice--premium">
-            <span class="chatbot-admin__tier-badge chatbot-admin__tier-badge--premium">Premium</span>
-            {{ tier.requestsPerMinute }} Anfragen je Minute.
+    {% if tier is defined and tier and (tier.notice or tier.isPremium) %}
+        <div class="chatbot-admin__notice {{ tier.notice ? 'chatbot-admin__notice--tier' : 'chatbot-admin__notice--premium' }}">
+            {% if tier.notice %}
+                <span class="chatbot-admin__tier-badge">{{ tier.notice.title }}</span>
+                {{ tier.notice.text }}
+            {% else %}
+                <span class="chatbot-admin__tier-badge chatbot-admin__tier-badge--premium">{{ tier.label ?? 'Premium' }}</span>
+                {{ tier.requestsPerMinute }} Anfragen je Minute.
+            {% endif %}
+            {# Aeltere API-Fassungen liefern keinen Monatsverbrauch; dann entfaellt die Zeile. #}
+            {% if tier.usedThisMonth is defined and tier.usedThisMonth is not null %}
+                <br>
+                {% if tier.requestsPerMonth is not null %}
+                    {{ tier.usedThisMonth|number_format(0, ',', '.') }} von {{ tier.requestsPerMonth|number_format(0, ',', '.') }} Anfragen in diesem Monat verbraucht.
+                {% else %}
+                    {{ tier.usedThisMonth|number_format(0, ',', '.') }} Anfragen in diesem Monat, ohne Monatslimit.
+                {% endif %}
+            {% endif %}
         </div>
     {% endif %}
 
