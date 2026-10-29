@@ -125,6 +125,30 @@ Löschvorgang eine JSON-Datei unter `var/chatbot/` ab. Das ist zur Fehlersuche g
 für den Dauerbetrieb: Ein Crawler-Lauf erzeugt eine Datei je Seite samt vollständigem Inhalt, und
 niemand räumt sie wieder weg.
 
+## Aussehen
+
+Alle Teile – Chat-Widget, Frage-Modul und Suche – kommen **mit fertigem Design** und übernehmen die
+**Akzentfarbe** aus *System → Einstellungen* (im Widget je Modul überschreibbar): Verlauf im Kopf des Chats,
+Eingabefeld als Pille mit Lupe, Antwortkarte mit Quellen-Pillen, Trefferliste als Karten.
+Das Stylesheet lädt die Erweiterung selbst; wer es komplett selbst gestalten will, setzt im Modul
+*Kein Standard-Styling*.
+
+Anpassen geht über CSS-Variablen, ohne die Datei der Erweiterung anzufassen:
+
+```css
+.chatbot-widget,
+.chatbot-ask-container,
+.chatbot-generate-search-container {
+    --chatbot-widget-accent: #f47c00;          /* Hauptfarbe; Töne und Schein leiten sich davon ab */
+    --chatbot-widget-accent-contrast: #1a1a1a; /* Schriftfarbe auf der Hauptfarbe */
+    --chatbot-widget-radius: 12px;
+    --chatbot-widget-font: "Inter", sans-serif;
+}
+```
+
+Weitere Variablen: `--chatbot-widget-bg`, `-surface`, `-bubble-bg`, `-text`, `-muted`, `-border`,
+`-bot-bubble`, `-gap`, `-z-index`, `-message-font-size`.
+
 ## Seiten von den KI-Antworten ausschließen
 
 In den Seiteneinstellungen steht neben *Von der Suche ausschließen* (ab Contao 5.6: *Suchindexierung*) das Feld
@@ -453,6 +477,29 @@ for every training and deletion operation. This is meant for troubleshooting, no
 operation: one crawler run produces a file per page including its full content, and nothing ever
 cleans them up.
 
+## Appearance
+
+The chat widget, the question module and the search all ship with a **finished design** and pick up the
+**accent colour** from *System → Settings* (overridable per module in the widget): gradient header, pill-shaped
+input with a magnifier, answer card with source pills, result list as cards. The extension loads its own
+stylesheet; to style everything yourself, tick *No default styling* in the module.
+
+Customise with CSS variables without touching the extension's file:
+
+```css
+.chatbot-widget,
+.chatbot-ask-container,
+.chatbot-generate-search-container {
+    --chatbot-widget-accent: #f47c00;          /* main colour; tints and glow are derived from it */
+    --chatbot-widget-accent-contrast: #1a1a1a; /* text colour on the main colour */
+    --chatbot-widget-radius: 12px;
+    --chatbot-widget-font: "Inter", sans-serif;
+}
+```
+
+More variables: `--chatbot-widget-bg`, `-surface`, `-bubble-bg`, `-text`, `-muted`, `-border`, `-bot-bubble`,
+`-gap`, `-z-index`, `-message-font-size`.
+
 ## Excluding pages from AI answers
 
 Next to *Exclude from search* (Contao 5.6 and later: *Search indexing*) the page settings offer **Exclude from AI answers**. Both decide
@@ -638,7 +685,7 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
-### Unveröffentlicht (nach 1.4.1)
+### 1.5.0 - 2026-10-29
 
 - **Spracheingabe im Chat-Widget:** Mikrofon-Knopf neben dem Senden-Knopf; die Aufnahme wird über
   die neue Route `POST /bluebranch/chatbot/api/v1/transcribe` in Text umgewandelt und als Frage
@@ -655,8 +702,20 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
   sich aus der Akzentfarbe ab; neue Variablen `--chatbot-widget-surface` und
   `--chatbot-widget-bubble-bg`, bestehende Variablen und Klassennamen bleiben. Eigene Stylesheets, die
   das Widget stark umbauen, bitte prüfen
-- README: Tarife (Free, Pro, Expert; Selbstbuchung per Stripe im Frontend, Enterprise entfällt)
-  und Datenschutz zur Spracheingabe nachgezogen
+- **Frage-Modul und Suche** haben jetzt ein fertiges Standard-Design (Pillen-Suchfeld mit Lupe, Antwortkarte mit
+  Statuszeile, Quellen als Pillen, Trefferliste als Karten) und übernehmen die Akzentfarbe aus den Einstellungen.
+  Das Stylesheet wird immer geladen (bisher nur mit Feedback); *Kein Standard-Styling* gilt nun auch für Frage-Modul
+  und Suche. Angepasste Templates `mod_chatbot_ask`/`mod_chatbot_generate_search*` bitte mit denen der Erweiterung
+  vergleichen (Stylesheet-Einbindung am Anfang, `accentStyle` am Container)
+- Texte der Statuszeile („Antwort generiert“, „Sekunden“, Fehlertext) und „Quellen:“ in Frage-Modul und Suche kommen
+  aus den Sprachdateien statt fest im Code
+- Behoben: Chat-Widget stand im Suchindex von Contao (Text wie „Private Chats & Hosted in Germany“ tauchte in
+  Suchtreffern auf) – `indexer::stop` im Widget-Template
+- Behoben: Nach Quellen und Feedback-Leiste scrollte das Widget nicht mehr ganz nach unten, die letzte Zeile der
+  Antwort war angeschnitten
+- Nicht unterstütztes Audioformat (415 der API) zeigt eine eigene Meldung
+- README: Tarife (Free, Pro, Expert; Selbstbuchung per Stripe im Frontend, Enterprise entfällt),
+  Datenschutz zur Spracheingabe und Abschnitt „Aussehen“ nachgezogen
 
 ### 1.4.1 - 2026-10-12
 

@@ -1,8 +1,7 @@
 # Stand und offene ToDos
 
-Stand: 29.10.2026. Veröffentlicht ist **1.4.1** (Tag `1.4.1`, auf Packagist); darüber liegt lokal
-unveröffentlichte Arbeit (Spracheingabe, neues Design, siehe unten) – **noch nicht gepusht, nicht
-getaggt, keine neue Versionsnummer**.
+Stand: 29.10.2026, Version **1.5.0** (Tag `1.5.0`, Spracheingabe, neues Standard-Design für Widget, Frage-Modul
+und Suche). Davor: 1.4.1 vom 12.10.2026.
 Anforderungen, Entscheidungen und Testprotokoll des Ausbaus: [ausbau-2026-10.md](ausbau-2026-10.md).
 Die Pfade dort beziehen sich auf das Testprojekt `contao57` (`extensions/bluebranch/chatbot`).
 
@@ -15,11 +14,7 @@ Zusammenspiel der Repositories:
 | `spardorf-chatbot-api` | 0.0.62 (live: Stripe-Abos, Whisper) | `docs/11-stand-und-todos.md`, `docs/12-stripe-und-abos.md` |
 | `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
 
-## Unveröffentlicht (nach 1.4.1)
-
-Änderungen im Arbeitsverzeichnis, lokal committet, **nicht gepusht und nicht getaggt**. Der
-README-Changelog führt sie unter „Unveröffentlicht“; bei der Freigabe die Überschrift durch die neue
-Versionsnummer ersetzen (nach Funktionsumfang 1.5.0).
+## Was 1.5.0 enthält
 
 | Bereich | Stand | Getestet |
 |---|---|---|
@@ -30,15 +25,20 @@ Versionsnummer ersetzen (nach Funktionsumfang 1.5.0).
 | Stille-Sperre: Spitzenpegel unter 0,04 → kein Upload, kein Kontingent | fertig | Browser, stilles Signal: 0 Uploads |
 | `project_paused` (403) → neutraler Besuchertext (Stream- und Nicht-Stream-Route) | fertig | nicht gegen ein echtes pausiertes Projekt |
 | Neues Standard-Design des Widgets (Kopf mit Avatar und Verlauf, getönter Verlauf, Pillen-Eingabe, aus der Akzentfarbe abgeleitete Töne) | fertig | Browser (Desktop, Standardfarbe) |
-| README: Tarife (Free/Pro/Expert, Stripe im Frontend, Enterprise entfällt), Spracheingabe, Datenschutz | fertig | – |
-| **Contao 5.7, 5.3 und 4.13** (PHP 8.3 / 8.2 / 8.1) | Spracheingabe läuft in allen dreien | 30.10.2026, Chrome (Playwright, `--use-file-for-fake-audio-capture` mit einer per `say` gesprochenen Frage): Aufnahme, Wellen, Upload (200), Frage wortgenau erkannt, Antwort; Desktop 1280 × 800 und mobil 390 × 844, keine JS-Fehler (404 nur das fehlende Favicon der Testseiten) |
+| README: Tarife (Free/Pro/Expert, Stripe im Frontend, Enterprise entfällt), Spracheingabe, Datenschutz, Abschnitt „Aussehen“ | fertig | – |
+| **Frage-Modul und Suche: neues Standard-Design** (Pillen-Suchfeld, Antwortkarte, Quellen-Pillen, Trefferkarten), Akzentfarbe aus den Einstellungen (`Appearance`), *Kein Standard-Styling* auch dort | fertig | Browser: Contao 5.7, 5.3 und 4.13 (Desktop, 5.7 mobil) |
+| Statuszeile, „Quellen:“ und Fehlertext von Frage/Suche aus den Sprachdateien (`FeedbackStrings`) | fertig | Browser: Englisch (5.7), Deutsch (5.3, 4.13) |
+| Fix: Widget stand im Contao-Suchindex (`indexer::stop`) | fertig | Suchtreffer in 5.3 |
+| Fix: Widget scrollt nach Quellen und Feedback ganz nach unten | fertig | Referenz-Screenshots |
+| 415 (Audioformat) mit eigener Meldung; zu lang (413) und zu groß (4 MB) | fertig | Route per curl: 413 `audio_too_long` (130 s Datei), 413 (5 MB), 415 |
+| **Contao 5.7, 5.3 und 4.13** (PHP 8.3 / 8.2 / 8.1) | Spracheingabe läuft in allen dreien | 29.10.2026, Chrome (Playwright, `--use-file-for-fake-audio-capture` mit einer per `say` gesprochenen Frage): Aufnahme, Wellen, Upload (200), Frage wortgenau erkannt, Antwort; Desktop 1280 × 800 und mobil 390 × 844, keine JS-Fehler (404 nur das fehlende Favicon der Testseiten) |
 
 Nach dem Update: `composer update`, `contao:migrate` (neues Feld `tl_module.chatbot_voice`),
 **Seiten-Cache leeren**. Angepasste Templates `mod_chatbot_widget.html5` brauchen für das Mikrofon den
 Knopf `.chatbot-widget__voice` im Formular und `voice` in der Konfiguration – am einfachsten aus dem
 Template der Erweiterung übernehmen.
 
-**Offen zur Spracheingabe und zum Design:**
+**Offen zur Spracheingabe und zum Design (nach 1.5.0):**
 
 - [ ] **Echtes Mikrofon testen.** Getestet ist der ganze Weg mit einer synthetisch gesprochenen Frage
       (Stimme „Anna“) als Mikrofon; offen sind Erkennungsqualität, Pegelschwelle (0,04) und die
@@ -46,9 +46,11 @@ Template der Erweiterung übernehmen.
       (Safari/iOS nimmt als `audio/mp4` auf, Firefox als `audio/ogg`).
 - [ ] **Frage-Modul und Suche** haben noch kein Mikrofon. Die Aufnahme (`ChatbotVoice`) und die Route
       sind schon wiederverwendbar; es fehlen Palette, Template und Anbindung in `ask.js`/`search.js`.
-- [ ] **Design:** mobile Vollbild-Ansicht, andere Positionen (links, oben), dunkle Seiten und
-      Frage-/Suchmodul nicht angesehen. Wer das Widget mit eigenem CSS stark umgebaut hat, prüft es
-      nach dem Update.
+- [ ] **Design:** andere Widget-Positionen (links, oben) und sehr dunkle Seiten nicht angesehen; mobil nur
+      das Widget (Desktop-Modul in 5.7 mobil gesehen). Wer das Widget mit eigenem CSS stark umgebaut hat,
+      prüft es nach dem Update.
+- [ ] **Contao-Backend** (neue Felder *Spracheingabe*, *Kein Standard-Styling* für Frage/Suche, Vorgabe in den
+      Einstellungen) nie in der Oberfläche geöffnet; Felder und Texte nur per Lint und SQL geprüft.
 - [ ] **Datenschutzerklärung der Website** um die Spracheingabe ergänzen (Hinweis steht im README).
 - [ ] **Aufnahme bei Whisper-Halluzination:** Die Stille-Sperre fängt Stille ab, nicht leises
       Rauschen oder Fremdgeräusche (ein Testsignal wurde als „Thank you.“ erkannt). Eine kurze
