@@ -4,7 +4,7 @@ use Contao\BackendUser;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\DataContainer;
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param,chatbot_typed_questions,chatbot_feedback,chatbot_voice,chatbot_widget_unstyled;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_search_info,chatbot_query_param,chatbot_typed_questions;{chatbot_feature_legend},chatbot_feedback,chatbot_voice;{template_legend:hide},customTpl,chatbot_widget_unstyled;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'label'                   => &$GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'],
@@ -14,7 +14,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'sql'                     => "varchar(64) NOT NULL default 'keywords'"
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions,chatbot_feedback,chatbot_voice,chatbot_widget_unstyled;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions;{chatbot_feature_legend},chatbot_feedback,chatbot_voice;{template_legend:hide},customTpl,chatbot_widget_unstyled;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 /**
  * Wird im Frontend Zeichen fuer Zeichen als Platzhalter ins Eingabefeld getippt.
@@ -28,7 +28,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_typed_questions'] = [
     'sql'       => "blob NULL",
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{config_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer,chatbot_feedback,chatbot_voice;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{chatbot_look_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_text_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions;{chatbot_feature_legend},chatbot_feedback,chatbot_voice,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_widget_name'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_name'],
@@ -134,4 +134,14 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_voice'] = [
     'reference' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_options'],
     'eval'      => ['includeBlankOption' => true, 'blankOptionLabel' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_default'], 'tl_class' => 'w50'],
     'sql'       => "char(1) NOT NULL default ''",
+];
+
+/*
+ * Hinweis oben in der Such-Maske: erklaert die zwei Varianten. Ein reiner Text ohne Eingabefeld
+ * (siehe chatbot_info in tl_settings): Was der Rueckruf liefert, wird unveraendert eingesetzt.
+ */
+$GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_search_info'] = [
+    'input_field_callback' => static fn () => '<div class="widget clr"><p class="tl_info">'
+        . ($GLOBALS['TL_LANG']['tl_module']['chatbot_search_info'] ?? '')
+        . '</p></div>',
 ];

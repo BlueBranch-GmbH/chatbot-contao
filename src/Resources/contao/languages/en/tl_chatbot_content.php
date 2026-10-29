@@ -2,7 +2,7 @@
 
 $GLOBALS['TL_LANG']['tl_chatbot_content']['title_legend'] = 'Title and kind';
 $GLOBALS['TL_LANG']['tl_chatbot_content']['content_legend'] = 'Content';
-$GLOBALS['TL_LANG']['tl_chatbot_content']['config_legend'] = 'Assignment';
+$GLOBALS['TL_LANG']['tl_chatbot_content']['config_legend'] = 'Settings';
 $GLOBALS['TL_LANG']['tl_chatbot_content']['publish_legend'] = 'Publishing';
 
 $GLOBALS['TL_LANG']['tl_chatbot_content']['title'] = ['Title', 'Internal title; the AI sees it as the heading of the content. It is never shown to visitors as a source.'];

@@ -1,7 +1,7 @@
 <?php
 
-$GLOBALS['TL_LANG']['tl_settings']['chatbot_legend'] = 'Chatbot settings';
-$GLOBALS['TL_LANG']['tl_settings']['chatbot_info'] = 'Access and an API key are available at <a href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">chatbot.bluebranch.de</a>; the <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">Contao guide</a> walks through the setup step by step. The key itself is stored on the website root page &ndash; this page only holds the defaults for all chat widgets.';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_legend'] = 'Chatbot – setup';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_info'] = 'The easiest way to set everything up is <strong>BlueBranch Chatbot → Getting started</strong> (account, training, display, test). This page holds the defaults for all chat modules; every module can override them. Account and guide: <a href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.';
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_name'] = ['Chatbot name', 'Default name shown in the chat header when the module does not define its own name.'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_color'] = ['Accent color', 'Default accent color of the chat widget when the module does not define its own color.'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_default_icon'] = ['Icon (SVG)', 'Replaces the default AI icon on the chat button, if the module does not define its own icon.'];
@@ -26,6 +26,8 @@ $GLOBALS['TL_LANG']['tl_settings']['chatbot_debug'] = ['Write debug files', 'Sto
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_log_legend'] = 'Questions, answers and feedback';
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_log_enabled'] = ['Store questions and answers', 'Stores every question with its answer for later analysis (back end: "Questions & feedback"). No IP address, browser data or session ID; e-mail addresses and phone numbers in questions are masked. Even without this switch an answer is stored when a visitor rates it (enable feedback in the module).'];
 $GLOBALS['TL_LANG']['tl_settings']['chatbot_log_retention'] = ['Retention (days)', 'Older entries are deleted daily. 0 = unlimited.'];
-$GLOBALS['TL_LANG']['tl_settings']['chatbot_feedback_default'] = ['Ask for feedback on answers', 'Default for all chatbot modules: thumbs up/down below every answer, a short text field on thumbs down. Can be switched on or off per module.'];
-$GLOBALS['TL_LANG']['tl_settings']['chatbot_voice_default'] = ['Offer voice input in the chat widget', 'Default for all chat widgets: a microphone button lets visitors speak their question (converted to text through the API, nothing stored). Can be switched on or off per module. Please mention it in your privacy policy.'];
-$GLOBALS['TL_LANG']['tl_settings']['chatbot_global_widget'] = ['Show chat on all pages', 'The selected widget module appears on every page without having to be placed in a layout or article. Leave empty to switch it off. Exclude single pages with "Hide chat on this page" in the page settings. The easiest way is BlueBranch Chatbot → Getting started.'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_feedback_default'] = ['Ask for feedback on answers', 'Thumbs up/down below every answer; can be changed per module.'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_voice_default'] = ['Offer voice input (microphone)', 'Default for all modules; nothing is stored. Please mention it in your privacy policy.'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_global_widget'] = ['Show chat on all pages', 'Appears on every page without a layout entry. Empty = off.'];
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_look_legend'] = 'Chatbot – appearance';
+$GLOBALS['TL_LANG']['tl_settings']['chatbot_text_legend'] = 'Chatbot – texts and notes';

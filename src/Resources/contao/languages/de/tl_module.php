@@ -1,32 +1,30 @@
 <?php
 
-$GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'] = ['Query Parameter', 'Geben Sie den Namen des Query-Parameters an (z.B. keywords).'];
-
-$GLOBALS['TL_LANG']['tl_module']['chatbot_typed_questions'] = ['Getippte Fragen', 'Werden im Frontend nacheinander Zeichen für Zeichen als Platzhalter ins Eingabefeld geschrieben. Ohne Eintrag bleibt der statische Platzhalter stehen.'];
-
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_position'] = ['Position', 'Wählen Sie, in welcher Ecke des Bildschirms der Chat-Button erscheinen soll.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'] = ['Suchparameter', 'Name des Parameters in der Adresse, z. B. „keywords“. Er muss zum Contao-Suchmodul passen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_typed_questions'] = ['Getippte Fragen', 'Werden nacheinander als Platzhalter ins Eingabefeld getippt. Ohne Eintrag bleibt der feste Platzhalter.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_position'] = ['Position', 'Ecke des Bildschirms, in der der Chat-Knopf erscheint.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_position_options'] = [
     'bottom-right' => 'Unten rechts',
     'bottom-left'  => 'Unten links',
     'top-right'    => 'Oben rechts',
     'top-left'     => 'Oben links',
 ];
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_color'] = ['Farbe', 'Akzentfarbe des Chat-Buttons und -Fensters. Leer lassen, um die globale Einstellung aus den Website-Einstellungen zu verwenden.'];
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_icon'] = ['Icon (SVG)', 'Ersetzt das Standard-KI-Icon im Chat-Button. Leer lassen, um das globale Icon aus den Website-Einstellungen bzw. das Standard-Icon zu verwenden.'];
-
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_color'] = ['Farbe', 'Akzentfarbe des Chats. Leer = Vorgabe aus den Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_icon'] = ['Icon (SVG)', 'Ersetzt das Standard-Symbol. Leer = Vorgabe aus den Einstellungen.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_legend'] = 'Chatbot-Einstellungen';
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_name'] = ['Name', 'Der Name des Chatbots, der im Chat-Header angezeigt wird. Wenn leer, wird der globale Standardname aus den Website-Einstellungen verwendet.'];
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_greeting'] = ['Begrüßung', 'Die Nachricht, die der Chatbot beim ersten Öffnen des Chats automatisch anzeigt. Leer lassen, um die globale Einstellung aus den Website-Einstellungen zu verwenden.'];
-
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_suggestions'] = ['Fragen-Vorschläge', 'Werden beim ersten Öffnen als klickbare Pills über dem Eingabefeld angezeigt. Klick auf eine Pill schickt die Frage sofort ab. Leer lassen, um die globalen Vorschläge aus den Website-Einstellungen zu verwenden.'];
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_summarize'] = ['"Inhalt zusammenfassen"-Pill ausblenden', 'Blendet die Pill zum Zusammenfassen des Seiteninhalts für dieses Modul aus, auch wenn sie global aktiviert ist.'];
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_disclaimer'] = ['Datenschutz-Hinweis ausblenden', 'Blendet den Hinweis "Private Chats & Hosted in Germany" am unteren Rand des Chat-Fensters für dieses Modul aus, auch wenn er global aktiviert ist.'];
-
-$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_unstyled'] = ['Kein Standard-Styling', 'Lädt kein CSS der Erweiterung. Der Chat bleibt voll funktionsfähig, das Erscheinungsbild muss dann vollständig über eigenes CSS gestaltet werden.'];
-
-$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'] = ['Feedback abfragen', 'Zeigt unter jeder Antwort Daumen hoch/runter; beim Daumen nach unten kann der Besucher kurz angeben, was nicht gepasst hat. Bewertete Antworten werden samt Frage gespeichert (Backend: „Fragen & Feedback“). Standard: die Vorgabe aus System → Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_name'] = ['Name', 'Steht im Kopf des Chats. Leer = Vorgabe aus den Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_greeting'] = ['Begrüßung', 'Erste Nachricht beim Öffnen des Chats. Leer = Vorgabe aus den Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_suggestions'] = ['Fragen-Vorschläge', 'Klickbare Fragen über dem Eingabefeld. Leer = Vorgabe aus den Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_summarize'] = ['„Inhalt zusammenfassen“ ausblenden', 'Blendet den Knopf zum Zusammenfassen der Seite aus.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_hide_disclaimer'] = ['Datenschutz-Hinweis ausblenden', 'Blendet „Private Chats & Hosted in Germany“ unten im Chat aus.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_unstyled'] = ['Kein Standard-Styling', 'Lädt kein CSS der Erweiterung; das Aussehen kommt dann komplett aus Ihrem eigenen CSS.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'] = ['Feedback abfragen', 'Daumen hoch/runter unter jeder Antwort. Bewertete Fragen stehen unter „Fragen & Feedback“.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'] = ['1' => 'An', '0' => 'Aus'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'] = 'Standard (wie in den Einstellungen)';
-$GLOBALS['TL_LANG']['tl_module']['chatbot_voice'] = ['Spracheingabe (Mikrofon)', 'Zeigt im Chat einen Mikrofon-Knopf: Besucher sprechen ihre Frage, die Aufnahme wird in Text umgewandelt und als Frage gesendet. Die Aufnahme wird nicht gespeichert. Jede gesprochene Frage zählt zweimal zum Kontingent (Umwandlung und Antwort). Der Knopf erscheint nur, wenn die Spracherkennung für Ihren Zugang eingerichtet ist und die Seite über HTTPS läuft. Standard: die Vorgabe aus System → Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice'] = ['Spracheingabe (Mikrofon)', 'Besucher sprechen ihre Frage; keine Speicherung, braucht HTTPS.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_voice_options'] = ['1' => 'An', '0' => 'Aus'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_voice_default'] = 'Standard (wie in den Einstellungen)';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_look_legend'] = 'Aussehen';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_text_legend'] = 'Texte';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_feature_legend'] = 'Funktionen';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_search_info'] = 'Die Suche gibt es in zwei Varianten: Mit dem Standard-Template erscheint die KI-Antwort über der Trefferliste des Contao-Suchmoduls. Wählen Sie unter „Template“ <code>mod_chatbot_generate_search_full</code>, hat das Modul ein eigenes Suchfeld mit Trefferliste – nur dort wirken „Getippte Fragen“ und das Mikrofon.';

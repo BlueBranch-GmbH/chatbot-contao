@@ -22,7 +22,7 @@ $GLOBALS['TL_DCA']['tl_chatbot_content'] = [
         'sorting' => [
             'mode' => 1,
             'fields' => ['title'],
-            'flag' => 1,
+            'flag' => 11,
             'panelLayout' => 'filter;search,limit',
         ],
         'label' => [
@@ -64,8 +64,8 @@ $GLOBALS['TL_DCA']['tl_chatbot_content'] = [
     ],
     'palettes' => [
         '__selector__' => ['type'],
-        'default' => '{title_legend},title,type;{content_legend},text;{config_legend},root,language;{publish_legend},published',
-        'file' => '{title_legend},title,type;{content_legend},file;{config_legend},root,language;{publish_legend},published',
+        'default' => '{title_legend},title,type;{content_legend},text;{config_legend},root,language,published',
+        'file' => '{title_legend},title,type;{content_legend},file;{config_legend},root,language,published',
     ],
     'fields' => [
         'id' => ['sql' => 'int(10) unsigned NOT NULL auto_increment'],

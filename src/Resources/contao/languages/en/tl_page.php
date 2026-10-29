@@ -3,10 +3,10 @@
 $GLOBALS['TL_LANG']['tl_page']['chatbot_legend'] = 'Chatbot settings';
 $GLOBALS['TL_LANG']['tl_page']['chatbot_api_key'] = [
     'API Key',
-    'A stored key is only shown as a placeholder and never rendered into the form. Leaving the placeholder keeps it, an empty field deletes it, a new entry replaces it.',
+    'Shown as a placeholder only. Keep the placeholder = keep the key, empty = delete, new text = replace. Easier: BlueBranch Chatbot → Getting started.',
 ];
 $GLOBALS['TL_LANG']['tl_page']['chatbot_noAnswers'] = [
     'Exclude from AI answers',
     'This page is not used for chatbot answers. The setting also applies to all subpages.',
 ];
-$GLOBALS['TL_LANG']['tl_page']['chatbot_hide_widget'] = ['Hide chat on this page', 'Excludes this page from "Show chat on all pages". A widget placed in a layout or article is not affected.'];
+$GLOBALS['TL_LANG']['tl_page']['chatbot_hide_widget'] = ['Hide chat on this page', 'Excludes the page from "Show chat on all pages". A widget placed in a layout or article stays.'];
