@@ -384,6 +384,25 @@ php vendor/bin/contao-console contao:migrate
 > hineinschreiben, und die Website antwortet nur noch mit 500 – ohne Eintrag im Anwendungslog,
 > weil der Fehler vor dem Framework passiert. Über den Contao Manager kann das nicht schiefgehen.
 
+### Ältere Versionen und angepasste Templates
+
+Die Erweiterung läuft mit **Contao 4.13 und 5.x** (PHP 8.0 oder neuer). Beim Update bleibt alles lauffähig, auch wenn ein Schritt
+fehlt: Fehlen die neuen Datenbankfelder noch (vor *Datenbank aktualisieren*), liefern die Seiten normal aus, nur die neuen Schalter
+sind erst nach der Migration speicherbar.
+
+Eigene Kopien der Templates unter `templates/mod_chatbot_*.html5` ersetzen die der Erweiterung und werden vom Update **nicht**
+mitgezogen. Der Code bleibt rückwärtskompatibel dazu (getestet gegen die Templates von 1.3.0, 1.4.1 und 1.5.1):
+
+| Template stammt aus | Verhalten mit der aktuellen Erweiterung |
+|---|---|
+| 1.5.x | funktioniert; Frage-Modul und Suche ohne Mikrofon-Knopf |
+| 1.3.x und 1.4.x | funktioniert; ohne Mikrofon-Knopf, ohne neues Design (bei Frage und Suche), Widget-Text kann im Suchindex landen |
+| älter als 1.3.0 | **Chat antwortet nicht** („Bitte laden Sie die Seite neu“): Die Signatur von Seite und Modul fehlt, sie ist seit 1.3.0 Pflicht |
+
+*BlueBranch Chatbot → Erste Schritte* prüft die Projekt-Templates und nennt, welche veraltet sind und was ihnen fehlt; bei fehlender
+Signatur steht zusätzlich ein Fehler im Anwendungslog. Am einfachsten: die eigene Kopie löschen (dann gilt das Template der Erweiterung)
+oder neu aus `vendor/bluebranch/chatbot/src/Resources/contao/templates/` kopieren und anpassen.
+
 ## Datenschutz und Hosting
 
 - **Hosting in Deutschland.** Server und Datenverarbeitung liegen ausschließlich in Deutschland.
@@ -732,6 +751,25 @@ php vendor/bin/contao-console contao:migrate
 > website answers with 500 only – without an entry in the application log, because the error
 > happens before the framework. This cannot go wrong via the Contao Manager.
 
+### Older versions and customised templates
+
+The extension runs with **Contao 4.13 and 5.x** (PHP 8.0 or newer). An update stays functional even if a step is missing: while the new
+database fields are not there yet (before *Update database*), the pages render normally; the new switches just cannot be saved before
+the migration.
+
+Your own copies of the templates under `templates/mod_chatbot_*.html5` replace the extension's and are **not** carried along by an
+update. The code stays backwards compatible with them (tested against the templates of 1.3.0, 1.4.1 and 1.5.1):
+
+| Template comes from | Behaviour with the current extension |
+|---|---|
+| 1.5.x | works; question module and search without microphone button |
+| 1.3.x and 1.4.x | works; without microphone button, without the new design (question and search), widget text can end up in the search index |
+| older than 1.3.0 | **chat does not answer** ("Please reload the page"): the page/module signature is missing, mandatory since 1.3.0 |
+
+*BlueBranch Chatbot → Getting started* checks the project templates and names the outdated ones and what they lack; a missing signature
+also leaves an error in the application log. Simplest: delete your copy (the extension's template applies then) or copy it again from
+`vendor/bluebranch/chatbot/src/Resources/contao/templates/` and re-apply your changes.
+
 ## Data protection and hosting
 
 - **Hosted in Germany.** Servers and data processing are located in Germany only.
@@ -771,6 +809,11 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 ## Changes
 
 ### Unveröffentlicht (nach 1.6.0)
+
+- **Angepasste Templates werden geprüft:** *Erste Schritte* listet Projekt-Templates (`templates/mod_chatbot_*.html5`), nennt veraltete und
+  was ihnen fehlt (Signatur = bricht den Chat; Mikrofon, neues Design = nur Hinweis). Fehlt die Signatur, steht ein Fehler im Anwendungslog
+  statt nur „Bitte laden Sie die Seite neu“ beim Besucher. Neue Klasse `TemplateCheck`. Getestet gegen die Templates von 1.2.4, 1.3.0, 1.4.1 und
+  1.5.1: ab 1.3.0 laufen sie unverändert weiter (siehe README „Ältere Versionen und angepasste Templates“)
 
 - **Backend-Masken überarbeitet:** Das Chat-Widget gruppiert seine Felder in *Aussehen*, *Texte* und *Funktionen*; Frage-Modul und Suche
   zeigen *Funktionen* und legen „Kein Standard-Styling“ zum Template. Die Such-Maske erklärt die zwei Varianten (mit und ohne eigenes Suchfeld).
