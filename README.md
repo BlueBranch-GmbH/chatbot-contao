@@ -245,15 +245,21 @@ noch lief, steht danach mit dem Hinweis „Antwort unterbrochen“ da.
 
 ## Spracheingabe (Mikrofon)
 
-Im Chat-Widget kann ein Mikrofon-Knopf neben dem Senden-Knopf stehen. Besucher sprechen ihre Frage,
+Im Chat-Widget, im Frage-Modul und in der Suche kann ein Mikrofon-Knopf stehen (im Widget neben dem Senden-Knopf, im Frage-Modul und in der
+Suche rechts im Eingabefeld). Besucher sprechen ihre Frage,
 die Aufnahme wird in Text umgewandelt und wie eine getippte Frage gesendet – mit Antwort, Quellen,
 Feedback und Verlauf wie gewohnt.
 
 **Einschalten.** Unter *System → Einstellungen → Spracheingabe im Chat-Widget anbieten* gilt die
-Vorgabe für alle Widgets (standardmäßig **aus**). In jedem Widget-Modul lässt sie sich mit
-*Spracheingabe (Mikrofon)* auf „An“ oder „Aus“ setzen – so lässt sich das Mikrofon auch nur an
-einzelnen Modulen anbieten oder an einzelnen abschalten. Die Einstellung steht bisher nur im
-Chat-Widget, nicht im Frage- und im Suchmodul.
+Vorgabe für alle Module (standardmäßig **aus**). In jedem Modul – Chat-Widget, Frage-Modul und Suche – lässt sie
+sich mit *Spracheingabe (Mikrofon)* auf „An“ oder „Aus“ setzen, so lässt sich das Mikrofon auch nur an einzelnen
+Modulen anbieten oder an einzelnen abschalten.
+
+**Frage-Modul und Suche.** Im Frage-Modul geht die gesprochene Frage nach dem Erkennen sofort ab; die Antwort erscheint
+darunter. In der Suche gilt das für die Variante mit eigenem Suchfeld (Template `mod_chatbot_generate_search_full`): Der
+erkannte Text startet die Suche wie ein getipptes Stichwort. Die Variante, die nur die KI-Antwort über der Trefferliste des
+Contao-Suchmoduls einfügt, hat kein eigenes Feld und deshalb kein Mikrofon. Angepasste Templates brauchen den Knopf
+`.chatbot-voice-btn` im Feld und `voice` in der Konfiguration – am einfachsten aus dem Template der Erweiterung übernehmen.
 
 **Wann der Knopf erscheint.** Alle drei Bedingungen müssen zutreffen:
 
@@ -626,9 +632,14 @@ question, the recording is converted to text and sent like a typed question – 
 sources, feedback and history as usual.
 
 - **Switching it on:** *System → Settings → Offer voice input in the chat widget* is the default for
-  all widgets (**off** by default). Each widget module can set *Voice input (microphone)* to "On" or
-  "Off", so the microphone can be offered on selected modules only or switched off on single ones.
-  So far the setting exists for the chat widget only, not for the question and search modules.
+  all modules (**off** by default). Each module – chat widget, question module and search – can set *Voice input
+  (microphone)* to "On" or "Off", so the microphone can be offered on selected modules only or switched off on single ones.
+- **Question module and search:** in the question module the spoken question is sent right after recognition and the answer
+  appears below. In the search this applies to the variant with its own search field (template
+  `mod_chatbot_generate_search_full`): the recognised text starts the search like a typed keyword. The variant that only adds
+  the AI answer above the results of the Contao search module has no field of its own and therefore no microphone. Customised
+  templates need the `.chatbot-voice-btn` button in the field and `voice` in the configuration – easiest is to copy them from
+  the extension's templates.
 - **When the button appears:** the module allows it, the API has speech recognition set up for the
   account (`transcriptionEnabled` in `GET /user/me/tier`, cached for ten minutes), and the page is
   served over **HTTPS** (or `localhost`) in a browser that can record.
@@ -758,6 +769,15 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### Unveröffentlicht (nach 1.6.0)
+
+- **Spracheingabe auch im Frage-Modul und in der Suche:** Mikrofon-Knopf rechts im Eingabefeld, Wellen ersetzen bei der Aufnahme
+  das Feld (× oder Escape verwirft), der erkannte Text geht sofort als Frage bzw. Suche ab. In der Suche nur in der Variante mit
+  eigenem Suchfeld (`mod_chatbot_generate_search_full`). Das Feld *Spracheingabe (Mikrofon)* steht jetzt in allen drei Modultypen
+  und folgt der Vorgabe aus den Einstellungen. Nach dem Update Seitencache leeren; angepasste Templates brauchen den Knopf
+  `.chatbot-voice-btn` im Feld und `voice` in der Konfiguration. Neu: `ChatbotVoiceField` in `chatbot-common.js`,
+  `VoiceInput::forModule()`
 
 ### 1.6.0 - 2026-10-29
 

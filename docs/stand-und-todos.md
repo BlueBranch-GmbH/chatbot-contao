@@ -16,6 +16,15 @@ Zusammenspiel der Repositories:
 | `spardorf-chatbot-api` | 0.0.62 (live: Stripe-Abos, Whisper) | `docs/11-stand-und-todos.md`, `docs/12-stripe-und-abos.md` |
 | `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
 
+## Unveröffentlicht (nach 1.6.0)
+
+Lokal committet, **nicht gepusht und nicht getaggt**. README-Changelog: „Unveröffentlicht (nach 1.6.0)“.
+
+| Bereich | Stand | Getestet |
+|---|---|---|
+| **Mikrofon im Frage-Modul und in der Suche** (Variante mit eigenem Suchfeld, `_full`): Knopf im Feld, Wellen statt Feld bei der Aufnahme, erkannter Text startet Frage bzw. Suche; `ChatbotVoiceField` (gemeinsame Logik), `VoiceInput::forModule()`, Feld `chatbot_voice` in beiden Paletten | fertig | Chrome mit gesprochener Datei: Frage-Modul in 5.7, 5.3, 4.13; Suche in 5.7 und 5.3; Abbrechen (× und Escape), Stille, verweigertes Mikrofon; mobil in 5.7; Widget nach der Änderung erneut in allen drei |
+| Suche ohne eigenes Feld (nur KI-Antwort über der Contao-Suche) | bewusst ohne Mikrofon | Feld gehört dem Contao-Suchmodul |
+
 ## Was 1.6.0 enthält
 
 | Bereich | Stand | Getestet |
@@ -64,8 +73,6 @@ Template der Erweiterung übernehmen.
       (Stimme „Anna“) als Mikrofon; offen sind Erkennungsqualität, Pegelschwelle (0,04) und die
       Stille-Sperre mit echter Sprache und verschiedenen Geräten
       (Safari/iOS nimmt als `audio/mp4` auf, Firefox als `audio/ogg`).
-- [ ] **Frage-Modul und Suche** haben noch kein Mikrofon. Die Aufnahme (`ChatbotVoice`) und die Route
-      sind schon wiederverwendbar; es fehlen Palette, Template und Anbindung in `ask.js`/`search.js`.
 - [ ] **Design:** andere Widget-Positionen (links, oben) und sehr dunkle Seiten nicht angesehen; mobil nur
       das Widget (Desktop-Modul in 5.7 mobil gesehen). Wer das Widget mit eigenem CSS stark umgebaut hat,
       prüft es nach dem Update.
