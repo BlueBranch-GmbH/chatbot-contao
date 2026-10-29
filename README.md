@@ -808,20 +808,7 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
-### Unveröffentlicht (nach 1.6.0)
-
-- **Angepasste Templates werden geprüft:** *Erste Schritte* listet Projekt-Templates (`templates/mod_chatbot_*.html5`), nennt veraltete und
-  was ihnen fehlt (Signatur = bricht den Chat; Mikrofon, neues Design = nur Hinweis). Fehlt die Signatur, steht ein Fehler im Anwendungslog
-  statt nur „Bitte laden Sie die Seite neu“ beim Besucher. Neue Klasse `TemplateCheck`. Getestet gegen die Templates von 1.2.4, 1.3.0, 1.4.1 und
-  1.5.1: ab 1.3.0 laufen sie unverändert weiter (siehe README „Ältere Versionen und angepasste Templates“)
-
-- **Backend-Masken überarbeitet:** Das Chat-Widget gruppiert seine Felder in *Aussehen*, *Texte* und *Funktionen*; Frage-Modul und Suche
-  zeigen *Funktionen* und legen „Kein Standard-Styling“ zum Template. Die Such-Maske erklärt die zwei Varianten (mit und ohne eigenes Suchfeld).
-  Der Modultyp heißt jetzt *Chatbot KI-Suche* (bisher „Chatbot Generate Search“). Die Hilfetexte sind kürzer und werden nicht mehr abgeschnitten.
-  Die Einstellungen sind in *Einrichtung*, *Aussehen* und *Texte und Hinweise* geteilt und verweisen auf *Erste Schritte*
-- **Inhaltselemente:** Die Indexer-Elemente heißen *Suchindex: Bereich ausnehmen – Anfang/Ende*, zeigen nur noch Typ und Sichtbarkeit
-  (keine Template-, Zugriffs- und Experten-Felder) und sagen, dass die KI-Wissensbasis die Markierung ignoriert
-- **Zusatzinhalte:** Die Liste ist alphabetisch ohne Buchstaben-Gruppen, die Maske hat eine Gruppe weniger („Einstellungen“)
+### 1.7.0 - 2026-10-29
 
 - **Spracheingabe auch im Frage-Modul und in der Suche:** Mikrofon-Knopf rechts im Eingabefeld, Wellen ersetzen bei der Aufnahme
   das Feld (× oder Escape verwirft), der erkannte Text geht sofort als Frage bzw. Suche ab. In der Suche nur in der Variante mit
@@ -829,6 +816,18 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
   und folgt der Vorgabe aus den Einstellungen. Nach dem Update Seitencache leeren; angepasste Templates brauchen den Knopf
   `.chatbot-voice-btn` im Feld und `voice` in der Konfiguration. Neu: `ChatbotVoiceField` in `chatbot-common.js`,
   `VoiceInput::forModule()`
+- **Backend-Masken überarbeitet:** Das Chat-Widget gruppiert seine Felder in *Aussehen*, *Texte* und *Funktionen*; Frage-Modul und Suche
+  zeigen *Funktionen* und legen „Kein Standard-Styling“ zum Template. Die Such-Maske erklärt die zwei Varianten (mit und ohne eigenes Suchfeld).
+  Der Modultyp heißt jetzt *Chatbot KI-Suche* (bisher „Chatbot Generate Search“). Die Hilfetexte sind kürzer und werden nicht mehr abgeschnitten.
+  Die Einstellungen sind in *Einrichtung*, *Aussehen* und *Texte und Hinweise* geteilt und verweisen auf *Erste Schritte*
+- **Inhaltselemente:** Die Indexer-Elemente heißen *Suchindex: Bereich ausnehmen – Anfang/Ende*, zeigen nur noch Typ und Sichtbarkeit
+  (keine Template-, Zugriffs- und Experten-Felder) und sagen, dass die KI-Wissensbasis die Markierung ignoriert
+- **Zusatzinhalte:** Die Liste ist alphabetisch ohne Buchstaben-Gruppen, die Maske hat eine Gruppe weniger („Einstellungen“)
+- **Angepasste Templates werden geprüft:** *Erste Schritte* listet Projekt-Templates (`templates/mod_chatbot_*.html5`), nennt veraltete und
+  was ihnen fehlt (Signatur = bricht den Chat; Mikrofon, neues Design = nur Hinweis). Fehlt die Signatur, steht ein Fehler im Anwendungslog
+  statt nur „Bitte laden Sie die Seite neu“ beim Besucher. Neue Klasse `TemplateCheck`. Getestet gegen die Templates von 1.2.4, 1.3.0, 1.4.1 und
+  1.5.1: ab 1.3.0 laufen sie unverändert weiter (siehe README „Ältere Versionen und angepasste Templates“)
+- Nach dem Update: `composer update`, `contao:migrate`, Seiten-Cache leeren; angepasste Templates prüft *Erste Schritte*
 
 ### 1.6.0 - 2026-10-29
 

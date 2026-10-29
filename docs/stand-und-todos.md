@@ -1,6 +1,7 @@
 # Stand und offene ToDos
 
-Stand: 2026-10-29, Version **1.6.0** (Tag `1.6.0`: Backend-Assistent „Erste Schritte“ und „Chat auf allen Seiten anzeigen“).
+Stand: 2026-10-29, Version **1.7.0** (Tag `1.7.0`: Mikrofon in Frage-Modul und Suche, überarbeitete Backend-Masken, Prüfung angepasster Templates).
+1.6.0 brachte den Backend-Assistenten „Erste Schritte“ und „Chat auf allen Seiten anzeigen“.
 1.5.1 brachte nur Packagist-Texte und README mit Screenshots, 1.5.0 die Spracheingabe und das neue Standard-Design für Widget,
 Frage-Modul und Suche. Davor: 1.4.1 vom 12.10.2026.
 Der neue Contao-Manager-Eintrag ist als Pull Request #839 an `contao/package-metadata` offen (noch nicht gemergt).
@@ -16,9 +17,7 @@ Zusammenspiel der Repositories:
 | `spardorf-chatbot-api` | 0.0.62 (live: Stripe-Abos, Whisper) | `docs/11-stand-und-todos.md`, `docs/12-stripe-und-abos.md` |
 | `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
 
-## Unveröffentlicht (nach 1.6.0)
-
-Lokal committet, **nicht gepusht und nicht getaggt**. README-Changelog: „Unveröffentlicht (nach 1.6.0)“.
+## Was 1.7.0 enthält
 
 | Bereich | Stand | Getestet |
 |---|---|---|
