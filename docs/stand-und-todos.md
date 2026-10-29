@@ -1,7 +1,8 @@
 # Stand und offene ToDos
 
-Stand: 29.10.2026, Version **1.5.0** (Tag `1.5.0`, Spracheingabe, neues Standard-Design für Widget, Frage-Modul
-und Suche). Davor: 1.4.1 vom 12.10.2026.
+Stand: 29.10.2026, Version **1.5.1** (Tag `1.5.1`: nur Packagist-Texte, README mit Screenshots; Code wie 1.5.0).
+1.5.0 brachte Spracheingabe und das neue Standard-Design für Widget, Frage-Modul und Suche. Davor: 1.4.1 vom 12.10.2026.
+Der neue Contao-Manager-Eintrag ist als Pull Request #839 an `contao/package-metadata` offen (noch nicht gemergt).
 Anforderungen, Entscheidungen und Testprotokoll des Ausbaus: [ausbau-2026-10.md](ausbau-2026-10.md).
 Die Pfade dort beziehen sich auf das Testprojekt `contao57` (`extensions/bluebranch/chatbot`).
 

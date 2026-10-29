@@ -1,7 +1,17 @@
-# BlueBranch Chatbot – KI-Chatbot und KI-Suche für Contao (DE)
+# BlueBranch Chatbot – KI-Chatbot und KI-Suche mit Spracheingabe für Contao (DE)
 
-Beantworte Besucherfragen direkt auf deiner Contao-Website – mit einer KI, die ausschließlich
-deine eigenen Seiteninhalte kennt.
+Dein Website-Assistent für Contao: Besucher tippen oder sprechen ihre Frage und bekommen sofort eine
+Antwort – ausschließlich aus deinen eigenen Seiten, mit Quellenangabe.
+
+![Chat-Widget mit Sprachaufnahme und Antwort](docs/screenshots/chat-widget-antwort.jpg)
+
+- **Nur deine Inhalte.** Die KI antwortet aus deinen Seiten und nennt die Quellen als Link.
+- **Sprechen statt Tippen.** Mikrofon-Knopf mit Wellenanzeige, die Aufnahme wird nicht gespeichert.
+- **Fertiges Design.** Chat-Widget, Frage-Modul und KI-Antwort über der Suche – in deiner Akzentfarbe,
+  auch auf dem Smartphone.
+- **DSGVO.** Betrieb und Verarbeitung in Deutschland, eigenes KI-Modell ohne OpenAI-Konto, kein
+  Training mit deinen Daten, Vertrag nach Art. 28 DSGVO auf Anfrage.
+- **Kostenlos starten.** Eine kostenlose Stufe zum Ausprobieren, größere Pakete für mehr Anfragen.
 
 Die Erweiterung übergibt die Seiteninhalte beim Suchindex-Lauf an die Chatbot-API, die daraus
 eine Vektor-Wissensbasis aufbaut. Aus genau diesem Bestand werden Fragen beantwortet – als
@@ -13,6 +23,16 @@ Contao spricht mit der API.
 
 
 > Stand der Entwicklung und offene ToDos: [docs/stand-und-todos.md](docs/stand-und-todos.md)
+
+## So sieht es aus
+
+| Chat mit Sprachaufnahme | Frage-Modul mit Antwortkarte |
+|---|---|
+| ![Sprachaufnahme mit Wellen](docs/screenshots/chat-widget-sprachaufnahme.jpg) | ![Frage-Modul mit Antwort und Quellen](docs/screenshots/frage-modul-antwort.jpg) |
+
+| Eigene Farbe (eine CSS-Variable) | Auf dem Smartphone |
+|---|---|
+| ![Chat in Orange](docs/screenshots/chat-widget-orange.jpg) | ![Chat auf dem Smartphone](docs/screenshots/chat-mobil-antwort.jpg) |
 
 ## So funktioniert die Contao-Integration
 
@@ -365,10 +385,20 @@ php vendor/bin/contao-console contao:migrate
 - Kein Server-Cronjob nötig: Die Bereinigung läuft über Contaos eigenes Cron-System
 - DSGVO-konform: Verarbeitung ausschließlich in Deutschland, eigenes KI-Modell, AVV möglich
 
-# BlueBranch Chatbot – AI chat and AI search for Contao (EN)
+# BlueBranch Chatbot – AI chat and AI search with voice input for Contao (EN)
 
-Answer visitor questions directly on your Contao website – with an AI that knows nothing but your
-own page content.
+Your website assistant for Contao: visitors type or speak their question and get an answer right away –
+drawn only from your own pages, with sources.
+
+![Chat widget with voice recording and answer](docs/screenshots/chat-widget-antwort.jpg)
+
+- **Only your content.** The AI answers from your pages and links the sources.
+- **Speak instead of typing.** Microphone button with live waveform; the recording is not stored.
+- **Ready-made design.** Chat widget, question module and AI answer above the search – in your accent
+  colour, also on smartphones.
+- **GDPR.** Hosted and processed in Germany, our own AI model without an OpenAI account, no training
+  with your data, agreement under Art. 28 GDPR on request.
+- **Start for free.** A free tier to try it out, larger plans for more requests.
 
 During the search index run, the extension hands your page content to the Chatbot API, which
 builds a vector knowledge base from it. Questions are answered from exactly that content – as a
@@ -376,6 +406,16 @@ collapsible chat widget and as a summarising answer above the Contao search resu
 
 The API key stays on the server: the browser only ever talks to Contao, and Contao talks to the
 API.
+
+## What it looks like
+
+| Chat with voice recording | Question module with answer card |
+|---|---|
+| ![Voice recording with waveform](docs/screenshots/chat-widget-sprachaufnahme.jpg) | ![Question module with answer and sources](docs/screenshots/frage-modul-antwort.jpg) |
+
+| Your own colour (one CSS variable) | On a smartphone |
+|---|---|
+| ![Chat in orange](docs/screenshots/chat-widget-orange.jpg) | ![Chat on a smartphone](docs/screenshots/chat-mobil-antwort.jpg) |
 
 ## How the Contao Integration Works
 
@@ -684,6 +724,15 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.5.1 - 2026-10-29
+
+- Neuer Titel und neue Beschreibung im Contao Manager und auf extensions.contao.org („KI-Chatbot mit Sprache –
+  kostenlos & DSGVO“, mehr Keywords); die Texte kommen über das Repository `contao/package-metadata`
+  (Pull Request #839), `meta/bluebranch/chatbot/*.yml` hier ist die Arbeitskopie
+- Packagist: neue Beschreibung und erweiterte Schlagwörter
+- README: neuer Einstieg mit Nutzen in fünf Stichpunkten, Screenshots (Chat mit Sprachaufnahme, Frage-Modul, eigene
+  Farbe, Smartphone) und englischer Einstieg angeglichen. Keine Änderung am Code
 
 ### 1.5.0 - 2026-10-29
 
