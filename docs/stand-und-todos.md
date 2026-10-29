@@ -31,6 +31,7 @@ Versionsnummer ersetzen (nach Funktionsumfang 1.5.0).
 | `project_paused` (403) → neutraler Besuchertext (Stream- und Nicht-Stream-Route) | fertig | nicht gegen ein echtes pausiertes Projekt |
 | Neues Standard-Design des Widgets (Kopf mit Avatar und Verlauf, getönter Verlauf, Pillen-Eingabe, aus der Akzentfarbe abgeleitete Töne) | fertig | Browser (Desktop, Standardfarbe) |
 | README: Tarife (Free/Pro/Expert, Stripe im Frontend, Enterprise entfällt), Spracheingabe, Datenschutz | fertig | – |
+| **Contao 5.7, 5.3 und 4.13** (PHP 8.3 / 8.2 / 8.1) | Spracheingabe läuft in allen dreien | 30.10.2026, Chrome (Playwright, `--use-file-for-fake-audio-capture` mit einer per `say` gesprochenen Frage): Aufnahme, Wellen, Upload (200), Frage wortgenau erkannt, Antwort; Desktop 1280 × 800 und mobil 390 × 844, keine JS-Fehler (404 nur das fehlende Favicon der Testseiten) |
 
 Nach dem Update: `composer update`, `contao:migrate` (neues Feld `tl_module.chatbot_voice`),
 **Seiten-Cache leeren**. Angepasste Templates `mod_chatbot_widget.html5` brauchen für das Mikrofon den
@@ -39,8 +40,9 @@ Template der Erweiterung übernehmen.
 
 **Offen zur Spracheingabe und zum Design:**
 
-- [ ] **Echtes Mikrofon testen.** Bisher nur ein künstliches Signal; Erkennungsqualität, Pegelschwelle
-      (0,04) und Länge der Stille-Sperre mit echter Sprache und verschiedenen Geräten prüfen
+- [ ] **Echtes Mikrofon testen.** Getestet ist der ganze Weg mit einer synthetisch gesprochenen Frage
+      (Stimme „Anna“) als Mikrofon; offen sind Erkennungsqualität, Pegelschwelle (0,04) und die
+      Stille-Sperre mit echter Sprache und verschiedenen Geräten
       (Safari/iOS nimmt als `audio/mp4` auf, Firefox als `audio/ogg`).
 - [ ] **Frage-Modul und Suche** haben noch kein Mikrofon. Die Aufnahme (`ChatbotVoice`) und die Route
       sind schon wiederverwendbar; es fehlen Palette, Template und Anbindung in `ask.js`/`search.js`.
