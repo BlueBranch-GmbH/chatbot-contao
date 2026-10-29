@@ -37,3 +37,7 @@ $GLOBALS['TL_LANG']['chatbot_widget']['voiceEmpty'] = 'Es wurde nichts verstande
 $GLOBALS['TL_LANG']['chatbot_widget']['voiceDenied'] = 'Kein Zugriff auf das Mikrofon. Bitte in der Adresszeile des Browsers erlauben.';
 $GLOBALS['TL_LANG']['chatbot_widget']['voiceError'] = 'Die Spracheingabe hat nicht funktioniert.';
 $GLOBALS['TL_LANG']['chatbot_widget']['voiceCancel'] = 'Aufnahme verwerfen';
+$GLOBALS['TL_LANG']['chatbot_widget']['searchLoading'] = 'Antwort wird generiert...';
+$GLOBALS['TL_LANG']['chatbot_widget']['searchDone'] = 'Antwort generiert';
+$GLOBALS['TL_LANG']['chatbot_widget']['searchStopped'] = 'Antwort abgebrochen';
+$GLOBALS['TL_LANG']['chatbot_widget']['searchSeconds'] = 'Sekunden';

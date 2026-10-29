@@ -18,6 +18,12 @@ class FeedbackStrings
         'feedbackSend' => 'Senden',
         'feedbackThanks' => 'Danke für Ihr Feedback!',
         'feedbackError' => 'Feedback konnte nicht gesendet werden.',
+        // Statuszeile und Fehlertext von Frage- und Suchmodul
+        'searchLoading' => 'Antwort wird generiert...',
+        'searchDone' => 'Antwort generiert',
+        'searchStopped' => 'Antwort abgebrochen',
+        'searchSeconds' => 'sekunden',
+        'requestError' => 'Es ist ein Fehler bei der Anfrage aufgetreten.',
     ];
 
     public static function get(): array

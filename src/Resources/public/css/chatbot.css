@@ -3,11 +3,14 @@
  *
  * All colors/sizes are exposed as custom properties on .chatbot-widget so a
  * project's own stylesheet can rebrand the widget without touching this file.
+ * The question and search modules share the same variables.
  * Everything derived from the accent color (tints, glow, gradient) follows it
  * automatically, so one `--chatbot-widget-accent` is enough to rebrand.
  */
 
-.chatbot-widget {
+.chatbot-widget,
+.chatbot-ask-container,
+.chatbot-generate-search-container {
     --chatbot-widget-accent: #2b6cb0;
     --chatbot-widget-accent-contrast: #ffffff;
     --chatbot-widget-bg: #ffffff;
@@ -28,7 +31,9 @@
     --chatbot-widget-accent-soft: rgba(43, 108, 176, 0.1);
     --chatbot-widget-accent-ring: rgba(43, 108, 176, 0.25);
     --chatbot-widget-accent-glow: rgba(0, 0, 0, 0.22);
+}
 
+.chatbot-widget {
     position: fixed;
     z-index: var(--chatbot-widget-z-index);
     font-family: var(--chatbot-widget-font);
@@ -37,7 +42,9 @@
 }
 
 @supports (color: color-mix(in srgb, red, blue)) {
-    .chatbot-widget {
+    .chatbot-widget,
+    .chatbot-ask-container,
+    .chatbot-generate-search-container {
         --chatbot-widget-accent-dark: color-mix(in srgb, var(--chatbot-widget-accent) 78%, #000000);
         --chatbot-widget-accent-soft: color-mix(in srgb, var(--chatbot-widget-accent) 10%, transparent);
         --chatbot-widget-accent-ring: color-mix(in srgb, var(--chatbot-widget-accent) 28%, transparent);
@@ -47,7 +54,13 @@
 
 .chatbot-widget *,
 .chatbot-widget *::before,
-.chatbot-widget *::after {
+.chatbot-widget *::after,
+.chatbot-ask-container *,
+.chatbot-ask-container *::before,
+.chatbot-ask-container *::after,
+.chatbot-generate-search-container *,
+.chatbot-generate-search-container *::before,
+.chatbot-generate-search-container *::after {
     box-sizing: border-box;
 }
 
@@ -848,4 +861,462 @@
 
 .chatbot-feedback__thanks--error {
     color: #b42318;
+}
+
+/* ==========================================================================
+   Frage-Modul und Suche: Eingabefeld, Antwortkarte, Quellen, Trefferliste
+   ========================================================================== */
+
+.chatbot-ask-container,
+.chatbot-generate-search-container {
+    margin: 0 0 1.5rem;
+    color: inherit;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.chatbot-ask-container .invisible,
+.chatbot-generate-search-container .invisible {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Formular: Suchfeld als Pille mit Lupe, daneben der Knopf. */
+.chatbot-ask-form,
+.chatbot-search-form {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+.chatbot-ask-form .widget,
+.chatbot-search-form .widget {
+    float: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.chatbot-ask-form .widget-text,
+.chatbot-search-form .widget-text {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.chatbot-ask-form .widget-submit,
+.chatbot-search-form .widget-submit {
+    flex: 0 0 auto;
+}
+
+.chatbot-ask-container .chatbot-ask-input,
+.chatbot-generate-search-container .chatbot-ask-input {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 54px;
+    margin: 0;
+    padding: 0 22px 0 54px;
+    border: 1px solid var(--chatbot-widget-border);
+    border-radius: 999px;
+    background: var(--chatbot-widget-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 20px center / 20px 20px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+    color: var(--chatbot-widget-text);
+    font: inherit;
+    font-size: 1.05em;
+    line-height: 1.4;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chatbot-ask-container .chatbot-ask-input::placeholder,
+.chatbot-generate-search-container .chatbot-ask-input::placeholder {
+    color: var(--chatbot-widget-muted);
+    opacity: 1;
+}
+
+.chatbot-ask-container .chatbot-ask-input::-webkit-search-cancel-button,
+.chatbot-generate-search-container .chatbot-ask-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.chatbot-ask-container .chatbot-ask-input:hover,
+.chatbot-generate-search-container .chatbot-ask-input:hover {
+    border-color: var(--chatbot-widget-accent-ring);
+}
+
+.chatbot-ask-container .chatbot-ask-input:focus,
+.chatbot-generate-search-container .chatbot-ask-input:focus {
+    outline: none;
+    border-color: var(--chatbot-widget-accent);
+    box-shadow: 0 0 0 4px var(--chatbot-widget-accent-ring), 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+
+.chatbot-ask-container .chatbot-ask-form .submit,
+.chatbot-generate-search-container .chatbot-search-form .submit {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 54px;
+    margin: 0;
+    padding: 0 30px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(145deg, var(--chatbot-widget-accent), var(--chatbot-widget-accent-dark));
+    box-shadow: 0 6px 16px var(--chatbot-widget-accent-ring);
+    color: var(--chatbot-widget-accent-contrast);
+    font: inherit;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.chatbot-ask-container .chatbot-ask-form .submit:hover,
+.chatbot-generate-search-container .chatbot-search-form .submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px var(--chatbot-widget-accent-ring);
+}
+
+.chatbot-ask-container .chatbot-ask-form .submit:focus-visible,
+.chatbot-generate-search-container .chatbot-search-form .submit:focus-visible {
+    outline: 3px solid var(--chatbot-widget-accent-ring);
+    outline-offset: 3px;
+}
+
+/* Waehrend der Antwort ist derselbe Knopf der Stopp-Knopf. */
+.chatbot-ask-container .chatbot-ask-form .submit.is-stop {
+    background: #4b5563;
+    box-shadow: none;
+}
+
+/* Antwortkarte */
+.chatbot-ask-container .chatbot-response,
+.chatbot-generate-search-container .chatbot-response {
+    position: relative;
+    margin-top: 18px;
+    padding: 24px 26px 22px;
+    overflow: hidden;
+    border: 1px solid var(--chatbot-widget-border);
+    border-radius: 18px;
+    background: var(--chatbot-widget-bg);
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.09);
+    color: var(--chatbot-widget-text);
+    animation: chatbot-response-in 0.3s ease-out;
+}
+
+.chatbot-ask-container .chatbot-response::before,
+.chatbot-generate-search-container .chatbot-response::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--chatbot-widget-accent), var(--chatbot-widget-accent-dark));
+}
+
+.chatbot-ask-container .chatbot-response[hidden],
+.chatbot-generate-search-container.chatbot-empty .chatbot-response {
+    display: none;
+}
+
+@keyframes chatbot-response-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* Statuszeile: pulsierender Punkt, am Ende gruen und ruhig. */
+.chatbot-ask-container .chatbot-loading,
+.chatbot-generate-search-container .chatbot-loading {
+    margin: 0 0 14px;
+    color: var(--chatbot-widget-muted);
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.chatbot-ask-container .chatbot-loading::before,
+.chatbot-generate-search-container .chatbot-loading::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--chatbot-widget-accent);
+    vertical-align: 1px;
+    animation: chatbot-loading-pulse 1.1s ease-in-out infinite;
+}
+
+.chatbot-ask-container .chatbot-loading.finished::before,
+.chatbot-generate-search-container .chatbot-loading.finished::before {
+    background: #22c55e;
+    animation: none;
+}
+
+@keyframes chatbot-loading-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Antworttext */
+.chatbot-ask-container .chatbot-content,
+.chatbot-generate-search-container .chatbot-content {
+    font-size: 1.02em;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.chatbot-ask-container .chatbot-content > :first-child,
+.chatbot-generate-search-container .chatbot-content > :first-child {
+    margin-top: 0;
+}
+
+.chatbot-ask-container .chatbot-content > :last-child,
+.chatbot-generate-search-container .chatbot-content > :last-child {
+    margin-bottom: 0;
+}
+
+.chatbot-ask-container .chatbot-content p,
+.chatbot-generate-search-container .chatbot-content p {
+    margin: 0 0 0.9em;
+}
+
+.chatbot-ask-container .chatbot-content ul,
+.chatbot-ask-container .chatbot-content ol,
+.chatbot-generate-search-container .chatbot-content ul,
+.chatbot-generate-search-container .chatbot-content ol {
+    margin: 0 0 0.9em;
+    padding-left: 1.4em;
+}
+
+.chatbot-ask-container .chatbot-content li,
+.chatbot-generate-search-container .chatbot-content li {
+    margin: 0.25em 0;
+}
+
+.chatbot-ask-container .chatbot-content a,
+.chatbot-generate-search-container .chatbot-content a {
+    color: var(--chatbot-widget-accent);
+    text-underline-offset: 3px;
+}
+
+.chatbot-ask-container .chatbot-content code,
+.chatbot-generate-search-container .chatbot-content code {
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+    background: var(--chatbot-widget-bot-bubble);
+    font-size: 0.9em;
+}
+
+.chatbot-ask-container .chatbot-content blockquote,
+.chatbot-generate-search-container .chatbot-content blockquote {
+    margin: 0 0 0.9em;
+    padding: 0.2em 0 0.2em 1em;
+    border-left: 3px solid var(--chatbot-widget-accent-ring);
+    color: var(--chatbot-widget-muted);
+}
+
+.chatbot-ask-container .chatbot-content .error,
+.chatbot-generate-search-container .chatbot-content .error {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid #fecdca;
+    border-radius: 12px;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+/* Quellen als Pillen */
+.chatbot-ask-container .chatbot-sources,
+.chatbot-generate-search-container .chatbot-sources {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--chatbot-widget-border);
+}
+
+.chatbot-ask-container .chatbot-sources p,
+.chatbot-generate-search-container .chatbot-sources p {
+    margin: 0 0 10px;
+    color: var(--chatbot-widget-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.chatbot-ask-container .chatbot-sources ul,
+.chatbot-generate-search-container .chatbot-sources ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chatbot-ask-container .chatbot-sources li,
+.chatbot-generate-search-container .chatbot-sources li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chatbot-ask-container .chatbot-sources a,
+.chatbot-generate-search-container .chatbot-sources a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 13px;
+    border: 1px solid var(--chatbot-widget-accent-ring);
+    border-radius: 999px;
+    background: var(--chatbot-widget-accent-soft);
+    color: var(--chatbot-widget-accent);
+    font-size: 0.88rem;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.chatbot-ask-container .chatbot-sources a::before,
+.chatbot-generate-search-container .chatbot-sources a::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 13px;
+    height: 13px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.chatbot-ask-container .chatbot-sources a:hover,
+.chatbot-ask-container .chatbot-sources a:focus-visible,
+.chatbot-generate-search-container .chatbot-sources a:hover,
+.chatbot-generate-search-container .chatbot-sources a:focus-visible {
+    background: var(--chatbot-widget-accent);
+    color: var(--chatbot-widget-accent-contrast);
+}
+
+.chatbot-ask-container .chatbot-feedback-wrap,
+.chatbot-generate-search-container .chatbot-feedback-wrap {
+    margin-top: 14px;
+}
+
+/* Trefferliste der Contao-Suche (Template mit „_full“) als Karten */
+.chatbot-native-results {
+    margin-top: 28px;
+}
+
+.chatbot-native-results__header {
+    margin: 0 0 14px;
+    color: var(--chatbot-widget-muted);
+    font-size: 0.9rem;
+}
+
+.chatbot-native-results__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chatbot-native-results__item {
+    margin: 0;
+    padding: 16px 20px;
+    border: 1px solid var(--chatbot-widget-border);
+    border-radius: 14px;
+    background: var(--chatbot-widget-bg);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.chatbot-native-results__item:hover {
+    border-color: var(--chatbot-widget-accent-ring);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+}
+
+.chatbot-native-results__title {
+    margin: 0 0 4px;
+    font-size: 1.12em;
+    line-height: 1.35;
+}
+
+.chatbot-native-results__title a {
+    color: var(--chatbot-widget-accent);
+    text-decoration: none;
+}
+
+.chatbot-native-results__title a:hover,
+.chatbot-native-results__title a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.chatbot-native-results__context {
+    margin: 0 0 6px;
+    opacity: 0.85;
+    line-height: 1.55;
+}
+
+.chatbot-native-results__context strong {
+    padding: 0 2px;
+    border-radius: 3px;
+    background: var(--chatbot-widget-accent-soft);
+    font-weight: 600;
+}
+
+.chatbot-native-results__url {
+    margin: 0;
+    color: var(--chatbot-widget-muted);
+    font-size: 0.78rem;
+    word-break: break-all;
+}
+
+.chatbot-native-results__empty {
+    margin: 0;
+    padding: 18px;
+    border: 1px dashed var(--chatbot-widget-border);
+    border-radius: 14px;
+    color: var(--chatbot-widget-muted);
+    text-align: center;
+}
+
+@media (max-width: 520px) {
+    .chatbot-ask-container .chatbot-ask-form .submit,
+    .chatbot-generate-search-container .chatbot-search-form .submit {
+        padding: 0 20px;
+    }
+
+    .chatbot-ask-container .chatbot-response,
+    .chatbot-generate-search-container .chatbot-response {
+        padding: 20px 18px 18px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chatbot-ask-container .chatbot-response,
+    .chatbot-generate-search-container .chatbot-response,
+    .chatbot-ask-container .chatbot-loading::before,
+    .chatbot-generate-search-container .chatbot-loading::before {
+        animation: none;
+    }
+
+    .chatbot-native-results__item,
+    .chatbot-native-results__item:hover {
+        transition: none;
+        transform: none;
+    }
 }

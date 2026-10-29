@@ -239,6 +239,10 @@ class ChatbotAPIController extends AbstractController
             return $this->noStore(new JsonResponse(['success' => false, 'message' => $this->limitMeldung($reason)], 429));
         }
 
+        if (415 === $status) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Dieses Audioformat wird nicht unterstützt.'], 415));
+        }
+
         return $this->noStore(new JsonResponse([
             'success' => false,
             'message' => 503 === $status

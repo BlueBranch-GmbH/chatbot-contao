@@ -292,7 +292,7 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         console.error('Chatbot Error:', error);
         // Eine Begruendung der Gegenstelle (etwa ein erschoepftes Kontingent) sagt mehr
         // als die allgemeine Meldung.
-        this.renderError(serverMessage || 'Es ist ein Fehler bei der Anfrage aufgetreten.');
+        this.renderError(serverMessage || this.strings.requestError || 'Es ist ein Fehler bei der Anfrage aufgetreten.');
     }
 
     showLoading(show) {
@@ -372,15 +372,15 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         const milliseconds = Math.floor((ms % 1000) / 10);
         const formattedMs = milliseconds.toString().padStart(2, '0');
         
-        const timerText = `${seconds}:${formattedMs} sekunden`;
+        const timerText = `${seconds}:${formattedMs} ${this.strings.searchSeconds || 'sekunden'}`;
         
         if (this.loadingDiv) {
-            let label = 'Antwort wird generiert...';
+            let label = this.strings.searchLoading || 'Antwort wird generiert...';
 
             if (this.wasStopped) {
-                label = 'Antwort abgebrochen';
+                label = this.strings.searchStopped || 'Antwort abgebrochen';
             } else if (this.loadingDiv.classList.contains('finished')) {
-                label = 'Antwort generiert';
+                label = this.strings.searchDone || 'Antwort generiert';
             }
 
             this.loadingDiv.textContent = `${label} (${timerText})`;

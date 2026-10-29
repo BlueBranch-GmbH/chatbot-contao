@@ -11,6 +11,7 @@ if ($this->iconUrl) {
     $styleVars[] = "--chatbot-widget-icon: url('" . implode('/', array_map('rawurlencode', explode('/', $this->iconUrl))) . "')";
 }
 ?>
+<!-- indexer::stop -->
 <div class="chatbot-widget" id="chatbot-widget-<?= $this->id ?>" data-position="<?= $this->position ?>"<?php if ($styleVars): ?> style="<?= \Contao\StringUtil::specialchars(implode('; ', $styleVars)) ?>;"<?php endif; ?>>
     <button type="button" class="chatbot-widget__toggle" aria-expanded="false" aria-controls="chatbot-widget-panel-<?= $this->id ?>" aria-label="<?= \Contao\StringUtil::specialchars($this->botName) ?>">
         <span class="chatbot-widget__toggle-icon" aria-hidden="true"></span>
@@ -77,3 +78,4 @@ if ($this->iconUrl) {
         ], JSON_HEX_TAG | JSON_HEX_AMP) ?>).init();
     });
 </script>
+<!-- indexer::continue -->

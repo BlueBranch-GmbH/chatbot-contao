@@ -2,6 +2,7 @@
 
 namespace Bluebranch\Chatbot\Module;
 
+use Bluebranch\Chatbot\classes\Appearance;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\ChatLog;
 use Bluebranch\Chatbot\classes\RequestSignature;
@@ -79,6 +80,9 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
 
         // Check if API key is present
         $template->hasApiKey = !empty($this->chatbotApi->getApiKey($pageModel));
+        // Standard-Design der Erweiterung; abschaltbar je Modul (wie beim Chat-Widget).
+        $template->unstyled = (bool) $model->chatbot_widget_unstyled;
+        $template->accentStyle = Appearance::accentStyle();
         // Den Hinweis auf einen fehlenden API-Schluessel sehen nur eingeloggte Redakteure;
         // Besuchern bleibt das Modul dann einfach leer.
         $template->showConfigHint = System::getContainer()->get('contao.security.token_checker')->hasBackendUser();
@@ -93,6 +97,9 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
         // Bindet Seite und Modul an diese Ausgabe (siehe RequestSignature).
         $template->sig = RequestSignature::sign((int) ($this->getPageModel() instanceof PageModel ? $this->getPageModel()->id : 0), (int) $model->id);
         $template->feedbackStrings = FeedbackStrings::get();
+
+        System::loadLanguageFile('chatbot_ask');
+        $template->labelSources = $GLOBALS['TL_LANG']['chatbot_ask']['sources'] ?? 'Quellen:';
 
         return $template->getResponse();
     }

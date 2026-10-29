@@ -832,6 +832,9 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
                     }
                 }
                 this.pendingSources = null;
+                // Quellen und Feedback-Leiste kamen erst jetzt dazu: ohne erneutes Scrollen
+                // bliebe die letzte Zeile der Antwort unter dem Rand abgeschnitten.
+                this.scrollToBottom();
                 finish();
             },
             error: (event) => {

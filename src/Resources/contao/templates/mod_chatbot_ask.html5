@@ -1,5 +1,6 @@
 <!-- indexer::stop -->
-<div class="chatbot-ask-container" id="chatbot-ask-<?= $this->id ?>">
+<?php if (!$this->unstyled): ?><link rel="stylesheet" href="<?= \Bluebranch\Chatbot\classes\Asset::url('css/chatbot.css') ?>"><?php endif; ?>
+<div class="chatbot-ask-container" id="chatbot-ask-<?= $this->id ?>"<?php if ($this->accentStyle): ?> style="<?= \Contao\StringUtil::specialchars($this->accentStyle) ?>"<?php endif; ?>>
 <?php if ($this->headline): ?>
     <<?= $this->hl ?> class="headline"><?= $this->headline ?></<?= $this->hl ?>>
 <?php endif; ?>
@@ -32,7 +33,6 @@
     </div>
 </div>
 
-<?php if ($this->feedback): ?><link rel="stylesheet" href="<?= \Bluebranch\Chatbot\classes\Asset::url('css/chatbot.css') ?>"><?php endif; ?>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/marked.min.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot-common.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/search.js') ?>"></script>

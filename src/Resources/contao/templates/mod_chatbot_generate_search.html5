@@ -1,5 +1,6 @@
 <!-- indexer::stop -->
-<div class="chatbot-generate-search-container<?= $this->query ? '' : ' chatbot-empty' ?>" id="chatbot-search-<?= $this->id ?>">
+<?php if (!$this->unstyled): ?><link rel="stylesheet" href="<?= \Bluebranch\Chatbot\classes\Asset::url('css/chatbot.css') ?>"><?php endif; ?>
+<div class="chatbot-generate-search-container<?= $this->query ? '' : ' chatbot-empty' ?>" id="chatbot-search-<?= $this->id ?>"<?php if ($this->accentStyle): ?> style="<?= \Contao\StringUtil::specialchars($this->accentStyle) ?>"<?php endif; ?>>
     <?php if ($this->headline): ?>
     <<?= $this->hl ?> class="headline"><?= $this->headline ?></<?= $this->hl ?>>
 <?php endif; ?>
@@ -16,13 +17,12 @@
     <div class="chatbot-loading" style="display:none;">Antwort wird generiert...</div>
     <div class="chatbot-content"></div>
     <div class="chatbot-sources" style="display:none;">
-        <p><strong>Quellen:</strong></p>
+        <p><strong><?= $this->labelSources ?></strong></p>
         <ul></ul>
     </div>
 </div>
 </div>
 
-<?php if ($this->feedback): ?><link rel="stylesheet" href="<?= \Bluebranch\Chatbot\classes\Asset::url('css/chatbot.css') ?>"><?php endif; ?>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/marked.min.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot-common.js') ?>"></script>
 <script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/search.js') ?>"></script>
