@@ -9,3 +9,4 @@ $GLOBALS['TL_LANG']['tl_page']['chatbot_noAnswers'] = [
     'Exclude from AI answers',
     'This page is not used for chatbot answers. The setting also applies to all subpages.',
 ];
+$GLOBALS['TL_LANG']['tl_page']['chatbot_hide_widget'] = ['Hide chat on this page', 'Excludes this page from "Show chat on all pages". A widget placed in a layout or article is not affected.'];

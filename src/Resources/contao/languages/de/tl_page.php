@@ -9,3 +9,4 @@ $GLOBALS['TL_LANG']['tl_page']['chatbot_noAnswers'] = [
     'Aus den KI-Antworten ausschließen',
     'Diese Seite wird nicht für Chatbot-Antworten herangezogen. Die Einstellung gilt auch für alle Unterseiten.',
 ];
+$GLOBALS['TL_LANG']['tl_page']['chatbot_hide_widget'] = ['Chat auf dieser Seite ausblenden', 'Nimmt diese Seite von „Chat auf allen Seiten anzeigen“ aus. Ein Widget, das im Layout oder in einem Artikel steht, bleibt davon unberührt.'];

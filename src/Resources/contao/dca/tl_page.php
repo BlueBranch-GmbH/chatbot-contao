@@ -49,6 +49,18 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_noAnswers'] = [
 ];
 
 /*
+ * Nimmt eine Seite von „Chat auf allen Seiten anzeigen“ aus. Ein Widget, das ausdruecklich im
+ * Layout oder in einem Artikel steht, bleibt davon unberuehrt.
+ */
+$GLOBALS['TL_DCA']['tl_page']['fields']['chatbot_hide_widget'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_page']['chatbot_hide_widget'],
+    'exclude'   => true,
+    'inputType' => 'checkbox',
+    'eval'      => ['tl_class' => 'w50 m12'],
+    'sql'       => "char(1) NOT NULL default ''",
+];
+
+/*
  * Trainingsstand je Seite, gepflegt von `TrainingState` - kein Formularfeld.
  *
  * Contao ruft den indexPage-Hook bei jedem indexierten Seitenaufruf auf, auch wenn sich nichts
@@ -85,7 +97,7 @@ foreach (array_keys($GLOBALS['TL_DCA']['tl_page']['palettes']) as $palette) {
         }
 
         PaletteManipulator::create()
-            ->addField('chatbot_noAnswers', $searchField, PaletteManipulator::POSITION_AFTER)
+            ->addField(['chatbot_noAnswers', 'chatbot_hide_widget'], $searchField, PaletteManipulator::POSITION_AFTER)
             ->applyToPalette($palette, 'tl_page');
 
         break;

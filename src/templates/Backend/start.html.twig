@@ -1,0 +1,345 @@
+<div id="tl_buttons">
+    <a href="{{ path('contao_backend') }}" class="header_back"
+       title="{{ 'MSC.backBT'|trans([], 'contao_default') }}"
+       accesskey="b">{{ 'MSC.backBT'|trans([], 'contao_default') }}</a>
+</div>
+
+{#
+  Schritt-fuer-Schritt-Seite. Alles hier laeuft durch Twigs Autoescape, kein |raw.
+  Pflicht sind die Schritte 1 bis 3 (`steps`); Schritt 4 und 5 sind optional.
+#}
+{% set current = not steps.connect ? 1 : (not steps.train ? 2 : (not steps.show ? 3 : 4)) %}
+
+<div class="chatbot-start">
+
+    <div class="chatbot-start__head">
+        <h2>Chatbot &ndash; Erste Schritte</h2>
+        <p class="chatbot-start__lead">
+            {% if doneCount == 3 %}
+                Alles eingerichtet &ndash; Ihr Chatbot läuft. Probieren Sie ihn unten aus oder passen Sie die Voreinstellungen an.
+            {% else %}
+                In drei Schritten zum laufenden Chatbot. <strong>{{ doneCount }} von 3</strong> sind erledigt.
+            {% endif %}
+        </p>
+        <div class="chatbot-start__bar" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="{{ doneCount }}">
+            <span style="width: {{ (doneCount / 3 * 100)|round }}%"></span>
+        </div>
+
+        {% if roots|length > 1 %}
+        <form method="get" class="chatbot-start__sites">
+            <input type="hidden" name="do" value="chatbot_start">
+            <label for="chatbot-start-site">Website</label>
+            <select id="chatbot-start-site" name="pageId" onchange="this.form.submit()">
+                {% for r in roots %}
+                    <option value="{{ r.id }}"{{ r.id == root.id ? ' selected' : '' }}>{{ r.title }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if notice %}
+    <div class="chatbot-start__notice chatbot-start__notice--{{ notice.type }}" role="status">{{ notice.text }}</div>
+    {% endif %}
+
+    {# ---------------------------------------------------------------- 1 #}
+    <section class="chatbot-start__step{{ steps.connect ? ' is-done' : '' }}{{ current == 1 ? ' is-current' : '' }}">
+        <div class="chatbot-start__badge">{{ steps.connect ? '✓' : '1' }}</div>
+        <div class="chatbot-start__body">
+            <h3>Zugang verbinden</h3>
+
+            {% if connected %}
+                <p class="chatbot-start__ok">
+                    Verbunden mit <strong>{{ tier.label }}</strong>
+                    {% if tier.requestsPerMonth is not null %}
+                        &middot; {{ tier.usedThisMonth|number_format(0, ',', '.') }} von {{ tier.requestsPerMonth|number_format(0, ',', '.') }} Anfragen in diesem Monat
+                    {% endif %}
+                    &middot; Spracheingabe {{ tier.transcriptionEnabled ? 'möglich (bis ' ~ tier.maxAudioSeconds ~ ' s je Aufnahme)' : 'nicht verfügbar' }}
+                </p>
+                <p class="chatbot-start__muted">Der Key ist bei „{{ root.title }}“ im Seitenbaum gespeichert.</p>
+                <details>
+                    <summary>Anderen Key eintragen</summary>
+                    {% include '@Chatbot/Backend/_start_key_form.html.twig' %}
+                </details>
+            {% else %}
+                {% if hasKey and connectionError %}
+                    <p class="chatbot-start__bad">{{ connectionError }} Tragen Sie den Key unten noch einmal ein, wenn er sich geändert hat.</p>
+                {% endif %}
+                <p>Damit der Chatbot antworten kann, braucht Ihre Website einen Zugang. Die Registrierung ist kostenlos und dauert eine Minute:</p>
+                <p><a class="chatbot-start__btn chatbot-start__btn--ghost" href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">Kostenlos registrieren &#8599;</a></p>
+                <p>Erstellen Sie dort einen <strong>API-Key</strong> und fügen Sie ihn hier ein:</p>
+                {% include '@Chatbot/Backend/_start_key_form.html.twig' %}
+            {% endif %}
+        </div>
+    </section>
+
+    {# ---------------------------------------------------------------- 2 #}
+    <section class="chatbot-start__step{{ steps.train ? ' is-done' : '' }}{{ current == 2 ? ' is-current' : '' }}{{ not steps.connect ? ' is-locked' : '' }}">
+        <div class="chatbot-start__badge">{{ steps.train ? '✓' : '2' }}</div>
+        <div class="chatbot-start__body">
+            <h3>Inhalte trainieren</h3>
+            <p>
+                Der Chatbot antwortet nur aus Ihren eigenen Seiten. Dafür liest Contao Ihre Inhalte beim Aufbau des
+                <strong>Suchindex</strong> und übergibt sie an den Chatbot.
+            </p>
+            {% if steps.train %}
+                <p class="chatbot-start__ok">
+                    {{ trainedPages }} {{ trainedPages == 1 ? 'Seite' : 'Seiten' }} trainiert{% if extraContent > 0 %} &middot; {{ extraContent }} {{ extraContent == 1 ? 'Zusatzinhalt' : 'Zusatzinhalte' }}{% endif %}.
+                    Neue und geänderte Seiten werden bei ihrem nächsten Aufruf automatisch ergänzt.
+                </p>
+            {% else %}
+                <ol class="chatbot-start__list">
+                    <li>Öffnen Sie <strong>System → Wartung</strong> und wählen Sie <em>Suchindex neu aufbauen</em>.</li>
+                    <li>Starten Sie den Vorgang und warten Sie, bis er fertig ist.</li>
+                    <li>Kommen Sie hierher zurück &ndash; der Stand aktualisiert sich beim Laden der Seite.</li>
+                </ol>
+            {% endif %}
+            <p class="chatbot-start__actions">
+                <a class="chatbot-start__btn{{ steps.train ? ' chatbot-start__btn--ghost' : '' }}" href="{{ path('contao_backend', {do: 'maintenance'}) }}">Wartung öffnen</a>
+                <a class="chatbot-start__btn chatbot-start__btn--ghost" href="{{ path('contao_backend', {do: 'chatbot_start', pageId: root.id}) }}">Stand aktualisieren</a>
+                <a class="chatbot-start__link" href="{{ path('contao_backend', {do: 'chatbot_content'}) }}">Zusatzinhalte (PDF, Word, Text) hinzufügen</a>
+            </p>
+        </div>
+    </section>
+
+    {# ---------------------------------------------------------------- 3 #}
+    <section class="chatbot-start__step{{ steps.show ? ' is-done' : '' }}{{ current == 3 ? ' is-current' : '' }}{{ not steps.connect ? ' is-locked' : '' }}">
+        <div class="chatbot-start__badge">{{ steps.show ? '✓' : '3' }}</div>
+        <div class="chatbot-start__body">
+            <h3>Chat auf der Website anzeigen</h3>
+
+            {% if globalOn %}
+                <p class="chatbot-start__ok">
+                    Der Chat erscheint auf <strong>allen Seiten</strong>
+                    {% if globalModule %}(Modul „{{ globalModule.name }}“, ID {{ globalModule.id }}){% endif %}.
+                    Einzelne Seiten nehmen Sie in den Seiteneinstellungen mit <em>Chat auf dieser Seite ausblenden</em> aus.
+                </p>
+                <form method="post" class="chatbot-start__inline">
+                    <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+                    <input type="hidden" name="pageId" value="{{ root.id }}">
+                    <input type="hidden" name="action" value="widget_off">
+                    <button type="submit" class="chatbot-start__btn chatbot-start__btn--ghost">Nicht mehr automatisch anzeigen</button>
+                    {% if globalModule %}
+                    <a class="chatbot-start__link" href="{{ path('contao_backend', {do: 'themes', table: 'tl_module', act: 'edit', id: globalModule.id}) }}">Aussehen und Texte im Modul ändern</a>
+                    {% endif %}
+                </form>
+            {% else %}
+                <p>Wie soll der Chat erscheinen?</p>
+                <div class="chatbot-start__choices">
+                    <div class="chatbot-start__choice chatbot-start__choice--main">
+                        <strong>Auf allen Seiten <span class="chatbot-start__tag">empfohlen</span></strong>
+                        <p>Ein Klick &ndash; kein Modul, kein Layout. Das Chat-Symbol erscheint unten rechts auf jeder Seite.</p>
+                        <form method="post">
+                            <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+                            <input type="hidden" name="pageId" value="{{ root.id }}">
+                            <input type="hidden" name="action" value="widget_on">
+                            <button type="submit" class="chatbot-start__btn"{{ not connected ? ' disabled' : '' }}>Chat auf allen Seiten anzeigen</button>
+                        </form>
+                    </div>
+                    <div class="chatbot-start__choice">
+                        <strong>Selbst platzieren</strong>
+                        <p>
+                            Für mehr Kontrolle: Binden Sie das Modul <em>Chatbot Widget</em>, <em>Chatbot Frage</em> oder die
+                            <em>KI-Antwort in der Suche</em> in ein Layout oder einen Artikel ein
+                            {% if modules.widget + modules.ask + modules.search > 0 %}
+                                (es gibt bereits {{ modules.widget + modules.ask + modules.search }} {{ modules.widget + modules.ask + modules.search == 1 ? 'Modul' : 'Module' }}).
+                            {% else %}
+                                (Layout → Module, oder Inhaltselement „Modul“).
+                            {% endif %}
+                        </p>
+                        <a class="chatbot-start__btn chatbot-start__btn--ghost" href="{{ path('contao_backend', {do: 'themes', table: 'tl_module'}) }}">Module öffnen</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ---------------------------------------------------------------- 4 #}
+    <section class="chatbot-start__step chatbot-start__step--optional{{ current == 4 ? ' is-current' : '' }}{{ not connected ? ' is-locked' : '' }}">
+        <div class="chatbot-start__badge">4</div>
+        <div class="chatbot-start__body">
+            <h3>Ausprobieren <span class="chatbot-start__tag">optional</span></h3>
+            <p>Stellen Sie dem Chatbot eine Frage zu Ihrer Website &ndash; so wie ein Besucher es täte.</p>
+            <form id="chatbot-start-test" class="chatbot-start__test" autocomplete="off">
+                <input type="text" id="chatbot-start-q" placeholder="z. B. Welche Leistungen bieten Sie an?" maxlength="500"{{ not connected ? ' disabled' : '' }}>
+                <button type="submit" class="chatbot-start__btn"{{ not connected ? ' disabled' : '' }}>Fragen</button>
+            </form>
+            <div id="chatbot-start-answer" class="chatbot-start__answer" hidden aria-live="polite">
+                <div id="chatbot-start-answer-text"></div>
+                <ul id="chatbot-start-sources" class="chatbot-start__sources"></ul>
+            </div>
+            <p class="chatbot-start__actions">
+                <a class="chatbot-start__btn chatbot-start__btn--ghost" href="{{ siteUrl }}" target="_blank" rel="noopener">Website öffnen &#8599;</a>
+            </p>
+        </div>
+    </section>
+
+    {# ---------------------------------------------------------------- 5 #}
+    <section class="chatbot-start__step chatbot-start__step--optional">
+        <div class="chatbot-start__badge">5</div>
+        <div class="chatbot-start__body">
+            <h3>Feinschliff <span class="chatbot-start__tag">optional</span></h3>
+            <form method="post">
+                <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+                <input type="hidden" name="pageId" value="{{ root.id }}">
+                <input type="hidden" name="action" value="defaults">
+                <label class="chatbot-start__check">
+                    <input type="checkbox" name="voice" value="1"{{ voiceDefault ? ' checked' : '' }}>
+                    <span><strong>Spracheingabe anbieten</strong> &ndash; Besucher können ihre Frage sprechen (Mikrofon-Knopf). Die Aufnahme wird nicht gespeichert. Bitte in der Datenschutzerklärung erwähnen.</span>
+                </label>
+                <label class="chatbot-start__check">
+                    <input type="checkbox" name="feedback" value="1"{{ feedbackDefault ? ' checked' : '' }}>
+                    <span><strong>Feedback abfragen</strong> &ndash; Daumen hoch/runter unter jeder Antwort; die bewertete Frage wird im Backend unter „Fragen &amp; Feedback“ gespeichert.</span>
+                </label>
+                <p><button type="submit" class="chatbot-start__btn chatbot-start__btn--ghost">Voreinstellungen speichern</button></p>
+            </form>
+            <p class="chatbot-start__muted">
+                Name, Farbe, Symbol und Begrüßung stellen Sie unter
+                <a href="{{ path('contao_backend', {do: 'settings'}) }}">System → Einstellungen</a> ein.
+                Weiter geht es mit
+                <a href="{{ path('contao_backend', {do: 'chatbot_log'}) }}">Fragen &amp; Feedback</a> und
+                <a href="{{ path('contao_backend', {do: 'chatbot_trained_content'}) }}">Trainierte Seiten</a>;
+                die Anleitung steht unter <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.
+            </p>
+        </div>
+    </section>
+
+</div>
+
+<script src="{{ assets.marked }}"></script>
+<script src="{{ assets.common }}"></script>
+<script>
+(function () {
+    const form = document.getElementById('chatbot-start-test');
+    if (!form || !window.ChatbotStream) return;
+
+    const input = document.getElementById('chatbot-start-q');
+    const box = document.getElementById('chatbot-start-answer');
+    const text = document.getElementById('chatbot-start-answer-text');
+    const list = document.getElementById('chatbot-start-sources');
+    const button = form.querySelector('button');
+    let stream = null;
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const question = input.value.trim();
+        if (!question) return;
+
+        if (stream) stream.close();
+        let answer = '';
+        let sources = [];
+        box.hidden = false;
+        text.innerHTML = '<em>Antwort wird erzeugt …</em>';
+        list.innerHTML = '';
+        button.disabled = true;
+
+        const finish = function () { button.disabled = false; };
+
+        stream = ChatbotStream.open({{ streamUrl|json_encode|raw }}, {
+            token: {{ streamToken|json_encode|raw }},
+            body: { prompt: question, language: {{ root.language|json_encode|raw }}, pageId: {{ root.id }} },
+            handlers: {
+                message: function (e) {
+                    try {
+                        const data = JSON.parse(e.data);
+                        if (data.answer) {
+                            answer += data.answer;
+                            text.innerHTML = ChatbotMarkdown.toHtml(answer);
+                        }
+                        if (data.sources) sources = data.sources;
+                    } catch (err) { /* unvollstaendiger Block */ }
+                },
+                end: function () {
+                    if (!answer) text.textContent = 'Es kam keine Antwort. Wurde der Suchindex schon aufgebaut?';
+                    list.innerHTML = '';
+                    ChatbotSources.linkable(sources).slice(0, 3).forEach(function (s) {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.href = s.url; a.textContent = s.title || s.url; a.target = '_blank'; a.rel = 'noopener';
+                        li.appendChild(a); list.appendChild(li);
+                    });
+                    finish();
+                },
+                error: function (e) {
+                    let message = 'Die Anfrage ist fehlgeschlagen.';
+                    try { const d = JSON.parse(e.data); if (d.message) message = d.message; } catch (err) { /* ohne Rumpf */ }
+                    text.textContent = message;
+                    finish();
+                }
+            }
+        });
+    });
+})();
+</script>
+
+<style>
+    .chatbot-start {
+        --cs-accent: #2563eb;
+        --cs-text: var(--text, #1f2430);
+        --cs-muted: var(--gray, #6b7280);
+        --cs-border: var(--content-border, #e5e7eb);
+        --cs-card: var(--content-bg, #fff);
+        --cs-subtle: var(--table-header, #f6f7f9);
+        color: var(--cs-text);
+        max-width: 880px;
+    }
+    .chatbot-start h2 { margin: 0 0 6px; font-size: 1.5rem; }
+    .chatbot-start h3 { margin: 0 0 8px; font-size: 1.1rem; }
+    .chatbot-start__head { margin-bottom: 18px; }
+    .chatbot-start__lead { margin: 0 0 12px; color: var(--cs-muted); }
+    .chatbot-start__bar { height: 8px; border-radius: 999px; background: var(--cs-subtle); overflow: hidden; border: 1px solid var(--cs-border); }
+    .chatbot-start__bar span { display: block; height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); transition: width .3s ease; }
+    .chatbot-start__sites { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+    .chatbot-start__notice { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid; }
+    .chatbot-start__notice--ok { background: #eef7ee; border-color: #b9dcb7; color: #24541f; }
+    .chatbot-start__notice--error { background: #fdf1f0; border-color: #efc2be; color: #7d2b26; }
+
+    .chatbot-start__step {
+        display: flex; gap: 16px; padding: 20px 22px; margin-bottom: 14px;
+        border: 1px solid var(--cs-border); border-radius: 14px; background: var(--cs-card);
+    }
+    .chatbot-start__step.is-current { border-color: var(--cs-accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
+    .chatbot-start__step.is-done { border-color: #b9dcb7; }
+    .chatbot-start__step.is-locked { opacity: .6; }
+    .chatbot-start__step--optional { background: var(--cs-subtle); }
+    .chatbot-start__badge {
+        flex: 0 0 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; background: var(--cs-subtle); border: 2px solid var(--cs-border); color: var(--cs-muted);
+    }
+    .chatbot-start__step.is-current .chatbot-start__badge { background: var(--cs-accent); border-color: var(--cs-accent); color: #fff; }
+    .chatbot-start__step.is-done .chatbot-start__badge { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .chatbot-start__body { flex: 1 1 auto; min-width: 0; }
+    .chatbot-start__body p { margin: 0 0 10px; line-height: 1.55; }
+    .chatbot-start__ok { color: #24541f; }
+    .chatbot-start__bad { color: #7d2b26; }
+    .chatbot-start__muted { color: var(--cs-muted); font-size: .9em; }
+    .chatbot-start__tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--cs-subtle); border: 1px solid var(--cs-border); color: var(--cs-muted); font-size: .72rem; font-weight: 600; vertical-align: 2px; }
+    .chatbot-start__list { margin: 0 0 12px 20px; padding: 0; line-height: 1.7; }
+
+    .chatbot-start__btn {
+        display: inline-block; padding: 9px 18px; border: 1px solid var(--cs-accent); border-radius: 8px;
+        background: var(--cs-accent); color: #fff; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+    }
+    .chatbot-start__btn:hover { filter: brightness(1.08); }
+    .chatbot-start__btn[disabled] { opacity: .5; cursor: not-allowed; }
+    .chatbot-start__btn--ghost { background: transparent; color: var(--cs-accent); }
+    .chatbot-start__link { margin-left: 8px; color: var(--cs-accent); }
+    .chatbot-start__actions, .chatbot-start__inline { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    .chatbot-start__key { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .chatbot-start__key input { flex: 1 1 320px; min-width: 0; padding: 9px 12px; border: 1px solid var(--cs-border); border-radius: 8px; font: inherit; background: var(--cs-card); color: var(--cs-text); }
+    details summary { cursor: pointer; color: var(--cs-accent); margin-top: 6px; }
+
+    .chatbot-start__choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .chatbot-start__choice { padding: 16px; border: 1px solid var(--cs-border); border-radius: 12px; background: var(--cs-subtle); }
+    .chatbot-start__choice--main { border-color: var(--cs-accent); background: var(--cs-card); }
+    @media (max-width: 720px) { .chatbot-start__choices { grid-template-columns: 1fr; } }
+
+    .chatbot-start__test { display: flex; gap: 10px; margin-bottom: 10px; }
+    .chatbot-start__test input { flex: 1 1 auto; min-width: 0; padding: 9px 12px; border: 1px solid var(--cs-border); border-radius: 8px; font: inherit; background: var(--cs-card); color: var(--cs-text); }
+    .chatbot-start__answer { margin: 6px 0 14px; padding: 14px 16px; border: 1px solid var(--cs-border); border-radius: 12px; background: var(--cs-card); }
+    .chatbot-start__sources { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+    .chatbot-start__sources a { display: inline-block; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--cs-border); text-decoration: none; }
+    .chatbot-start__check { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; line-height: 1.5; }
+    .chatbot-start__check input { margin-top: 4px; }
+</style>

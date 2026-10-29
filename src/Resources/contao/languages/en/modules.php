@@ -9,3 +9,4 @@ $GLOBALS['TL_LANG']['FMD']['chatbot_ask'] = ['Chatbot Question', 'Adds an input 
 $GLOBALS['TL_LANG']['FMD']['chatbot_widget'] = ['Chatbot Widget', 'Adds a collapsible chat button that lets visitors chat with the chatbot directly. The API key is never sent to the browser.'];
 $GLOBALS['TL_LANG']['MOD']['chatbot_log'] = ['Questions & feedback', 'Stored visitor questions and answers including ratings; CSV export.'];
 $GLOBALS['TL_LANG']['MOD']['chatbot_content'] = ['Additional content', 'Texts and files the chatbot knows in addition to the pages. Only text is transferred.'];
+$GLOBALS['TL_LANG']['MOD']['chatbot_start'] = ['Getting started', 'A few steps to a running chatbot: connect your account, train your content, show the chat, try it out.'];

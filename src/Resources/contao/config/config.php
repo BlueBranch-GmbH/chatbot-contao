@@ -1,10 +1,14 @@
 <?php
 
 use Bluebranch\Chatbot\Controller\Backend\ChatLogController;
+use Bluebranch\Chatbot\Controller\Backend\StartController;
 use Bluebranch\Chatbot\Controller\Backend\TrainedContentController;
 use Bluebranch\Chatbot\EventListener\ExtraContentListener;
 
 $GLOBALS['BE_MOD']['bluebranch_chatbot'] = [
+    'chatbot_start' => [
+        'callback'   => StartController::class,
+    ],
     'chatbot_trained_content' => [
         'callback'   => TrainedContentController::class,
     ],

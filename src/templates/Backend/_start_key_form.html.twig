@@ -1,0 +1,7 @@
+<form method="post" class="chatbot-start__key" autocomplete="off">
+    <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+    <input type="hidden" name="pageId" value="{{ root.id }}">
+    <input type="hidden" name="action" value="save_key">
+    <input type="password" name="api_key" placeholder="API-Key hier einfügen" required minlength="16" maxlength="200" autocomplete="off" spellcheck="false" aria-label="API-Key">
+    <button type="submit" class="chatbot-start__btn">Speichern &amp; Verbindung testen</button>
+</form>
