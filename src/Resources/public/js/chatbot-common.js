@@ -800,3 +800,203 @@ window.ChatbotVoice = window.ChatbotVoice || {
         }));
     },
 };
+
+/**
+ * Mikrofon-Knopf in einem Eingabefeld (Frage-Modul, Suche): nimmt auf, zeigt Wellen an die Stelle
+ * des Textfelds, laesst die Aufnahme in Text umwandeln und uebergibt ihn an `onText`.
+ *
+ * Bei Stille (durchgehend fast kein Pegel) geht nichts an die API - Whisper erfindet dann gern Saetze.
+ * Fehlt dem Browser die Aufnahme (oder HTTPS), bleibt der Knopf verborgen.
+ *
+ * @param {{wrap: Element, form: Element, input: HTMLInputElement, button: HTMLElement, maxSeconds: number,
+ *          request: {pageId: string, moduleId: number|string, sig: string, language: string},
+ *          strings?: Object, token?: string, onText: function(string): void}} o
+ * @returns {{setBusy: function(boolean): void, cancel: function(): void}|null}
+ */
+window.ChatbotVoiceField = window.ChatbotVoiceField || {
+    attach(o) {
+        if (!window.ChatbotVoice || !ChatbotVoice.supported() || !o.button || !o.wrap || !(o.maxSeconds > 0)) {
+            return null;
+        }
+
+        const t = Object.assign({
+            voice: 'Spracheingabe starten',
+            voiceStop: 'Aufnahme beenden und senden',
+            voiceCancel: 'Aufnahme verwerfen',
+            voiceWorking: 'Wird verstanden …',
+            voiceEmpty: 'Es wurde nichts verstanden. Bitte noch einmal sprechen.',
+            voiceDenied: 'Kein Zugriff auf das Mikrofon. Bitte in der Adresszeile des Browsers erlauben.',
+            voiceError: 'Die Spracheingabe hat nicht funktioniert.',
+        }, o.strings || {});
+
+        const BARS = 30;
+        const levels = new Array(BARS).fill(0);
+        let state = 'idle';
+        let busy = false;
+        let recorder = null;
+        let peak = 0;
+        let measured = false;
+        let token = o.token || '';
+
+        // Wellen-Leiste: liegt ueber dem Textfeld, solange aufgenommen oder erkannt wird.
+        const wave = document.createElement('div');
+        wave.className = 'chatbot-voice-wave';
+        wave.hidden = true;
+
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'chatbot-widget__wave-cancel';
+        cancel.innerHTML = '&times;';
+        cancel.setAttribute('aria-label', t.voiceCancel);
+        cancel.setAttribute('title', t.voiceCancel);
+
+        const barsEl = document.createElement('div');
+        barsEl.className = 'chatbot-widget__wave-bars';
+        barsEl.setAttribute('aria-hidden', 'true');
+        const bars = [];
+        for (let i = 0; i < BARS; i++) {
+            const bar = document.createElement('span');
+            bar.style.animationDelay = (i % 12) * 80 + 'ms';
+            barsEl.appendChild(bar);
+            bars.push(bar);
+        }
+
+        const time = document.createElement('span');
+        time.className = 'chatbot-widget__wave-time';
+
+        wave.append(cancel, barsEl, time);
+        o.wrap.appendChild(wave);
+        o.wrap.classList.add('has-voice');
+
+        // Rueckmeldungen (nichts verstanden, Mikrofon verweigert ...) unter dem Formular.
+        const note = document.createElement('div');
+        note.className = 'chatbot-voice-note';
+        note.setAttribute('role', 'status');
+        note.hidden = true;
+        if (o.form && o.form.parentNode) {
+            o.form.parentNode.insertBefore(note, o.form.nextSibling);
+        }
+
+        const say = (message) => {
+            note.textContent = message || '';
+            note.hidden = !message;
+        };
+
+        const clock = (seconds) => Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+
+        const setState = (next) => {
+            state = next;
+            const recording = next === 'recording';
+            const working = next === 'working';
+            const label = recording ? t.voiceStop : t.voice;
+
+            o.button.classList.toggle('chatbot-voice-btn--recording', recording);
+            o.button.setAttribute('aria-label', label);
+            o.button.setAttribute('title', label);
+            o.button.setAttribute('aria-pressed', recording ? 'true' : 'false');
+            o.button.disabled = working || (next === 'idle' && busy);
+
+            wave.hidden = !(recording || working);
+            wave.classList.toggle('chatbot-widget__wave--working', working);
+            cancel.hidden = working;
+            o.wrap.classList.toggle('is-voice', recording || working);
+
+            if (working) {
+                time.textContent = t.voiceWorking;
+            }
+            if (next === 'idle') {
+                levels.fill(0);
+                bars.forEach((bar) => { bar.style.transform = ''; });
+            }
+        };
+
+        const push = (level) => {
+            levels.shift();
+            levels.push(level);
+            bars.forEach((bar, i) => { bar.style.transform = 'scaleY(' + Math.max(0.1, levels[i]).toFixed(2) + ')'; });
+        };
+
+        const transcribe = (blob) => {
+            setState('working');
+
+            ChatbotStreamToken.get(token).then((value) => {
+                token = value;
+
+                return ChatbotVoice.transcribe(blob, {
+                    token: token,
+                    pageId: o.request.pageId,
+                    moduleId: o.request.moduleId,
+                    sig: o.request.sig,
+                    language: o.request.language,
+                });
+            }).then((text) => {
+                setState('idle');
+
+                if (!text) {
+                    say(t.voiceEmpty);
+                    return;
+                }
+
+                o.onText(text);
+            }).catch((error) => {
+                setState('idle');
+                say((error && error.message) || t.voiceError);
+            });
+        };
+
+        const start = () => {
+            if (state !== 'idle' || busy) return;
+
+            say('');
+            peak = 0;
+            measured = false;
+            recorder = ChatbotVoice.record({
+                maxSeconds: o.maxSeconds,
+                onTick: (seconds) => { time.textContent = clock(seconds) + ' / ' + clock(o.maxSeconds); },
+                onLevel: (level) => { measured = true; peak = Math.max(peak, level); push(level); },
+                onStop: () => { if (state === 'recording') setState('idle'); },
+                onBlob: (blob) => {
+                    // Durchgehend still: nichts an die API, kein Kontingent.
+                    if (measured && peak < 0.04) {
+                        say(t.voiceEmpty);
+                        return;
+                    }
+
+                    transcribe(blob);
+                },
+                onError: (kind) => {
+                    setState('idle');
+                    say(kind === 'denied' ? t.voiceDenied : t.voiceError);
+                },
+            });
+
+            // Vor dem Start gesperrt, damit ein zweiter Klick waehrend der Mikrofon-Abfrage nichts doppelt startet.
+            setState('recording');
+            recorder.start();
+        };
+
+        o.button.hidden = false;
+        o.button.addEventListener('click', () => {
+            if (state === 'recording') {
+                recorder.stop();
+                return;
+            }
+            start();
+        });
+        cancel.addEventListener('click', () => { if (state === 'recording' && recorder) recorder.cancel(); });
+        o.wrap.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && state === 'recording' && recorder) recorder.cancel();
+        });
+        window.addEventListener('pagehide', () => { if (state === 'recording' && recorder) recorder.cancel(); });
+
+        return {
+            setBusy(value) {
+                busy = !!value;
+                o.button.disabled = state === 'working' || (state === 'idle' && busy);
+            },
+            cancel() {
+                if (state === 'recording' && recorder) recorder.cancel();
+            },
+        };
+    },
+};

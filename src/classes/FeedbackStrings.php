@@ -24,6 +24,14 @@ class FeedbackStrings
         'searchStopped' => 'Antwort abgebrochen',
         'searchSeconds' => 'sekunden',
         'requestError' => 'Es ist ein Fehler bei der Anfrage aufgetreten.',
+        // Spracheingabe (Mikrofon-Knopf)
+        'voice' => 'Spracheingabe starten',
+        'voiceStop' => 'Aufnahme beenden und senden',
+        'voiceCancel' => 'Aufnahme verwerfen',
+        'voiceWorking' => 'Wird verstanden …',
+        'voiceEmpty' => 'Es wurde nichts verstanden. Bitte noch einmal sprechen.',
+        'voiceDenied' => 'Kein Zugriff auf das Mikrofon. Bitte in der Adresszeile des Browsers erlauben.',
+        'voiceError' => 'Die Spracheingabe hat nicht funktioniert.',
     ];
 
     public static function get(): array

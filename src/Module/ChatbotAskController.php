@@ -8,6 +8,7 @@ use Bluebranch\Chatbot\classes\ChatLog;
 use Bluebranch\Chatbot\classes\RequestSignature;
 use Bluebranch\Chatbot\classes\FeedbackStrings;
 use Bluebranch\Chatbot\classes\TypedQuestions;
+use Bluebranch\Chatbot\classes\VoiceInput;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
 use Contao\ModuleModel;
@@ -30,9 +31,15 @@ class ChatbotAskController extends AbstractFrontendModuleController
 {
     private ChatbotAPI $chatbotApi;
 
-    public function __construct(?ChatbotAPI $chatbotApi = null)
+    private ?VoiceInput $voiceInput;
+
+    public function __construct(?ChatbotAPI $chatbotApi = null, ?VoiceInput $voiceInput = null)
     {
-        $this->chatbotApi = $chatbotApi ?? System::getContainer()->get(ChatbotAPI::class);
+        $container = System::getContainer();
+        $this->chatbotApi = $chatbotApi ?? $container->get(ChatbotAPI::class);
+        // Optional wie beim Widget: Mit einem alten, noch nicht geleerten Container fehlt der Dienst,
+        // dann bleibt nur das Mikrofon aus.
+        $this->voiceInput = $voiceInput ?? ($container->has(VoiceInput::class) ? $container->get(VoiceInput::class) : null);
     }
 
     public function generate()
@@ -51,6 +58,7 @@ class ChatbotAskController extends AbstractFrontendModuleController
     protected function getResponse(Template $template, ModuleModel $model, Request $request): Response
     {
         System::loadLanguageFile('chatbot_ask');
+        System::loadLanguageFile('chatbot_widget');
         $lang = &$GLOBALS['TL_LANG']['chatbot_ask'];
 
         $pageModel = $this->getPageModel();
@@ -77,6 +85,13 @@ class ChatbotAskController extends AbstractFrontendModuleController
         // Bindet Seite und Modul an diese Ausgabe (siehe RequestSignature).
         $template->sig = RequestSignature::sign((int) ($this->getPageModel() instanceof PageModel ? $this->getPageModel()->id : 0), (int) $model->id);
         $template->feedbackStrings = FeedbackStrings::get();
+
+        // Mikrofon: vom Modul erlaubt und von der API eingerichtet.
+        $voice = null !== $this->voiceInput ? $this->voiceInput->forModule($model, $pageModel instanceof PageModel ? $pageModel : null) : ['enabled' => false, 'maxSeconds' => 0, 'language' => 'de'];
+        $template->voice = $voice['enabled'];
+        $template->voiceMaxSeconds = $voice['maxSeconds'];
+        $template->voiceLanguage = $voice['language'];
+        $template->labelVoice = $GLOBALS['TL_LANG']['chatbot_widget']['voice'] ?? 'Spracheingabe starten';
 
         return $template->getResponse();
     }

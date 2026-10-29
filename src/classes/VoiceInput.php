@@ -50,6 +50,27 @@ class VoiceInput
     }
 
     /**
+     * Ob und wie lang das Mikrofon fuer dieses Modul angeboten wird (Modul erlaubt es und die API bietet es an).
+     *
+     * @param object $module ModuleModel oder Datensatz mit `chatbot_voice`
+     *
+     * @return array{enabled: bool, maxSeconds: int, language: string}
+     */
+    public function forModule($module, ?PageModel $page): array
+    {
+        $language = $page instanceof PageModel ? substr(strtolower((string) $page->language), 0, 2) : 'de';
+        $language = 1 === preg_match('/^[a-z]{2}$/', $language) ? $language : 'de';
+
+        if (!self::moduleAllows($module)) {
+            return ['enabled' => false, 'maxSeconds' => 0, 'language' => $language];
+        }
+
+        $capability = $this->capability($page);
+
+        return ['enabled' => $capability['enabled'], 'maxSeconds' => $capability['maxSeconds'], 'language' => $language];
+    }
+
+    /**
      * Was die API fuer den Schluessel der Seite erlaubt.
      *
      * @return array{enabled: bool, maxSeconds: int}

@@ -1294,6 +1294,136 @@
     text-align: center;
 }
 
+/* Mikrofon im Eingabefeld von Frage-Modul und Suche: Knopf rechts im Feld, Wellen ersetzen das Feld bei der Aufnahme. */
+.chatbot-ask-container .chatbot-voice-btn,
+.chatbot-generate-search-container .chatbot-voice-btn {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 0;
+    border-radius: 50%;
+    background: var(--chatbot-widget-accent-soft);
+    color: var(--chatbot-widget-accent);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.chatbot-ask-container .chatbot-voice-btn[hidden],
+.chatbot-generate-search-container .chatbot-voice-btn[hidden] {
+    display: none;
+}
+
+.chatbot-ask-container .chatbot-voice-btn:hover:not(:disabled),
+.chatbot-generate-search-container .chatbot-voice-btn:hover:not(:disabled) {
+    background: var(--chatbot-widget-accent);
+    color: var(--chatbot-widget-accent-contrast);
+}
+
+.chatbot-ask-container .chatbot-voice-btn:focus-visible,
+.chatbot-generate-search-container .chatbot-voice-btn:focus-visible {
+    outline: 3px solid var(--chatbot-widget-accent-ring);
+    outline-offset: 2px;
+}
+
+.chatbot-ask-container .chatbot-voice-btn:disabled,
+.chatbot-generate-search-container .chatbot-voice-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.chatbot-ask-container .chatbot-voice-btn--recording,
+.chatbot-generate-search-container .chatbot-voice-btn--recording {
+    background: #ef4444;
+    color: #fff;
+    animation: chatbot-widget-voice-pulse 1.4s ease-in-out infinite;
+}
+
+.chatbot-ask-container .chatbot-voice-btn--recording:hover:not(:disabled),
+.chatbot-generate-search-container .chatbot-voice-btn--recording:hover:not(:disabled) {
+    background: #dc2626;
+    color: #fff;
+}
+
+/* Platz fuer den Knopf im Feld */
+.chatbot-ask-container .widget-text.has-voice .chatbot-ask-input,
+.chatbot-generate-search-container .widget-text.has-voice .chatbot-ask-input {
+    padding-right: 62px;
+}
+
+.chatbot-ask-container .chatbot-voice-wave,
+.chatbot-generate-search-container .chatbot-voice-wave {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 62px 0 10px;
+    border: 1px solid var(--chatbot-widget-accent-ring);
+    border-radius: 999px;
+    background: linear-gradient(var(--chatbot-widget-accent-soft), var(--chatbot-widget-accent-soft)), var(--chatbot-widget-bg);
+    color: var(--chatbot-widget-accent);
+}
+
+.chatbot-ask-container .chatbot-voice-wave[hidden],
+.chatbot-generate-search-container .chatbot-voice-wave[hidden] {
+    display: none;
+}
+
+.chatbot-ask-container .chatbot-voice-wave .chatbot-widget__wave-cancel,
+.chatbot-generate-search-container .chatbot-voice-wave .chatbot-widget__wave-cancel {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--chatbot-widget-muted);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chatbot-ask-container .chatbot-voice-wave .chatbot-widget__wave-cancel[hidden],
+.chatbot-generate-search-container .chatbot-voice-wave .chatbot-widget__wave-cancel[hidden] {
+    display: none;
+}
+
+.chatbot-ask-container .chatbot-voice-wave .chatbot-widget__wave-time,
+.chatbot-generate-search-container .chatbot-voice-wave .chatbot-widget__wave-time {
+    color: var(--chatbot-widget-text);
+    white-space: nowrap;
+}
+
+.chatbot-ask-container .chatbot-voice-note,
+.chatbot-generate-search-container .chatbot-voice-note {
+    margin: 10px 4px 0;
+    color: var(--chatbot-widget-muted);
+    font-size: 0.9rem;
+}
+
+.chatbot-ask-container .chatbot-voice-note[hidden],
+.chatbot-generate-search-container .chatbot-voice-note[hidden] {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chatbot-ask-container .chatbot-voice-btn--recording,
+    .chatbot-generate-search-container .chatbot-voice-btn--recording {
+        animation: none;
+    }
+}
+
 @media (max-width: 520px) {
     .chatbot-ask-container .chatbot-ask-form .submit,
     .chatbot-generate-search-container .chatbot-search-form .submit {

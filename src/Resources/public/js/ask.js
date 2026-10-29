@@ -38,6 +38,26 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
         });
 
         this.placeholder = new ChatbotTypedPlaceholder(this.input, config.questions || []);
+
+        // Mikrofon im Eingabefeld: der erkannte Text geht wie eine getippte Frage ab.
+        this.voice = null;
+        const voiceButton = this.container.querySelector('.chatbot-voice-btn');
+        if (config.voice && config.voice.maxSeconds > 0 && voiceButton && this.input && window.ChatbotVoiceField) {
+            this.voice = ChatbotVoiceField.attach({
+                wrap: this.input.parentElement,
+                form: this.form,
+                input: this.input,
+                button: voiceButton,
+                maxSeconds: config.voice.maxSeconds,
+                request: { pageId: config.pageId, moduleId: config.moduleId, sig: config.sig, language: config.voice.language || 'de' },
+                strings: config.strings,
+                token: config.requestToken,
+                onText: (text) => {
+                    this.input.value = text;
+                    this.submit();
+                },
+            });
+        }
     }
 
     init() {
@@ -85,6 +105,10 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
         if (this.submitButton) {
             this.submitLabel.textContent = busy ? this.labelStop : this.labelSubmit;
             this.submitButton.classList.toggle('is-stop', busy);
+        }
+
+        if (this.voice) {
+            this.voice.setBusy(busy);
         }
 
         if (this.form) {

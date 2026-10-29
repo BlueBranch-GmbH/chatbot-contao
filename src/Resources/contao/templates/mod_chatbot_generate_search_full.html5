@@ -9,6 +9,11 @@
         <div class="widget widget-text">
             <label for="ctrl_chatbot_keywords_<?= $this->id ?>" class="invisible"><?= $GLOBALS['TL_LANG']['MSC']['keywords'] ?></label>
             <input type="search" name="<?= $this->queryParam ?>" id="ctrl_chatbot_keywords_<?= $this->id ?>" class="text chatbot-ask-input" value="<?= \Contao\StringUtil::specialchars($this->query) ?>">
+            <?php if ($this->voice): ?>
+            <button type="button" class="chatbot-voice-btn" aria-label="<?= $this->labelVoice ?>" title="<?= $this->labelVoice ?>" hidden>
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 0 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.59A6 6 0 0 0 18 11.5Z"/></svg>
+            </button>
+            <?php endif; ?>
         </div>
         <div class="widget widget-submit">
             <button type="submit" class="submit"><?= $GLOBALS['TL_LANG']['MSC']['searchLabel'] ?></button>
@@ -60,6 +65,40 @@
         if (field && field.value === '') {
             new ChatbotTypedPlaceholder(field, <?= json_encode($this->typedQuestions) ?>).start();
         }
+    });
+</script>
+<?php endif; ?>
+
+<?php if ($this->hasApiKey && $this->voice): ?>
+<script src="<?= \Bluebranch\Chatbot\classes\Asset::url('js/chatbot-common.js') ?>"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('chatbot-search-<?= $this->id ?>');
+        const form = container ? container.querySelector('.chatbot-search-form') : null;
+        const input = form ? form.querySelector('.chatbot-ask-input') : null;
+        const button = form ? form.querySelector('.chatbot-voice-btn') : null;
+
+        if (!input || !button || !window.ChatbotVoiceField) return;
+
+        ChatbotVoiceField.attach({
+            wrap: input.parentElement,
+            form: form,
+            input: input,
+            button: button,
+            maxSeconds: <?= (int) $this->voiceMaxSeconds ?>,
+            request: {
+                pageId: <?= json_encode((string) $this->pageId, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+                moduleId: <?= (int) $this->moduleId ?>,
+                sig: <?= json_encode((string) $this->sig) ?>,
+                language: <?= json_encode((string) $this->voiceLanguage, JSON_HEX_TAG | JSON_HEX_AMP) ?>
+            },
+            strings: <?= json_encode($this->feedbackStrings, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
+            // Der erkannte Text startet die Suche wie ein getipptes Stichwort.
+            onText: function (text) {
+                input.value = text;
+                if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+            }
+        });
     });
 </script>
 <?php endif; ?>

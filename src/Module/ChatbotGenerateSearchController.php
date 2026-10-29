@@ -8,6 +8,7 @@ use Bluebranch\Chatbot\classes\ChatLog;
 use Bluebranch\Chatbot\classes\RequestSignature;
 use Bluebranch\Chatbot\classes\FeedbackStrings;
 use Bluebranch\Chatbot\classes\TypedQuestions;
+use Bluebranch\Chatbot\classes\VoiceInput;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
@@ -27,9 +28,13 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
 {
     private ChatbotAPI $chatbotApi;
 
-    public function __construct(?ChatbotAPI $chatbotApi = null)
+    private ?VoiceInput $voiceInput;
+
+    public function __construct(?ChatbotAPI $chatbotApi = null, ?VoiceInput $voiceInput = null)
     {
-        $this->chatbotApi = $chatbotApi ?? \Contao\System::getContainer()->get(ChatbotAPI::class);
+        $container = \Contao\System::getContainer();
+        $this->chatbotApi = $chatbotApi ?? $container->get(ChatbotAPI::class);
+        $this->voiceInput = $voiceInput ?? ($container->has(VoiceInput::class) ? $container->get(VoiceInput::class) : null);
     }
 
     public function generate()
@@ -100,6 +105,14 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
 
         System::loadLanguageFile('chatbot_ask');
         $template->labelSources = $GLOBALS['TL_LANG']['chatbot_ask']['sources'] ?? 'Quellen:';
+
+        // Mikrofon (nur die Variante mit eigenem Suchfeld, „_full“): vom Modul erlaubt und von der API eingerichtet.
+        System::loadLanguageFile('chatbot_widget');
+        $voice = null !== $this->voiceInput ? $this->voiceInput->forModule($model, $pageModel instanceof PageModel ? $pageModel : null) : ['enabled' => false, 'maxSeconds' => 0, 'language' => 'de'];
+        $template->voice = $voice['enabled'];
+        $template->voiceMaxSeconds = $voice['maxSeconds'];
+        $template->voiceLanguage = $voice['language'];
+        $template->labelVoice = $GLOBALS['TL_LANG']['chatbot_widget']['voice'] ?? 'Spracheingabe starten';
 
         return $template->getResponse();
     }

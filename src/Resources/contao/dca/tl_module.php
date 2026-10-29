@@ -4,7 +4,7 @@ use Contao\BackendUser;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\DataContainer;
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param,chatbot_typed_questions,chatbot_feedback,chatbot_widget_unstyled;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_generate_search'] = '{title_legend},name,headline,type;{config_legend},chatbot_query_param,chatbot_typed_questions,chatbot_feedback,chatbot_voice,chatbot_widget_unstyled;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'label'                   => &$GLOBALS['TL_LANG']['tl_module']['chatbot_query_param'],
@@ -14,7 +14,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_query_param'] = [
     'sql'                     => "varchar(64) NOT NULL default 'keywords'"
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions,chatbot_feedback,chatbot_widget_unstyled;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_ask'] = '{title_legend},name,headline,type;{config_legend},chatbot_typed_questions,chatbot_feedback,chatbot_voice,chatbot_widget_unstyled;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 /**
  * Wird im Frontend Zeichen fuer Zeichen als Platzhalter ins Eingabefeld getippt.
