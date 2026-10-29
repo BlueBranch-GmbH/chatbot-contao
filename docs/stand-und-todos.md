@@ -1,6 +1,8 @@
 # Stand und offene ToDos
 
-Stand: 12.10.2026, Version **1.4.1** (Tag `1.4.1`, Commit `dee101e`, auf Packagist).
+Stand: 29.10.2026. Veröffentlicht ist **1.4.1** (Tag `1.4.1`, auf Packagist); darüber liegt lokal
+unveröffentlichte Arbeit (Spracheingabe, neues Design, siehe unten) – **noch nicht gepusht, nicht
+getaggt, keine neue Versionsnummer**.
 Anforderungen, Entscheidungen und Testprotokoll des Ausbaus: [ausbau-2026-10.md](ausbau-2026-10.md).
 Die Pfade dort beziehen sich auf das Testprojekt `contao57` (`extensions/bluebranch/chatbot`).
 
@@ -10,8 +12,51 @@ Zusammenspiel der Repositories:
 |---|---|---|
 | `BlueBranch-GmbH/chatbot-contao` (dieses) | 1.4.1 | dieses Dokument |
 | `BlueBranch-GmbH/chatbot-wordpress` | 1.2.1 | `docs/stand-und-todos.md` |
-| `spardorf-chatbot-api` | 0.0.56 | `docs/11-stand-und-todos.md` |
+| `spardorf-chatbot-api` | 0.0.62 (live: Stripe-Abos, Whisper) | `docs/11-stand-und-todos.md`, `docs/12-stripe-und-abos.md` |
 | `spardorf-chatbot-frontend` | 0.1.29 | `docs/stand-und-todos.md` |
+
+## Unveröffentlicht (nach 1.4.1)
+
+Änderungen im Arbeitsverzeichnis, lokal committet, **nicht gepusht und nicht getaggt**. Der
+README-Changelog führt sie unter „Unveröffentlicht“; bei der Freigabe die Überschrift durch die neue
+Versionsnummer ersetzen (nach Funktionsumfang 1.5.0).
+
+| Bereich | Stand | Getestet |
+|---|---|---|
+| **Spracheingabe im Chat-Widget** (Mikrofon-Knopf → `POST /bluebranch/chatbot/api/v1/transcribe` → `POST /chatbot-ai/transcribe`) | fertig | Live-API (Expert, 60 s): Transkription eines `say`-Satzes, Route mit Token, Signatur, Modul an/aus, fehlender Datei; Browser (Chrome) mit künstlichem Mikrofon-Signal |
+| Schalter: Vorgabe in *Einstellungen* (aus), je Modul *Standard/An/Aus* (`tl_module.chatbot_voice`) | fertig | Knopf fehlt im HTML und Route antwortet 403, wenn aus |
+| Fähigkeit aus `GET /user/me/tier` (`transcriptionEnabled`, `maxAudioSeconds`), 10 Min. im `cache.app` (`VoiceInput`) | fertig | Live-API |
+| Wellen-Leiste während der Aufnahme (Web Audio `AnalyserNode`), Abbrechen per × / Escape, „Wird verstanden …“ | fertig | Browser, künstliches Signal |
+| Stille-Sperre: Spitzenpegel unter 0,04 → kein Upload, kein Kontingent | fertig | Browser, stilles Signal: 0 Uploads |
+| `project_paused` (403) → neutraler Besuchertext (Stream- und Nicht-Stream-Route) | fertig | nicht gegen ein echtes pausiertes Projekt |
+| Neues Standard-Design des Widgets (Kopf mit Avatar und Verlauf, getönter Verlauf, Pillen-Eingabe, aus der Akzentfarbe abgeleitete Töne) | fertig | Browser (Desktop, Standardfarbe) |
+| README: Tarife (Free/Pro/Expert, Stripe im Frontend, Enterprise entfällt), Spracheingabe, Datenschutz | fertig | – |
+
+Nach dem Update: `composer update`, `contao:migrate` (neues Feld `tl_module.chatbot_voice`),
+**Seiten-Cache leeren**. Angepasste Templates `mod_chatbot_widget.html5` brauchen für das Mikrofon den
+Knopf `.chatbot-widget__voice` im Formular und `voice` in der Konfiguration – am einfachsten aus dem
+Template der Erweiterung übernehmen.
+
+**Offen zur Spracheingabe und zum Design:**
+
+- [ ] **Echtes Mikrofon testen.** Bisher nur ein künstliches Signal; Erkennungsqualität, Pegelschwelle
+      (0,04) und Länge der Stille-Sperre mit echter Sprache und verschiedenen Geräten prüfen
+      (Safari/iOS nimmt als `audio/mp4` auf, Firefox als `audio/ogg`).
+- [ ] **Frage-Modul und Suche** haben noch kein Mikrofon. Die Aufnahme (`ChatbotVoice`) und die Route
+      sind schon wiederverwendbar; es fehlen Palette, Template und Anbindung in `ask.js`/`search.js`.
+- [ ] **Design:** mobile Vollbild-Ansicht, andere Positionen (links, oben), dunkle Seiten und
+      Frage-/Suchmodul nicht angesehen. Wer das Widget mit eigenem CSS stark umgebaut hat, prüft es
+      nach dem Update.
+- [ ] **Datenschutzerklärung der Website** um die Spracheingabe ergänzen (Hinweis steht im README).
+- [ ] **Aufnahme bei Whisper-Halluzination:** Die Stille-Sperre fängt Stille ab, nicht leises
+      Rauschen oder Fremdgeräusche (ein Testsignal wurde als „Thank you.“ erkannt). Eine kurze
+      Bestätigung („Haben Sie gesagt …?“) wäre eine Option.
+- [ ] **Sprachausgabe** (Antworten vorlesen, Freihand-Dialog) ist bewusst zurückgestellt; die API hat
+      dafür nichts, im Browser ginge `speechSynthesis`.
+- [ ] **`contao:migrate`** bricht in der Testinstanz bei `tl_message_queue` (`ENGINE =`) ab – kommt
+      von Contao, nicht von der Erweiterung; die Spalte `chatbot_voice` wird trotzdem angelegt.
+- [ ] Testdaten in der Instanz `contao57`: Modul „Chatbot Widget (Sprache)“ (ID 74), eingebunden im
+      Artikel „AI Frage“ der Startseite.
 
 ## Was 1.4.1 enthält
 

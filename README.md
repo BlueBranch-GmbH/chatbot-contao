@@ -111,6 +111,7 @@ kann sie einzeln überschreiben.
 | Standard-Vorschläge | Vorschlagsfragen als Pills über dem Eingabefeld |
 | „Inhalt zusammenfassen"-Pill ausblenden | Blendet die Zusammenfassen-Funktion aus |
 | Datenschutz-Hinweis ausblenden | Blendet den Hinweis „Private chats & Hosted in Germany" aus |
+| Spracheingabe im Chat-Widget anbieten | Vorgabe für das Mikrofon, siehe [Spracheingabe](#spracheingabe-mikrofon); standardmäßig aus |
 
 **Automatische Bereinigung.** Seiten, die nicht mehr veröffentlicht, von der Suche ausgeschlossen
 oder über ihr Start-/Stop-Datum abgelaufen sind, gehören nicht in den KI-Index. Ein
@@ -180,6 +181,41 @@ Besucher können ihren Chat über das Download-Symbol im Kopf des Widgets als **
 enthält jetzt auch die Antworten samt Quellen und Bewertung; eine Antwort, die beim Seitenwechsel
 noch lief, steht danach mit dem Hinweis „Antwort unterbrochen“ da.
 
+## Spracheingabe (Mikrofon)
+
+Im Chat-Widget kann ein Mikrofon-Knopf neben dem Senden-Knopf stehen. Besucher sprechen ihre Frage,
+die Aufnahme wird in Text umgewandelt und wie eine getippte Frage gesendet – mit Antwort, Quellen,
+Feedback und Verlauf wie gewohnt.
+
+**Einschalten.** Unter *System → Einstellungen → Spracheingabe im Chat-Widget anbieten* gilt die
+Vorgabe für alle Widgets (standardmäßig **aus**). In jedem Widget-Modul lässt sie sich mit
+*Spracheingabe (Mikrofon)* auf „An“ oder „Aus“ setzen – so lässt sich das Mikrofon auch nur an
+einzelnen Modulen anbieten oder an einzelnen abschalten. Die Einstellung steht bisher nur im
+Chat-Widget, nicht im Frage- und im Suchmodul.
+
+**Wann der Knopf erscheint.** Alle drei Bedingungen müssen zutreffen:
+
+1. Das Modul erlaubt die Spracheingabe (siehe oben).
+2. Die API hat die Spracherkennung für den Zugang eingerichtet (`transcriptionEnabled` in
+   `GET /user/me/tier`). Das Ergebnis wird zehn Minuten zwischengespeichert; bei einem Fehler der
+   API eine Minute.
+3. Die Seite läuft über **HTTPS** (oder `localhost`) und der Browser kann aufnehmen
+   (`MediaRecorder`) – sonst bleibt der Knopf verborgen.
+
+**Bedienung.** Ein Klick startet die Aufnahme, der nächste beendet sie und sendet. Während der
+Aufnahme zeigt eine Leiste Wellen nach Lautstärke und die Zeit; mit × oder Escape wird die Aufnahme
+verworfen. Die Aufnahme endet von selbst nach der längsten erlaubten Dauer des Zugangs (Free 10 s,
+Pro 30 s, Expert 60 s). Wurde es durchgehend still, geht nichts an die API und es erscheint „Es
+wurde nichts verstanden“ – Whisper erfindet bei Stille sonst gern Sätze.
+
+**Kontingent.** Eine gesprochene Frage zählt **zweimal** zum Anfragekontingent: einmal für die
+Umwandlung, einmal für die Antwort.
+
+**Technik.** Der Browser schickt die Aufnahme an `POST /bluebranch/chatbot/api/v1/transcribe`. Die
+Route prüft Sitzungs-Token, Signatur von Seite und Modul, die Modul-Einstellung, ein Ratenlimit
+(20 je Minute und Client) und die Größe (4 MB) und reicht die Aufnahme mit dem API-Schlüssel an
+`POST /chatbot-ai/transcribe` weiter. Der Schlüssel bleibt auf dem Server.
+
 ## Zusatzinhalte
 
 *BlueBranch Chatbot → Zusatzinhalte* nimmt Inhalte ohne eigene Seite auf: **Texte** für
@@ -207,10 +243,12 @@ ohne die Website zu öffnen.
 
 ## Nutzungsstufen
 
-Ein Zugang ist **Free**, **Pro**, **Expert** oder **Enterprise**. Der Unterschied liegt allein im
-Anfragekontingent der Antwort-Routen – je Minute und je Kalendermonat; Inhalte trainieren, Inhalte
-auflisten und API-Keys anlegen ist in allen Stufen unbegrenzt. Gebucht wird nicht über eine
-Website, sondern auf Anfrage an hello@bluebranch.de.
+Ein Zugang ist **Free**, **Pro** oder **Expert**. Die Stufen unterscheiden sich im
+Anfragekontingent der Antwort-Routen – je Minute und je Kalendermonat –, in der Zahl der Projekte
+und in der Länge einer Sprachaufnahme; Inhalte trainieren, Inhalte auflisten und API-Keys anlegen
+ist in allen Stufen unbegrenzt. **Pro und Expert** bucht der Inhaber des Zugangs selbst als
+Monatsabo über Stripe im Chatbot-Frontend (https://chatbot.bluebranch.de) – in dieser Erweiterung
+gibt es dafür keinen Bezahlweg.
 
 Die konkreten Zahlen stehen bewusst **nicht** in dieser Erweiterung. Sie kommen zur Laufzeit von
 der API, zusammen mit einem fertigen Hinweistext. Ändert sich das Kontingent, ändert sich die
@@ -222,6 +260,11 @@ Ist das Kontingent erschöpft, antwortet die API mit **HTTP 429** und nennt in `
 Besucher sehen dann eine neutrale Meldung: beim Minutenlimit (`rate_limit`), sie sollten es gleich
 noch einmal versuchen, beim Monatskontingent (`monthly_quota`), später. Der ausführliche Grund samt
 Stufe landet im Log der Contao-Installation und nicht im Chatfenster.
+
+**Pausierte Projekte.** Nach einem Abstieg (etwa Kündigung des Abos) bleiben alle Projekte
+erhalten, überzählige sind pausiert. Die API antwortet für sie mit **HTTP 403** und
+`reason: project_paused`; Besucher lesen „Der Chat steht im Moment nicht zur Verfügung“. Welche
+Projekte aktiv bleiben, wählt der Inhaber im Chatbot-Frontend.
 
 ## Wie die Anfragen laufen
 
@@ -284,6 +327,10 @@ php vendor/bin/contao-console contao:migrate
   E-Mail an lb@bluebranch.de.
 - **Der API-Schlüssel bleibt auf dem Server.** Der Browser spricht ausschließlich mit Contao und
   bekommt den Schlüssel zu keinem Zeitpunkt zu sehen.
+- **Spracheingabe (nur wenn eingeschaltet).** Die Aufnahme geht über Contao an die API und wird dort
+  im Arbeitsspeicher in Text umgewandelt; sie wird weder in Contao noch in der API gespeichert,
+  weder Audio noch Text kommen ins Log. Der Browser fragt vor der ersten Aufnahme selbst nach der
+  Erlaubnis für das Mikrofon. Bitte in der Datenschutzerklärung der Website erwähnen.
 
 ## Vorteile für Redakteur:innen und Entwickler
 
@@ -393,6 +440,7 @@ individually.
 | Default suggestions | Suggested questions as pills above the input field |
 | Hide "summarise content" pill | Hides the summarise function |
 | Hide privacy note | Hides the "Private chats & Hosted in Germany" note |
+| Offer voice input in the chat widget | Default for the microphone, see [Voice input](#voice-input-microphone); off by default |
 
 **Automatic clean-up.** Pages that are no longer published, excluded from the search or expired
 via their start/stop date do not belong in the AI index. Expiry by date happens without the
@@ -450,6 +498,30 @@ similar dynamic areas remain answerable. They apply to the classic Contao search
 - **Scheduled content**: a cron job (every 15 minutes) removes expired pages and refreshes pages
   whose articles or content elements started or stopped.
 
+## Voice input (microphone)
+
+The chat widget can show a microphone button next to the send button. Visitors speak their
+question, the recording is converted to text and sent like a typed question – with answer,
+sources, feedback and history as usual.
+
+- **Switching it on:** *System → Settings → Offer voice input in the chat widget* is the default for
+  all widgets (**off** by default). Each widget module can set *Voice input (microphone)* to "On" or
+  "Off", so the microphone can be offered on selected modules only or switched off on single ones.
+  So far the setting exists for the chat widget only, not for the question and search modules.
+- **When the button appears:** the module allows it, the API has speech recognition set up for the
+  account (`transcriptionEnabled` in `GET /user/me/tier`, cached for ten minutes), and the page is
+  served over **HTTPS** (or `localhost`) in a browser that can record.
+- **Using it:** one click starts recording, the next stops and sends. While recording, a bar shows
+  waves by loudness and the time; × or Escape discards the recording. It ends by itself after the
+  longest duration the account allows (Free 10 s, Pro 30 s, Expert 60 s). If it stayed silent
+  throughout, nothing is sent to the API.
+- **Quota:** a spoken question counts **twice** towards the request quota (transcription and
+  answer).
+- **How it works:** the browser posts the recording to
+  `POST /bluebranch/chatbot/api/v1/transcribe`. The route checks session token, page/module
+  signature, the module setting, a rate limit (20 per minute and client) and the size (4 MB) and
+  forwards it with the API key to `POST /chatbot-ai/transcribe`. The key stays on the server.
+
 ## Reviewing trained content
 
 The back end module *BlueBranch Chatbot → Trained pages* shows what the knowledge base actually
@@ -459,10 +531,11 @@ a question and check the answer including its sources without opening the websit
 
 ## Usage tiers
 
-An account is **Free**, **Pro**, **Expert** or **Enterprise**. The difference lies solely in the
-request quota of the answer routes – per minute and per calendar month; training content, listing
-content and creating API keys is unlimited in every tier. Upgrades are not booked on a website but
-on request to hello@bluebranch.de.
+An account is **Free**, **Pro** or **Expert**. The tiers differ in the request quota of the answer
+routes – per minute and per calendar month –, in the number of projects and in the length of a voice
+recording; training content, listing content and creating API keys is unlimited in every tier.
+**Pro and Expert** are booked by the account owner as a monthly subscription through Stripe in the
+chatbot frontend (https://chatbot.bluebranch.de) – this extension has no payment path.
 
 The actual numbers deliberately do **not** live in this extension. They come from the API at
 runtime, together with a ready-made note. If the quota changes, the display changes with it – no
@@ -473,6 +546,11 @@ Once the quota is exhausted, the API answers with **HTTP 429** and names the cau
 Visitors then see a neutral message: try again shortly after the per-minute limit (`rate_limit`),
 try again later once the monthly quota is used up (`monthly_quota`). The detailed reason including
 the tier goes to the log of the Contao installation, not into the chat window.
+
+**Paused projects.** After a downgrade (e.g. a cancelled subscription) all projects are kept, surplus
+ones are paused. The API answers for them with **HTTP 403** and `reason: project_paused`; visitors
+read "The chat is currently unavailable". The account owner picks the active projects in the
+chatbot frontend.
 
 ## How the requests work
 
@@ -532,6 +610,10 @@ php vendor/bin/contao-console contao:migrate
   lb@bluebranch.de.
 - **The API key stays on the server.** The browser only ever talks to Contao and never gets to see
   the key.
+- **Voice input (only if switched on).** The recording goes through Contao to the API and is
+  converted to text in memory there; it is stored neither in Contao nor in the API, and neither
+  audio nor text reach any log. The browser itself asks for microphone permission before the first
+  recording. Please mention it in your site's privacy policy.
 
 ## Benefits for editors and developers
 
@@ -555,6 +637,26 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### Unveröffentlicht (nach 1.4.1)
+
+- **Spracheingabe im Chat-Widget:** Mikrofon-Knopf neben dem Senden-Knopf; die Aufnahme wird über
+  die neue Route `POST /bluebranch/chatbot/api/v1/transcribe` in Text umgewandelt und als Frage
+  gesendet. Vorgabe unter *System → Einstellungen* (standardmäßig aus), je Modul *Standard / An /
+  Aus*. Der Knopf erscheint nur, wenn die API die Spracherkennung anbietet (`transcriptionEnabled`)
+  und die Seite über HTTPS läuft. Eine gesprochene Frage zählt zweimal zum Kontingent. Neues
+  Feld `tl_module.chatbot_voice` – nach dem Update `contao:migrate`, Cache leeren
+- Während der Aufnahme zeigt eine Leiste Wellen nach Lautstärke, die Zeit und einen Abbrechen-Knopf;
+  bei durchgehender Stille wird nichts an die API geschickt
+- Pausierte Projekte (`project_paused`, 403 der API) zeigen Besuchern „Der Chat steht im Moment
+  nicht zur Verfügung“
+- Neues Standard-Design des Widgets: Verlauf und Avatar im Kopf, getönter Verlauf mit weißen
+  Sprechblasen, Pillen-Eingabefeld, Einblendanimation. Alle Farben, Tönungen und der Schein leiten
+  sich aus der Akzentfarbe ab; neue Variablen `--chatbot-widget-surface` und
+  `--chatbot-widget-bubble-bg`, bestehende Variablen und Klassennamen bleiben. Eigene Stylesheets, die
+  das Widget stark umbauen, bitte prüfen
+- README: Tarife (Free, Pro, Expert; Selbstbuchung per Stripe im Frontend, Enterprise entfällt)
+  und Datenschutz zur Spracheingabe nachgezogen
 
 ### 1.4.1 - 2026-10-12
 
