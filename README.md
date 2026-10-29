@@ -34,9 +34,27 @@ Contao spricht mit der API.
 |---|---|
 | ![Chat in Orange](docs/screenshots/chat-widget-orange.jpg) | ![Chat auf dem Smartphone](docs/screenshots/chat-mobil-antwort.jpg) |
 
+## Erste Schritte im Backend
+
+Unter **BlueBranch Chatbot → Erste Schritte** führt ein Assistent in drei Pflichtschritten zum laufenden Chat:
+
+1. **Zugang verbinden** – Link zur kostenlosen Registrierung, API-Key einfügen, die Verbindung wird sofort geprüft
+   (Tarif, Verbrauch, Spracheingabe). Ein abgelehnter Key wird nicht übernommen, ein bisheriger bleibt erhalten.
+   Gespeichert wird der Key wie bisher an der Startseite im Seitenbaum; wer mehrere Websites betreibt, wählt oben die Website.
+2. **Inhalte trainieren** – zeigt, wie viele Seiten und Zusatzinhalte trainiert sind, und führt zum Suchindex-Aufbau.
+3. **Chat anzeigen** – ein Klick auf **„Chat auf allen Seiten anzeigen“** setzt das Chat-Widget ohne Layout- und
+   Modul-Arbeit in jede Seite ein. Einzelne Seiten nimmt *Chat auf dieser Seite ausblenden* in den Seiteneinstellungen aus;
+   ein Widget, das schon im Layout oder Artikel steht, wird nicht doppelt eingesetzt. Die Einstellung steht auch unter
+   *System → Einstellungen → Chat auf allen Seiten anzeigen*. Wer lieber selbst platziert, bindet die Module wie gewohnt ein.
+
+Optional folgen **Ausprobieren** (Testfrage direkt im Backend) und **Feinschliff** (Spracheingabe und Feedback als Voreinstellung).
+Die Seite ist nur für Administratoren sichtbar.
+
 ## So funktioniert die Contao-Integration
 
 Nach der Installation brauchst du nur einen API-Schlüssel – und kannst direkt loslegen:
+
+> Am einfachsten geht es über **BlueBranch Chatbot → Erste Schritte** (siehe oben). Hier die Schritte von Hand:
 
 1. Installation der Erweiterung `$ composer require bluebranch/chatbot` oder über den Contao Manager
 2. Registriere Dich auf [chatbot.bluebranch.de](https://chatbot.bluebranch.de)
@@ -417,6 +435,22 @@ API.
 |---|---|
 | ![Chat in orange](docs/screenshots/chat-widget-orange.jpg) | ![Chat on a smartphone](docs/screenshots/chat-mobil-antwort.jpg) |
 
+## Getting started in the back end
+
+Under **BlueBranch Chatbot → Getting started** an assistant leads to a running chat in three required steps:
+
+1. **Connect your account** – link to the free registration, paste the API key, the connection is checked right away
+   (plan, usage, voice input). A rejected key is not kept; a previous key stays. The key is stored on the root page in the
+   site tree as before; with several websites you pick the website at the top.
+2. **Train your content** – shows how many pages and additional contents are trained and leads to the search index rebuild.
+3. **Show the chat** – one click on **"Show chat on all pages"** puts the chat widget into every page without layout or
+   module work. Single pages are excluded with *Hide chat on this page* in the page settings; a widget that is already in a
+   layout or article is not inserted twice. The setting is also under *System → Settings → Show chat on all pages*. If you
+   prefer to place it yourself, add the modules as usual.
+
+Optional: **Try it out** (a test question right in the back end) and **Fine-tuning** (voice input and feedback as defaults).
+The page is visible to administrators only.
+
 ## How the Contao Integration Works
 
 After installation, all you need is an API key – and you are ready to go:
@@ -724,6 +758,17 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### Unveröffentlicht (nach 1.5.1)
+
+- **Neu: BlueBranch Chatbot → Erste Schritte** (erster Punkt der Navigation): Assistent in drei Pflichtschritten (Zugang
+  verbinden, Inhalte trainieren, Chat anzeigen) plus Testfrage und Voreinstellungen. Den API-Key trägt man dort ein; er wird
+  wie bisher an der Startseite gespeichert und sofort gegen die API geprüft, ein abgelehnter Key wird nicht übernommen
+- **Neu: „Chat auf allen Seiten anzeigen“** (Assistent oder *System → Einstellungen*): setzt das Widget-Modul ohne Eintrag
+  im Layout in jede Seite ein (Hook `modifyFrontendPage`), legt bei Bedarf Theme und Modul an, doppelt sich nicht mit einem
+  vorhandenen Widget. Neues Seitenfeld *Chat auf dieser Seite ausblenden* (`tl_page.chatbot_hide_widget`) – nach dem Update
+  `contao:migrate` und Seitencache leeren
+- Neue Dienstklassen `GlobalWidget`, `GlobalWidgetListener`, `StartController`
 
 ### 1.5.1 - 2026-10-29
 
