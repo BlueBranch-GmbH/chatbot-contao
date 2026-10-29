@@ -41,7 +41,9 @@ Unter **BlueBranch Chatbot → Erste Schritte** führt ein Assistent in drei Pfl
 1. **Zugang verbinden** – Link zur kostenlosen Registrierung, API-Key einfügen, die Verbindung wird sofort geprüft
    (Tarif, Verbrauch, Spracheingabe). Ein abgelehnter Key wird nicht übernommen, ein bisheriger bleibt erhalten.
    Gespeichert wird der Key wie bisher an der Startseite im Seitenbaum; wer mehrere Websites betreibt, wählt oben die Website.
-2. **Inhalte trainieren** – zeigt, wie viele Seiten und Zusatzinhalte trainiert sind, und führt zum Suchindex-Aufbau.
+2. **Inhalte trainieren** – zeigt, wie viele Seiten und Zusatzinhalte trainiert sind. **„Jetzt trainieren“** ruft die Seiten der
+   Website nacheinander ab (Fortschrittsbalken); dabei indiziert Contao sie und übergibt sie an die API. **„Alles neu trainieren“**
+   setzt den Stand zurück und trainiert alle Seiten neu. Der Suchindex-Aufbau bleibt als Alternative.
 3. **Chat anzeigen** – ein Klick auf **„Chat auf allen Seiten anzeigen“** setzt das Chat-Widget ohne Layout- und
    Modul-Arbeit in jede Seite ein. Einzelne Seiten nimmt *Chat auf dieser Seite ausblenden* in den Seiteneinstellungen aus;
    ein Widget, das schon im Layout oder Artikel steht, wird nicht doppelt eingesetzt. Die Einstellung steht auch unter
@@ -467,7 +469,9 @@ Under **BlueBranch Chatbot → Getting started** an assistant leads to a running
 1. **Connect your account** – link to the free registration, paste the API key, the connection is checked right away
    (plan, usage, voice input). A rejected key is not kept; a previous key stays. The key is stored on the root page in the
    site tree as before; with several websites you pick the website at the top.
-2. **Train your content** – shows how many pages and additional contents are trained and leads to the search index rebuild.
+2. **Train your content** – shows how many pages and additional contents are trained. **"Train now"** fetches the pages of the
+   website one after another (progress bar); Contao indexes them and hands them to the API. **"Retrain everything"** resets the
+   state and trains all pages again. The search index rebuild stays available as an alternative.
 3. **Show the chat** – one click on **"Show chat on all pages"** puts the chat widget into every page without layout or
    module work. Single pages are excluded with *Hide chat on this page* in the page settings; a widget that is already in a
    layout or article is not inserted twice. The setting is also under *System → Settings → Show chat on all pages*. If you
@@ -807,6 +811,18 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.8.0 - 2026-10-29
+
+- **„Jetzt trainieren“ in *Erste Schritte*:** Ein Klick ruft die Seiten der Website in Portionen ab (Fortschrittsbalken, Abbruch bei Fehlern
+  mit Meldung); Contao indiziert sie, der Index-Hook trainiert. „Alles neu trainieren“ setzt den Stand zurück. Neu: `PageFetcher`,
+  `StartTrainController` (nur Administratoren, Token-geschützt). Bei fester Domain wird die URL aus Domain und Schema gebaut, Weiterleitungen
+  auf andere Hosts gelten als Fehler
+- **Link zum Portal** (chatbot.bluebranch.de) im Kopfbanner und in Schritt 1 von *Erste Schritte*
+- **Texte in Sprachdateien:** *Erste Schritte* liest alle Texte aus `chatbot_start` (Deutsch und Englisch, 97 Schlüssel), ebenso die Meldungen
+  der Template-Prüfung und der Verbindungsprüfung
+- Getestet in Chrome, Brave und der WebKit-Engine (Safari-Äquivalent) mit simuliertem Mikrofon
+- Nach dem Update: `composer update`, Cache leeren
 
 ### 1.7.0 - 2026-10-29
 
