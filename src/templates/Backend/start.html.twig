@@ -53,6 +53,24 @@
     </div>
     {% endif %}
 
+    {% if customTemplates %}
+    {% set hasError = false %}{% for t in customTemplates %}{% if t.level == 'error' %}{% set hasError = true %}{% endif %}{% endfor %}
+    <div class="cs-notice cs-notice--{{ hasError ? 'error' : 'warn' }}" role="status">
+        <span class="cs-notice__icon" aria-hidden="true">!</span>
+        <div>
+            <strong>{{ hasError ? 'Angepasste Templates sind zu alt' : 'Angepasste Templates im Projekt' }}</strong>
+            <p style="margin:4px 0 8px">Diese Dateien im Ordner <code>templates/</code> ersetzen die der Erweiterung und werden bei Updates nicht mitgezogen.
+                {% if hasError %}Mindestens eine bricht den Chat. Am einfachsten: die Datei löschen (dann gilt das Template der Erweiterung) oder neu aus <code>vendor/bluebranch/chatbot/src/Resources/contao/templates/</code> kopieren und anpassen.{% else %}Der Chat funktioniert, es fehlen neuere Funktionen. Zum Nachziehen die Datei löschen oder neu aus <code>vendor/bluebranch/chatbot/src/Resources/contao/templates/</code> kopieren.{% endif %}</p>
+            <ul class="cs-tpl">
+                {% for t in customTemplates %}
+                <li><code>{{ t.file }}</code> <span class="cs-pill {{ t.level == 'error' ? 'cs-pill--bad' : 'cs-pill--muted' }}">{{ t.level == 'error' ? 'bricht den Chat' : 'veraltet' }}</span>
+                    <small>{{ t.messages|join(' · ') }}</small></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="cs-steps">
 
         {# ============================================================ 1 #}
@@ -381,6 +399,11 @@
     .cs-notice--ok .cs-notice__icon { background: var(--cs-ok); }
     .cs-notice--error { background: rgba(220,38,38,.09); border-color: rgba(220,38,38,.35); }
     .cs-notice--error .cs-notice__icon { background: var(--cs-bad); }
+    .cs-notice--warn { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.45); }
+    .cs-notice--warn .cs-notice__icon { background: #d97706; }
+    .cs-notice code { font-size: .88em; }
+    .cs-tpl { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .cs-tpl small { display: block; color: var(--cs-muted); }
 
     /* ------------------------------------------------------------ Zeitleiste und Schritte */
     .cs-steps { position: relative; }

@@ -6,6 +6,7 @@ use Bluebranch\Chatbot\classes\Asset;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\GlobalWidget;
 use Bluebranch\Chatbot\classes\StreamToken;
+use Bluebranch\Chatbot\classes\TemplateCheck;
 use Contao\BackendUser;
 use Contao\Config;
 use Contao\CoreBundle\Controller\AbstractBackendController;
@@ -183,6 +184,7 @@ class StartController extends AbstractBackendController
             'doneCount' => \count(array_filter($steps)),
             'voiceDefault' => (bool) Config::get('chatbot_voice_default'),
             'feedbackDefault' => (bool) Config::get('chatbot_feedback_default'),
+            'customTemplates' => TemplateCheck::scan((string) $container->getParameter('kernel.project_dir')),
             'notice' => $this->noticeFor((string) $request->query->get('done'), $tier),
             'requestToken' => $this->requestToken(),
             'streamToken' => StreamToken::forSession($request),

@@ -509,6 +509,13 @@ class ChatbotAPIController extends AbstractController
         // Seite und Modul nur so, wie der Server sie gerendert hat (RequestSignature). Im Backend
         // waehlt ein Administrator die Seite selbst.
         if (!$isBackend && ($pageId > 0 || $moduleId > 0) && !RequestSignature::verify($pageId, $moduleId, $payload['sig'] ?? null)) {
+            // Als Fehler (nicht Warnung): Im Produktivbetrieb verwirft Symfony kleinere Stufen. Fehlt die Signatur ganz, stammt die Seite fast sicher von einem angepassten Template aus der Zeit
+            // vor 1.3.0 (templates/mod_chatbot_*.html5). Besucher lesen nur „Bitte laden Sie die Seite neu“ -
+            // der Betreiber soll den Grund im Log finden. Die Anfrage kam mit gueltigem Sitzungs-Token.
+            if (empty($payload['sig'])) {
+                $this->logger->error('Chatbot: Anfrage ohne Signatur abgewiesen. Ein angepasstes Template (templates/mod_chatbot_*.html5) ist vermutlich aelter als 1.3.0 und braucht `sig` und `moduleId` - siehe BlueBranch Chatbot -> Erste Schritte.');
+            }
+
             $error = [403, 'Bitte laden Sie die Seite neu.'];
             $pageId = 0;
             $moduleId = 0;
