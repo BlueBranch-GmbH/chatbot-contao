@@ -110,19 +110,19 @@ Die Wissensbasis füllt sich über den Contao-Suchindex. Sobald der Crawler läu
 
 ### 3. Modul einbinden
 
-Unter *Themes → Frontend-Module* stehen zwei Module bereit:
+Unter *Themes → Frontend-Module* stehen drei Module bereit:
 
 | Modul | Zweck |
 |---|---|
 | *Chatbot Widget* | Aufklappbarer Chat-Button, standardmäßig unten rechts |
-| *Chatbot Generate Search* | Zusammenfassende KI-Antwort über der Trefferliste der Suche |
+| *Chatbot KI-Suche* | Zusammenfassende KI-Antwort über der Trefferliste der Suche (mit dem Template `_full` mit eigenem Suchfeld) |
 | *Chatbot Frage* | Eingabefeld mit getippten Fragen, Antwort direkt darunter |
 
 Alle drei werden wie gewohnt in ein Layout oder einen Artikel eingebunden.
 
 ### Getippte Fragen
 
-*Chatbot Frage* und *Chatbot Generate Search* haben beide das Feld **Getippte Fragen** — eine
+*Chatbot Frage* und *Chatbot KI-Suche* haben beide das Feld **Getippte Fragen** — eine
 Liste beliebig vieler Texte. Sie werden im Frontend nacheinander Zeichen für Zeichen als
 Platzhalter ins Eingabefeld geschrieben, gelöscht und durch den nächsten ersetzt. Bleibt die
 Liste leer, steht dort der statische Platzhalter.
@@ -210,8 +210,8 @@ erst beim nächsten Bereinigungslauf.
 
 Zwei Inhaltselemente grenzen Bereiche ab, die nicht in den Suchindex sollen:
 
-- *Indexer: Stop* – ab hier wird nicht mehr indiziert
-- *Indexer: Continue* – ab hier wieder
+- *Suchindex: Bereich ausnehmen – Anfang* (`indexer::stop`) – ab hier wird nicht mehr indiziert
+- *Suchindex: Bereich ausnehmen – Ende* (`indexer::continue`) – ab hier wieder; entsteht beim Speichern des Anfangs automatisch dahinter
 
 Für die KI-Wissensbasis werden diese Markierungen bewusst **ignoriert**, damit auch
 Nachrichtenlisten und ähnliche dynamische Bereiche beantwortbar bleiben. Sie wirken auf die
@@ -510,14 +510,14 @@ Two front end modules are available under *Themes → Front end modules*:
 | Module | Purpose |
 |---|---|
 | *Chatbot Widget* | Collapsible chat button, bottom right by default |
-| *Chatbot Generate Search* | Summarising AI answer above the search results |
+| *Chatbot AI search* | Summarising AI answer above the search results (with the `_full` template with its own search field) |
 | *Chatbot Question* | Input field with typed questions, answer right below it |
 
 All three are added to a layout or an article as usual.
 
 ### Typed questions
 
-*Chatbot Question* and *Chatbot Generate Search* both offer the **Typed questions** field — a list
+*Chatbot Question* and *Chatbot AI search* both offer the **Typed questions** field — a list
 of as many texts as you like. In the front end they are written into the input field as a
 placeholder, one character at a time, then deleted and replaced by the next one. If the list stays
 empty, the static placeholder remains.
@@ -603,8 +603,8 @@ run.
 
 Two content elements delimit areas that should stay out of the search index:
 
-- *Indexer: Stop* – nothing is indexed from here on
-- *Indexer: Continue* – indexing resumes
+- *Search index: exclude area – start* (`indexer::stop`) – nothing is indexed from here on
+- *Search index: exclude area – end* (`indexer::continue`) – indexing resumes; created automatically behind the start when you save it
 
 These markers are deliberately **ignored** for the AI knowledge base, so that news lists and
 similar dynamic areas remain answerable. They apply to the classic Contao search.
@@ -771,6 +771,14 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 ## Changes
 
 ### Unveröffentlicht (nach 1.6.0)
+
+- **Backend-Masken überarbeitet:** Das Chat-Widget gruppiert seine Felder in *Aussehen*, *Texte* und *Funktionen*; Frage-Modul und Suche
+  zeigen *Funktionen* und legen „Kein Standard-Styling“ zum Template. Die Such-Maske erklärt die zwei Varianten (mit und ohne eigenes Suchfeld).
+  Der Modultyp heißt jetzt *Chatbot KI-Suche* (bisher „Chatbot Generate Search“). Die Hilfetexte sind kürzer und werden nicht mehr abgeschnitten.
+  Die Einstellungen sind in *Einrichtung*, *Aussehen* und *Texte und Hinweise* geteilt und verweisen auf *Erste Schritte*
+- **Inhaltselemente:** Die Indexer-Elemente heißen *Suchindex: Bereich ausnehmen – Anfang/Ende*, zeigen nur noch Typ und Sichtbarkeit
+  (keine Template-, Zugriffs- und Experten-Felder) und sagen, dass die KI-Wissensbasis die Markierung ignoriert
+- **Zusatzinhalte:** Die Liste ist alphabetisch ohne Buchstaben-Gruppen, die Maske hat eine Gruppe weniger („Einstellungen“)
 
 - **Spracheingabe auch im Frage-Modul und in der Suche:** Mikrofon-Knopf rechts im Eingabefeld, Wellen ersetzen bei der Aufnahme
   das Feld (× oder Escape verwirft), der erkannte Text geht sofort als Frage bzw. Suche ab. In der Suche nur in der Variante mit

@@ -24,6 +24,7 @@ Lokal committet, **nicht gepusht und nicht getaggt**. README-Changelog: „Unver
 |---|---|---|
 | **Mikrofon im Frage-Modul und in der Suche** (Variante mit eigenem Suchfeld, `_full`): Knopf im Feld, Wellen statt Feld bei der Aufnahme, erkannter Text startet Frage bzw. Suche; `ChatbotVoiceField` (gemeinsame Logik), `VoiceInput::forModule()`, Feld `chatbot_voice` in beiden Paletten | fertig | Chrome mit gesprochener Datei: Frage-Modul in 5.7, 5.3, 4.13; Suche in 5.7 und 5.3; Abbrechen (× und Escape), Stille, verweigertes Mikrofon; mobil in 5.7; Widget nach der Änderung erneut in allen drei |
 | Suche ohne eigenes Feld (nur KI-Antwort über der Contao-Suche) | bewusst ohne Mikrofon | Feld gehört dem Contao-Suchmodul |
+| **Backend-Masken überarbeitet** (Module: Gruppen *Aussehen/Texte/Funktionen*, Hinweis in der Such-Maske, Name *Chatbot KI-Suche*; Inhaltselemente vereinfacht und umbenannt; Zusatzinhalte: Liste ohne Buchstaben-Gruppen, eine Gruppe weniger; Einstellungen in drei Gruppen; kürzere Hilfetexte DE/EN) | fertig | Browser (Backend, eingeloggt als Test-Admin auf `localhost`): alle Masken in 5.7, Module/Einstellungen/Zusatzinhalte/Erste Schritte in 5.3 und 4.13 ohne Fehler |
 
 ## Was 1.6.0 enthält
 
