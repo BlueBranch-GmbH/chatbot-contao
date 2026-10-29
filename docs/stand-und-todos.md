@@ -24,6 +24,7 @@ Lokal committet, **nicht gepusht und nicht getaggt**. README-Changelog: „Unver
 | **Backend-Seite „Erste Schritte“** (`StartController`, `start.html.twig`): Key eintragen und prüfen, Trainingsstand, Chat anzeigen, Testfrage, Voreinstellungen; erster Punkt der Navigation | fertig | Playwright im Backend (Login per Test-Admin auf `localhost`): Contao 5.7, 5.3, 4.13 |
 | **„Chat auf allen Seiten anzeigen“** (`GlobalWidget`, `GlobalWidgetListener`, Einstellung `chatbot_global_widget`, Seitenfeld `chatbot_hide_widget`) | fertig | 5.7: auf Such- und Eventseite eingesetzt, kein Doppel auf der Startseite, Seite ausgenommen, wieder aus; 5.3/4.13: ein/aus ohne Doppel |
 | Abgelehnter Key wird nicht übernommen (altes bleibt), Formatprüfung | fertig | ungültiger und zu kurzer Key |
+| **Neugestaltung der Seite** (Kopfbanner mit Fortschrittsring, Zeitleiste, Karten mit Statusanzeigen, Kennzahl-Chips, Schalter statt Checkboxen, Antwort im Chat-Look; Abstände zum Rand, Dark-Mode über Contao-Variablen) | fertig | Browser: Hell und Dunkel, Backend 5.7; Funktionstest in 5.7, 5.3, 4.13 erneut |
 | Fix beim Bau: `loadDetails()` sperrt das Speichern des Seitenmodells → Wiederherstellen des Keys direkt per SQL | behoben | Test hatte den Fehler aufgedeckt |
 | Fix beim Bau: `Config::persist()` schreibt erst nach der Weiterleitung → `Config::save()` sofort | behoben | Zustand direkt nach dem Klick richtig |
 
@@ -32,7 +33,7 @@ Offen dazu:
 - [ ] **Texte der Seite** stehen fest im Twig (Deutsch) – bei der nächsten Runde in `TL_LANG` ziehen (bekanntes ToDo).
 - [ ] **Seitencache** wird beim Ein-/Ausschalten nicht geleert (Hinweis auf der Seite); eine Cache-Invalidierung wäre schöner.
 - [ ] Schritt 2 führt nur zum Suchindex-Aufbau; ein **„Jetzt trainieren“-Knopf** direkt im Assistenten wäre der nächste Schritt.
-- [ ] Der Test fand nur mit Chrome statt; die **Optik im Dark-Mode des Backends** nicht gesehen (Farben über Contao-Variablen).
+- [ ] Der Test fand nur mit Chrome statt (Hell- und Dunkel-Modus des Backends sind angesehen und in Ordnung).
 
 ## Was 1.5.0 enthält
 
