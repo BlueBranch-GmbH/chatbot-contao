@@ -17,6 +17,9 @@ services:
     Bluebranch\Chatbot\classes\ChatbotAPI:
         public: true
 
+    Bluebranch\Chatbot\classes\VoiceInput:
+        public: true
+
     Bluebranch\Chatbot\Controller\Backend\TrainedContentController:
         public: true
 

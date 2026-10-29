@@ -604,3 +604,199 @@ window.ChatbotExport = window.ChatbotExport || {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
 };
+
+/**
+ * Spracheingabe: nimmt mit dem Mikrofon auf und laesst die Aufnahme vom Server in Text umwandeln.
+ *
+ * - Nur im sicheren Kontext (HTTPS oder localhost); sonst bietet `supported()` false.
+ * - Die Aufnahme endet von selbst nach `maxSeconds` (Grenze der Stufe des Kontos).
+ * - Nichts wird im Browser gespeichert: Der Puffer lebt bis zum Absenden.
+ * - Der API-Schluessel bleibt auf dem Server; hier gehen Aufnahme, Seite, Modul und Signatur
+ *   an die Route der Erweiterung.
+ */
+window.ChatbotVoice = window.ChatbotVoice || {
+    CANDIDATES: ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'],
+
+    supported() {
+        return typeof window !== 'undefined'
+            && window.isSecureContext === true
+            && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+            && typeof MediaRecorder !== 'undefined';
+    },
+
+    /**
+     * @param {{maxSeconds: number, onTick: function(number): void, onStop: function(): void,
+     *          onBlob: function(Blob, string): void, onError: function(string): void,
+     *          onLevel?: function(number): void}} options
+     *        `onLevel` bekommt rund 15-mal pro Sekunde den Pegel (0 bis 1) fuer die Wellenanzeige.
+     *        `onError` bekommt `denied` oder `failed`.
+     * @returns {{start: function(): Promise<void>, stop: function(): void, cancel: function(): void,
+     *            isRecording: function(): boolean}}
+     */
+    record(options) {
+        let recorder = null;
+        let stream = null;
+        let chunks = [];
+        let timer = null;
+        let elapsed = 0;
+        let cancelled = false;
+        let audioContext = null;
+        let levelTimer = null;
+
+        const release = () => {
+            if (levelTimer) {
+                clearInterval(levelTimer);
+                levelTimer = null;
+            }
+            if (audioContext) {
+                audioContext.close().catch(() => {});
+                audioContext = null;
+            }
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+                stream = null;
+            }
+            recorder = null;
+            chunks = [];
+        };
+
+        const stop = () => {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+            }
+        };
+
+        return {
+            isRecording: () => !!recorder && recorder.state === 'recording',
+            stop: stop,
+            cancel() {
+                cancelled = true;
+                if (recorder && recorder.state !== 'inactive') {
+                    recorder.stop();
+                } else {
+                    release();
+                }
+            },
+            async start() {
+                cancelled = false;
+
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (e) {
+                    release();
+                    options.onError('denied');
+                    return;
+                }
+
+                const mimeType = ChatbotVoice.CANDIDATES.find((type) => MediaRecorder.isTypeSupported(type));
+
+                try {
+                    // Sprache braucht wenig: 32 kbit/s halten die Aufnahme klein.
+                    recorder = new MediaRecorder(stream, Object.assign({ audioBitsPerSecond: 32000 }, mimeType ? { mimeType: mimeType } : {}));
+                } catch (e) {
+                    release();
+                    options.onError('failed');
+                    return;
+                }
+
+                chunks = [];
+                recorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size) {
+                        chunks.push(event.data);
+                    }
+                };
+                recorder.onstop = () => {
+                    const type = (recorder && recorder.mimeType) || mimeType || 'audio/webm';
+                    const blob = new Blob(chunks, { type: type });
+                    const wasCancelled = cancelled;
+
+                    release();
+                    options.onStop();
+
+                    if (!wasCancelled && blob.size) {
+                        options.onBlob(blob, type);
+                    }
+                };
+
+                // Pegel fuer die Wellenanzeige. Fehlt Web Audio, nimmt die Aufnahme trotzdem auf.
+                if (options.onLevel) {
+                    try {
+                        const Context = window.AudioContext || window.webkitAudioContext;
+                        audioContext = new Context();
+                        const analyser = audioContext.createAnalyser();
+                        analyser.fftSize = 512;
+                        audioContext.createMediaStreamSource(stream).connect(analyser);
+                        const samples = new Uint8Array(analyser.fftSize);
+
+                        levelTimer = setInterval(() => {
+                            analyser.getByteTimeDomainData(samples);
+                            let sum = 0;
+                            for (let i = 0; i < samples.length; i++) {
+                                const v = (samples[i] - 128) / 128;
+                                sum += v * v;
+                            }
+                            // Sprache liegt meist bei einem RMS von 0,05 bis 0,3.
+                            options.onLevel(Math.min(1, Math.sqrt(sum / samples.length) * 3.2));
+                        }, 70);
+                    } catch (e) {
+                        audioContext = null;
+                    }
+                }
+
+                elapsed = 0;
+                recorder.start();
+                options.onTick(0);
+                timer = setInterval(() => {
+                    elapsed += 1;
+                    options.onTick(elapsed);
+                    if (elapsed >= options.maxSeconds) {
+                        stop();
+                    }
+                }, 1000);
+            },
+        };
+    },
+
+    /**
+     * Schickt die Aufnahme an die Route der Erweiterung.
+     *
+     * @param {{url?: string, token: string, pageId: string, moduleId: string|number, sig: string, language: string}} config
+     * @returns {Promise<string>} der erkannte Text (kann leer sein); bei Fehlern eine Error mit lesbarer Meldung
+     */
+    transcribe(blob, config) {
+        const form = new FormData();
+        form.append('audio', blob, 'aufnahme');
+        form.append('language', config.language || 'de');
+
+        if (config.pageId) {
+            form.append('pageId', config.pageId);
+        }
+        if (config.moduleId) {
+            form.append('moduleId', config.moduleId);
+        }
+        if (config.sig) {
+            form.append('sig', config.sig);
+        }
+
+        return fetch(config.url || '/bluebranch/chatbot/api/v1/transcribe', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-Token': config.token, 'Accept': 'application/json' },
+            body: form,
+        }).then((response) => response.json().catch(() => ({})).then((data) => {
+            if (!response.ok || !data || data.success !== true) {
+                throw new Error(data && data.message ? data.message : '');
+            }
+
+            return typeof data.text === 'string' ? data.text.trim() : '';
+        }));
+    },
+};

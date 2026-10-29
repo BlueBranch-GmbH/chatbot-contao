@@ -10,6 +10,7 @@ use Bluebranch\Chatbot\classes\RequestSignature;
 use Bluebranch\Chatbot\classes\StreamRecorder;
 use Bluebranch\Chatbot\classes\StreamToken;
 use Bluebranch\Chatbot\classes\TrainingState;
+use Bluebranch\Chatbot\classes\VoiceInput;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\ModuleModel;
 use Contao\PageModel;
@@ -17,6 +18,7 @@ use Contao\System;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -32,6 +34,7 @@ class ChatbotAPIController extends AbstractController
     private ?ChatLog $chatLog;
     private ?ExtraContent $extraContent;
     private ?RateLimit $rateLimit;
+    private ?VoiceInput $voiceInput;
 
     /** Laengen: der laengste regulaere Prompt ist „Seite zusammenfassen“ mit 2.500 Zeichen Seitentext. */
     private const MAX_PROMPT = 4000;
@@ -42,6 +45,11 @@ class ChatbotAPIController extends AbstractController
     private const LIMIT_ANSWERS_GLOBAL = 300;
     private const LIMIT_TOKEN_CLIENT = 30;
     private const LIMIT_FEEDBACK_CLIENT = 30;
+    private const LIMIT_VOICE_CLIENT = 20;
+    private const LIMIT_VOICE_GLOBAL = 200;
+
+    /** Aufnahme: bei 32 kbit/s sind 120 s (harte Grenze der API) rund 500 KB; 4 MB lassen reichlich Luft. */
+    private const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 
     /** Welche Modultypen welche Quelle im Protokoll ergeben. */
     private const MODULE_SOURCES = [
@@ -57,7 +65,7 @@ class ChatbotAPIController extends AbstractController
      * Argumente uebergibt. Ein Pflichtargument wuerde dort einen ArgumentCountError
      * ausloesen, bis jemand den Cache leert -- und der Chatbot schwiege solange.
      */
-    public function __construct(ChatbotAPI $chatbotApi, LoggerInterface $logger, HttpClientInterface $httpClient, ?ContaoFramework $framework = null, ?ChatLog $chatLog = null, ?ExtraContent $extraContent = null, ?RateLimit $rateLimit = null)
+    public function __construct(ChatbotAPI $chatbotApi, LoggerInterface $logger, HttpClientInterface $httpClient, ?ContaoFramework $framework = null, ?ChatLog $chatLog = null, ?ExtraContent $extraContent = null, ?RateLimit $rateLimit = null, ?VoiceInput $voiceInput = null)
     {
         $this->chatbotApi = $chatbotApi;
         $this->logger = $logger;
@@ -68,6 +76,7 @@ class ChatbotAPIController extends AbstractController
         $this->chatLog = $chatLog;
         $this->extraContent = $extraContent;
         $this->rateLimit = $rateLimit;
+        $this->voiceInput = $voiceInput;
     }
 
     /**
@@ -140,6 +149,111 @@ class ChatbotAPIController extends AbstractController
         return $response;
     }
 
+    /**
+     * Wandelt die Sprachaufnahme eines Besuchers in Text.
+     *
+     * Der Browser schickt nur Aufnahme, Seite und Modul; den API-Schluessel kennt allein der
+     * Server. Die Aufnahme wird weder gespeichert noch protokolliert, auch der erkannte Text
+     * steht in keinem Log - er geht erst als normale Frage durch den Chat.
+     */
+    #[Route('/bluebranch/chatbot/api/v1/transcribe', name: 'bluebranch_chatbot_transcribe', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => false])]
+    public function transcribe(Request $request): JsonResponse
+    {
+        $this->framework->initialize();
+
+        if (!$this->hasValidStreamToken($request)) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Invalid token'], 403));
+        }
+
+        if (null === $this->voiceInput) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Voice input unavailable'], 503));
+        }
+
+        if (null !== $this->rateLimit
+            && (!$this->rateLimit->allowClient($request, 'transcribe', self::LIMIT_VOICE_CLIENT)
+                || !$this->rateLimit->allowGlobal('transcribe', self::LIMIT_VOICE_GLOBAL))
+        ) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => $this->limitMeldung('rate_limit')], 429));
+        }
+
+        $pageId = (int) $request->request->get('pageId', 0);
+        $moduleId = (int) $request->request->get('moduleId', 0);
+
+        // Ohne Modul keine Spracheingabe: Erst die Modul-Einstellung schaltet sie frei, und die
+        // Signatur bindet Seite und Modul an das, was der Server ausgeliefert hat.
+        if ($moduleId <= 0 || !RequestSignature::verify($pageId, $moduleId, $request->request->get('sig'))) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Bitte laden Sie die Seite neu.'], 403));
+        }
+
+        $module = ModuleModel::findByPk($moduleId);
+
+        if (!$module instanceof ModuleModel
+            || !isset(self::MODULE_SOURCES[$module->type])
+            || !VoiceInput::moduleAllows($module)
+        ) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Die Spracheingabe ist nicht aktiviert.'], 403));
+        }
+
+        $file = $request->files->get('audio');
+
+        if (!$file instanceof UploadedFile || !$file->isValid() || $file->getSize() <= 0) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Es wurde keine Aufnahme übertragen.'], 400));
+        }
+
+        if ($file->getSize() > self::MAX_AUDIO_BYTES) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => 'Die Aufnahme ist zu lang.', 'reason' => 'audio_too_long'], 413));
+        }
+
+        $pageModel = $pageId > 0 ? PageModel::findById($pageId) : null;
+        $mimeType = strtolower(trim(explode(';', (string) $file->getClientMimeType())[0]));
+        $language = strtolower(substr((string) $request->request->get('language', 'de'), 0, 2));
+
+        $result = $this->chatbotApi->transcribe(
+            (string) file_get_contents($file->getPathname()),
+            $mimeType,
+            1 === preg_match('/^[a-z]{2}$/', $language) ? $language : 'de',
+            $pageModel
+        );
+
+        if (!empty($result['success'])) {
+            return $this->noStore(new JsonResponse(['success' => true, 'text' => trim((string) ($result['text'] ?? ''))]));
+        }
+
+        $status = (int) ($result['statusCode'] ?? 0);
+        $reason = \is_string($result['reason'] ?? null) ? $result['reason'] : '';
+
+        if (413 === $status && 'audio_too_long' === $reason) {
+            $max = (int) ($result['maxSeconds'] ?? 0);
+
+            return $this->noStore(new JsonResponse([
+                'success' => false,
+                'reason' => 'audio_too_long',
+                'maxSeconds' => $max,
+                'message' => $max > 0
+                    ? sprintf('Die Aufnahme ist zu lang. Erlaubt sind höchstens %d Sekunden.', $max)
+                    : 'Die Aufnahme ist zu lang.',
+            ], 413));
+        }
+
+        if (429 === $status) {
+            return $this->noStore(new JsonResponse(['success' => false, 'message' => $this->limitMeldung($reason)], 429));
+        }
+
+        return $this->noStore(new JsonResponse([
+            'success' => false,
+            'message' => 503 === $status
+                ? 'Die Spracherkennung ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.'
+                : 'Die Spracheingabe steht im Moment nicht zur Verfügung.',
+        ], 503 === $status ? 503 : 502));
+    }
+
+    private function noStore(JsonResponse $response): JsonResponse
+    {
+        $response->headers->set('Cache-Control', 'no-store, private');
+
+        return $response;
+    }
+
     #[Route('/bluebranch/chatbot/api/v1/generate/search',name: 'bluebranch_chatbot_generate_seach', methods: ['POST'], defaults: ['_scope' => 'frontend', '_token_check' => true])]
     #[Route('/bluebranch/chatbot/api/v1/be/generate/search', name: 'bluebranch_chatbot_generate_search_be', methods: ['POST'], defaults: ['_scope' => 'backend', '_token_check' => true])]
     public function generateSearch(Request $request): JsonResponse
@@ -179,13 +293,14 @@ class ChatbotAPIController extends AbstractController
         // Betreibers, Fehler des HTTP-Clients die interne API-Adresse.
         if (empty($result['success'])) {
             $istLimit = 429 === ($result['statusCode'] ?? 0);
+            $istPausiert = 'project_paused' === ($result['reason'] ?? '');
 
             return new JsonResponse([
                 'success' => false,
-                'message' => $istLimit
+                'message' => ($istLimit || $istPausiert)
                     ? $this->limitMeldung((string) ($result['reason'] ?? ''))
                     : 'Die Anfrage konnte nicht beantwortet werden.',
-            ], $istLimit ? 429 : 502);
+            ], $istLimit ? 429 : ($istPausiert ? 503 : 502));
         }
 
         $sources = [];
@@ -550,6 +665,10 @@ class ChatbotAPIController extends AbstractController
      */
     private function limitMeldung(string $grund): string
     {
+        if ('project_paused' === $grund) {
+            return 'Der Chat steht im Moment nicht zur Verfügung.';
+        }
+
         if ('monthly_quota' === $grund) {
             return 'Der Chat steht im Moment nicht zur Verfügung. Bitte versuchen Sie es später erneut.';
         }
@@ -621,7 +740,7 @@ class ChatbotAPIController extends AbstractController
 
                     echo "event: error\n";
                     echo 'data: ' . json_encode([
-                        'message' => 429 === $statusCode
+                        'message' => (429 === $statusCode || 'project_paused' === $fehler['grund'])
                             ? $this->limitMeldung($fehler['grund'])
                             : 'Die Anfrage konnte nicht beantwortet werden.',
                         'status' => $statusCode,

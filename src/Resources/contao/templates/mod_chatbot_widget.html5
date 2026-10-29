@@ -40,6 +40,11 @@ if ($this->iconUrl) {
         <div class="chatbot-widget__suggestions" hidden></div>
         <form class="chatbot-widget__form">
             <textarea class="chatbot-widget__input" rows="1" placeholder="<?= $this->labelInputPlaceholder ?>" required></textarea>
+            <?php if ($this->voice): ?>
+            <button type="button" class="chatbot-widget__voice" aria-label="<?= $this->labelVoice ?>" title="<?= $this->labelVoice ?>" hidden>
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 0 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.59A6 6 0 0 0 18 11.5Z"/></svg>
+            </button>
+            <?php endif; ?>
             <button type="submit" class="chatbot-widget__send" aria-label="<?= $this->labelSend ?>">&#10148;</button>
         </form>
         <?php if ($this->showDisclaimer): ?>
@@ -67,6 +72,7 @@ if ($this->iconUrl) {
             'greeting' => $this->greeting,
             'suggestions' => $this->suggestions,
             'showSummarize' => $this->showSummarize,
+            'voice' => $this->voice ? ['maxSeconds' => (int) $this->voiceMaxSeconds] : false,
             'strings' => $this->jsStrings,
         ], JSON_HEX_TAG | JSON_HEX_AMP) ?>).init();
     });

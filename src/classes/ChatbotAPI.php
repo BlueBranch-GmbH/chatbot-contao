@@ -5,6 +5,8 @@ namespace Bluebranch\Chatbot\classes;
 use Contao\Config;
 use Contao\PageModel;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Mime\Part\DataPart;
+use Symfony\Component\Mime\Part\Multipart\FormDataPart;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ChatbotAPI
@@ -60,6 +62,28 @@ class ChatbotAPI
     public function getTier($page = null): array
     {
         return $this->sendRequest("GET", "/api/v1/user/me/tier", $page);
+    }
+
+    /**
+     * Wandelt eine Sprachaufnahme in Text (`POST /chatbot-ai/transcribe`).
+     *
+     * Die Aufnahme geht nur durch: weder hier noch in der API wird sie gespeichert. Bei Fehlern
+     * stehen `statusCode`, `reason` und - bei zu langen Aufnahmen - `maxSeconds` im Ergebnis.
+     *
+     * @param string $audio    Rohdaten der Aufnahme
+     * @param string $mimeType Medientyp ohne Parameter, etwa `audio/webm`
+     */
+    public function transcribe(string $audio, string $mimeType, string $language = 'de', $page = null): array
+    {
+        $form = new FormDataPart([
+            'language' => $language,
+            'audio' => new DataPart($audio, 'aufnahme', $mimeType),
+        ]);
+
+        return $this->sendRequest('POST', '/api/v1/chatbot-ai/transcribe', $page, [
+            'headers' => $form->getPreparedHeaders()->toArray(),
+            'body' => $form->bodyToIterable(),
+        ]);
     }
 
     /**

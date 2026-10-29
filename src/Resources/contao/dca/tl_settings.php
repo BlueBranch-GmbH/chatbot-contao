@@ -2,7 +2,7 @@
 
 $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] = str_replace(
     ';{chmod_legend}',
-    ';{chatbot_legend},chatbot_info,chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer;{chatbot_log_legend},chatbot_feedback_default,chatbot_log_enabled,chatbot_log_retention;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
+    ';{chatbot_legend},chatbot_info,chatbot_default_name,chatbot_default_color,chatbot_default_icon,chatbot_default_greeting,chatbot_default_suggestions,chatbot_default_hide_summarize,chatbot_default_hide_disclaimer,chatbot_voice_default;{chatbot_log_legend},chatbot_feedback_default,chatbot_log_enabled,chatbot_log_retention;{chatbot_purge_legend},chatbot_purge_enabled,chatbot_purge_interval;{chatbot_debug_legend},chatbot_debug;{chmod_legend}',
     $GLOBALS['TL_DCA']['tl_settings']['palettes']['default']
 );
 
@@ -112,6 +112,17 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_log_retention'] = [
  */
 $GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_feedback_default'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_feedback_default'],
+    'inputType' => 'checkbox',
+    'eval'      => ['tl_class' => 'w50 m12'],
+];
+
+/*
+ * Vorgabe fuer alle Chat-Widgets; im Modul laesst sie sich je Modul an- oder abschalten.
+ * Aus, solange niemand sie einschaltet: Das Mikrofon verlangt einen Hinweis in der
+ * Datenschutzerklaerung der Website.
+ */
+$GLOBALS['TL_DCA']['tl_settings']['fields']['chatbot_voice_default'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_settings']['chatbot_voice_default'],
     'inputType' => 'checkbox',
     'eval'      => ['tl_class' => 'w50 m12'],
 ];

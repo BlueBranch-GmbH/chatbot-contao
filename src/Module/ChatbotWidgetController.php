@@ -6,6 +6,7 @@ use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\ChatLog;
 use Bluebranch\Chatbot\classes\RequestSignature;
 use Bluebranch\Chatbot\classes\FeedbackStrings;
+use Bluebranch\Chatbot\classes\VoiceInput;
 use Contao\Config;
 use Contao\CoreBundle\Controller\FrontendModule\AbstractFrontendModuleController;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsFrontendModule;
@@ -25,9 +26,15 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
 
     private ChatbotAPI $chatbotApi;
 
-    public function __construct(?ChatbotAPI $chatbotApi = null)
+    private ?VoiceInput $voiceInput;
+
+    public function __construct(?ChatbotAPI $chatbotApi = null, ?VoiceInput $voiceInput = null)
     {
-        $this->chatbotApi = $chatbotApi ?? \Contao\System::getContainer()->get(ChatbotAPI::class);
+        $container = \Contao\System::getContainer();
+        $this->chatbotApi = $chatbotApi ?? $container->get(ChatbotAPI::class);
+        // Optional wie bei den anderen Diensten: Mit einem alten, noch nicht geleerten
+        // Container fehlt der Dienst, dann bleibt nur das Mikrofon aus.
+        $this->voiceInput = $voiceInput ?? ($container->has(VoiceInput::class) ? $container->get(VoiceInput::class) : null);
     }
 
     public function generate()
@@ -94,6 +101,19 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
         $template->labelExportTxt = $lang['exportTxt'] ?? 'Als Text (.txt)';
         $template->labelExportVtt = $lang['exportVtt'] ?? 'Als WebVTT (.vtt)';
         $template->moduleId = (int) $model->id;
+
+        // Mikrofon: vom Modul erlaubt und von der API eingerichtet. Die Laenge der Aufnahme
+        // gibt die Stufe des Kontos vor.
+        $template->voice = false;
+        $template->voiceMaxSeconds = 0;
+
+        if (null !== $this->voiceInput && VoiceInput::moduleAllows($model)) {
+            $voice = $this->voiceInput->capability($pageModel);
+            $template->voice = $voice['enabled'];
+            $template->voiceMaxSeconds = $voice['maxSeconds'];
+        }
+
+        $template->labelVoice = $lang['voice'] ?? 'Spracheingabe starten';
         $template->feedback = ChatLog::feedbackEnabled($model);
         // Bindet Seite und Modul an diese Ausgabe (siehe RequestSignature).
         $template->sig = RequestSignature::sign((int) ($this->getPageModel() instanceof PageModel ? $this->getPageModel()->id : 0), (int) $model->id);
@@ -112,6 +132,14 @@ class ChatbotWidgetController extends AbstractFrontendModuleController
             'source' => $lang['source'] ?? 'Quelle',
             'interrupted' => $lang['interrupted'] ?? 'Antwort unterbrochen.',
             'you' => $lang['you'] ?? 'Sie',
+            'voice' => $lang['voice'] ?? 'Spracheingabe starten',
+            'voiceCancel' => $lang['voiceCancel'] ?? 'Aufnahme verwerfen',
+            'voiceStop' => $lang['voiceStop'] ?? 'Aufnahme beenden und senden',
+            'voiceListening' => $lang['voiceListening'] ?? 'Ich höre zu …',
+            'voiceWorking' => $lang['voiceWorking'] ?? 'Wird verstanden …',
+            'voiceEmpty' => $lang['voiceEmpty'] ?? 'Es wurde nichts verstanden. Bitte noch einmal sprechen.',
+            'voiceDenied' => $lang['voiceDenied'] ?? 'Kein Zugriff auf das Mikrofon. Bitte in der Adresszeile des Browsers erlauben.',
+            'voiceError' => $lang['voiceError'] ?? 'Die Spracheingabe hat nicht funktioniert.',
         ] + FeedbackStrings::get();
 
         $template->pageId = $pageModel instanceof PageModel ? $pageModel->id : '';

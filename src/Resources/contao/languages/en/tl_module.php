@@ -26,3 +26,6 @@ $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_unstyled'] = ['No default styli
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'] = ['Ask for feedback', 'Shows thumbs up/down below every answer; with thumbs down the visitor can briefly say what was wrong. Rated answers are stored together with the question (back end: "Questions & feedback"). Default: the setting under System → Settings.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'] = ['1' => 'On', '0' => 'Off'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'] = 'Default (as in the settings)';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice'] = ['Voice input (microphone)', 'Shows a microphone button in the chat: visitors speak their question, the recording is converted to text and sent as the question. The recording is not stored. Every spoken question counts twice towards the quota (transcription and answer). The button only appears if speech recognition is set up for your account and the page is served over HTTPS. Default: the setting under System → Settings.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_options'] = ['1' => 'On', '0' => 'Off'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_default'] = 'Default (as in the settings)';

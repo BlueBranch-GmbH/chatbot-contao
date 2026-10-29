@@ -27,3 +27,6 @@ $GLOBALS['TL_LANG']['tl_module']['chatbot_widget_unstyled'] = ['Kein Standard-St
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback'] = ['Feedback abfragen', 'Zeigt unter jeder Antwort Daumen hoch/runter; beim Daumen nach unten kann der Besucher kurz angeben, was nicht gepasst hat. Bewertete Antworten werden samt Frage gespeichert (Backend: „Fragen & Feedback“). Standard: die Vorgabe aus System → Einstellungen.'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'] = ['1' => 'An', '0' => 'Aus'];
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'] = 'Standard (wie in den Einstellungen)';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice'] = ['Spracheingabe (Mikrofon)', 'Zeigt im Chat einen Mikrofon-Knopf: Besucher sprechen ihre Frage, die Aufnahme wird in Text umgewandelt und als Frage gesendet. Die Aufnahme wird nicht gespeichert. Jede gesprochene Frage zählt zweimal zum Kontingent (Umwandlung und Antwort). Der Knopf erscheint nur, wenn die Spracherkennung für Ihren Zugang eingerichtet ist und die Seite über HTTPS läuft. Standard: die Vorgabe aus System → Einstellungen.'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_options'] = ['1' => 'An', '0' => 'Aus'];
+$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_default'] = 'Standard (wie in den Einstellungen)';

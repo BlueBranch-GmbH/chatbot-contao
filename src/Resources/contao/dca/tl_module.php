@@ -28,7 +28,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_typed_questions'] = [
     'sql'       => "blob NULL",
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{config_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer,chatbot_feedback;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['chatbot_widget'] = '{title_legend},name,headline,type;{config_legend},chatbot_widget_position,chatbot_widget_color,chatbot_widget_icon,chatbot_widget_unstyled;{chatbot_legend},chatbot_widget_name,chatbot_widget_greeting,chatbot_widget_suggestions,chatbot_widget_hide_summarize,chatbot_widget_hide_disclaimer,chatbot_feedback,chatbot_voice;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_widget_name'] = [
     'label'     => &$GLOBALS['TL_LANG']['tl_module']['chatbot_widget_name'],
@@ -118,5 +118,20 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_feedback'] = [
     'options'   => ['1', '0'],
     'reference' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_options'],
     'eval'      => ['includeBlankOption' => true, 'blankOptionLabel' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_feedback_default'], 'tl_class' => 'w50'],
+    'sql'       => "char(1) NOT NULL default ''",
+];
+
+/*
+ * Mikrofon-Knopf: Besucher sprechen ihre Frage, die API wandelt die Aufnahme in Text.
+ * '' = Vorgabe aus den Einstellungen, '1' = an, '0' = aus. Zusaetzlich muss die Spracherkennung
+ * in der API eingerichtet sein (Tarif/Server); sonst erscheint kein Knopf.
+ */
+$GLOBALS['TL_DCA']['tl_module']['fields']['chatbot_voice'] = [
+    'label'     => &$GLOBALS['TL_LANG']['tl_module']['chatbot_voice'],
+    'exclude'   => true,
+    'inputType' => 'select',
+    'options'   => ['1', '0'],
+    'reference' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_options'],
+    'eval'      => ['includeBlankOption' => true, 'blankOptionLabel' => &$GLOBALS['TL_LANG']['tl_module']['chatbot_voice_default'], 'tl_class' => 'w50'],
     'sql'       => "char(1) NOT NULL default ''",
 ];

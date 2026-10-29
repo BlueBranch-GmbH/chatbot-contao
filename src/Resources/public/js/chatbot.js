@@ -34,6 +34,10 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         this.badge = this.container.querySelector('.chatbot-widget__badge');
         this.exportButton = this.container.querySelector('.chatbot-widget__export');
         this.exportMenu = this.container.querySelector('.chatbot-widget__export-menu');
+        this.voiceButton = this.container.querySelector('.chatbot-widget__voice');
+        this.voiceConfig = config.voice && config.voice.maxSeconds > 0 ? config.voice : null;
+        this.voiceState = 'idle';
+        this.voiceRecorder = null;
 
         this.storageKey = 'chatbot_widget_history_' + this.containerId;
         this.history = [];
@@ -57,6 +61,14 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             source: 'Quelle',
             interrupted: 'Antwort unterbrochen.',
             you: 'Sie',
+            voice: 'Spracheingabe starten',
+            voiceStop: 'Aufnahme beenden und senden',
+            voiceCancel: 'Aufnahme verwerfen',
+            voiceListening: 'Ich höre zu …',
+            voiceWorking: 'Wird verstanden …',
+            voiceEmpty: 'Es wurde nichts verstanden. Bitte noch einmal sprechen.',
+            voiceDenied: 'Kein Zugriff auf das Mikrofon. Bitte in der Adresszeile des Browsers erlauben.',
+            voiceError: 'Die Spracheingabe hat nicht funktioniert.',
         }, config.strings || {});
 
         this.fontSizeSteps = [13, 14, 15, 16, 17, 18, 19, 20];
@@ -123,7 +135,206 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
             });
         }
 
+        this.initVoice();
         this.renderSuggestions();
+    }
+
+    /**
+     * Mikrofon-Knopf: erst sichtbar, wenn der Browser aufnehmen kann (HTTPS, MediaRecorder).
+     * Ein Klick startet die Aufnahme, der naechste beendet sie und sendet den erkannten Text als
+     * Frage; Escape verwirft sie.
+     */
+    initVoice() {
+        if (!this.voiceButton || !this.voiceConfig || !window.ChatbotVoice || !ChatbotVoice.supported()) {
+            return;
+        }
+
+        this.buildWave();
+        this.voiceButton.hidden = false;
+        this.voiceButton.addEventListener('click', () => this.toggleVoice());
+        this.container.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && this.voiceState === 'recording') {
+                this.voiceRecorder.cancel();
+            }
+        });
+        window.addEventListener('pagehide', () => this.cancelVoice());
+    }
+
+    /**
+     * Die Leiste mit Wellen, Zeit und Abbrechen-Knopf. Sie ersetzt waehrend der Aufnahme das
+     * Textfeld und zeigt danach, dass der Text erkannt wird.
+     */
+    buildWave() {
+        const bars = 36;
+        this.waveLevels = new Array(bars).fill(0);
+
+        this.waveEl = document.createElement('div');
+        this.waveEl.className = 'chatbot-widget__wave';
+        this.waveEl.hidden = true;
+
+        this.waveCancel = document.createElement('button');
+        this.waveCancel.type = 'button';
+        this.waveCancel.className = 'chatbot-widget__wave-cancel';
+        this.waveCancel.setAttribute('aria-label', this.strings.voiceCancel);
+        this.waveCancel.setAttribute('title', this.strings.voiceCancel);
+        this.waveCancel.innerHTML = '&times;';
+        this.waveCancel.addEventListener('click', () => this.cancelVoice());
+
+        const barsEl = document.createElement('div');
+        barsEl.className = 'chatbot-widget__wave-bars';
+        barsEl.setAttribute('aria-hidden', 'true');
+        this.waveBars = [];
+        for (let i = 0; i < bars; i++) {
+            const bar = document.createElement('span');
+            bar.style.animationDelay = (i % 12) * 80 + 'ms';
+            barsEl.appendChild(bar);
+            this.waveBars.push(bar);
+        }
+
+        this.waveTime = document.createElement('span');
+        this.waveTime.className = 'chatbot-widget__wave-time';
+
+        this.waveEl.append(this.waveCancel, barsEl, this.waveTime);
+        this.form.insertBefore(this.waveEl, this.voiceButton);
+    }
+
+    /** Schiebt einen neuen Pegel hinein; die aeltesten Balken laufen links hinaus. */
+    pushWaveLevel(level) {
+        this.waveLevels.shift();
+        this.waveLevels.push(level);
+
+        this.waveBars.forEach((bar, index) => {
+            bar.style.transform = 'scaleY(' + Math.max(0.1, this.waveLevels[index]).toFixed(2) + ')';
+        });
+    }
+
+    resetWave() {
+        this.waveLevels.fill(0);
+        this.waveBars.forEach((bar) => {
+            bar.style.transform = '';
+        });
+    }
+
+    toggleVoice() {
+        if (this.voiceState === 'recording') {
+            this.voiceRecorder.stop();
+            return;
+        }
+
+        if (this.voiceState !== 'idle' || this.isBusy) {
+            return;
+        }
+
+        this.voicePeak = 0;
+        this.voiceMeasured = false;
+        this.voiceRecorder = ChatbotVoice.record({
+            maxSeconds: this.voiceConfig.maxSeconds,
+            onTick: (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const sec = String(seconds % 60).padStart(2, '0');
+                const max = this.voiceConfig.maxSeconds;
+                this.waveTime.textContent = m + ':' + sec + ' / ' + Math.floor(max / 60) + ':' + String(max % 60).padStart(2, '0');
+            },
+            onLevel: (level) => {
+                this.voiceMeasured = true;
+                this.voicePeak = Math.max(this.voicePeak, level);
+                this.pushWaveLevel(level);
+            },
+            onStop: () => {
+                if (this.voiceState === 'recording') {
+                    this.setVoiceState('idle');
+                }
+            },
+            onBlob: (blob) => {
+                // Whisper erfindet bei Stille gern Saetze („Danke fuers Zuschauen“). War der Pegel
+                // durchgehend fast null, geht nichts an die API und es kostet kein Kontingent.
+                if (this.voiceMeasured && this.voicePeak < 0.04) {
+                    this.addMessage('bot', this.strings.voiceEmpty);
+                    this.scrollToBottom();
+                    return;
+                }
+
+                this.transcribeVoice(blob);
+            },
+            onError: (kind) => {
+                this.setVoiceState('idle');
+                this.addMessage('bot', kind === 'denied' ? this.strings.voiceDenied : this.strings.voiceError);
+            },
+        });
+
+        // Vor dem Start gesperrt, damit ein zweiter Klick waehrend der Mikrofon-Abfrage nichts doppelt startet.
+        this.setVoiceState('recording');
+        this.voiceRecorder.start();
+    }
+
+    cancelVoice() {
+        if (this.voiceState === 'recording' && this.voiceRecorder) {
+            this.voiceRecorder.cancel();
+        }
+    }
+
+    transcribeVoice(blob) {
+        this.setVoiceState('working');
+
+        ChatbotStreamToken.get(this.requestToken)
+            .then((token) => {
+                this.requestToken = token;
+
+                return ChatbotVoice.transcribe(blob, {
+                    token: token,
+                    pageId: this.pageId,
+                    moduleId: this.moduleId,
+                    sig: this.sig,
+                    language: this.language,
+                });
+            })
+            .then((text) => {
+                this.setVoiceState('idle');
+
+                if (!text) {
+                    this.addMessage('bot', this.strings.voiceEmpty);
+                    this.scrollToBottom();
+                    return;
+                }
+
+                // Der erkannte Text geht wie eine getippte Frage durch den Chat.
+                this.sendPrompt(text);
+            })
+            .catch((error) => {
+                this.setVoiceState('idle');
+                this.addMessage('bot', (error && error.message) || this.strings.voiceError);
+                this.scrollToBottom();
+            });
+    }
+
+    setVoiceState(state) {
+        this.voiceState = state;
+
+        if (!this.voiceButton) return;
+
+        const recording = state === 'recording';
+        const working = state === 'working';
+        const label = recording ? this.strings.voiceStop : this.strings.voice;
+
+        this.voiceButton.classList.toggle('chatbot-widget__voice--recording', recording);
+        this.voiceButton.setAttribute('aria-label', label);
+        this.voiceButton.setAttribute('title', label);
+        this.voiceButton.setAttribute('aria-pressed', recording ? 'true' : 'false');
+        this.voiceButton.disabled = working || (state === 'idle' && this.isBusy);
+
+        // Die Leiste ersetzt das Textfeld, solange aufgenommen oder erkannt wird.
+        this.form.classList.toggle('chatbot-widget__form--voice', recording || working);
+        this.waveEl.hidden = !(recording || working);
+        this.waveEl.classList.toggle('chatbot-widget__wave--working', working);
+        this.waveCancel.hidden = working;
+
+        if (working) {
+            this.waveTime.textContent = this.strings.voiceWorking;
+        }
+
+        if (state === 'idle') {
+            this.resetWave();
+        }
     }
 
     /**
@@ -322,6 +533,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     }
 
     close() {
+        this.cancelVoice();
         this.isOpen = false;
         this.panel.classList.remove('is-open');
         this.toggleButton.setAttribute('aria-expanded', 'false');
@@ -356,6 +568,10 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     setBusy(state) {
         this.isBusy = state;
         this.input.disabled = state;
+
+        if (this.voiceButton) {
+            this.voiceButton.disabled = state || this.voiceState === 'working';
+        }
 
         if (this.sendButton) {
             this.sendButton.innerHTML = state ? '&#9632;' : this.sendIcon;
