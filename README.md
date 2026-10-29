@@ -759,7 +759,7 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
-### Unveröffentlicht (nach 1.5.1)
+### 1.6.0 - 2026-10-29
 
 - **Neu: BlueBranch Chatbot → Erste Schritte** (erster Punkt der Navigation): Assistent in drei Pflichtschritten (Zugang
   verbinden, Inhalte trainieren, Chat anzeigen) plus Testfrage und Voreinstellungen. Den API-Key trägt man dort ein; er wird
@@ -768,7 +768,10 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
   im Layout in jede Seite ein (Hook `modifyFrontendPage`), legt bei Bedarf Theme und Modul an, doppelt sich nicht mit einem
   vorhandenen Widget. Neues Seitenfeld *Chat auf dieser Seite ausblenden* (`tl_page.chatbot_hide_widget`) – nach dem Update
   `contao:migrate` und Seitencache leeren
+- Die Seite „Erste Schritte“ ist ansprechend gestaltet: Kopfbanner mit Fortschrittsring, Zeitleiste mit Statusanzeigen, Kennzahlen, Schalter für
+  Spracheingabe und Feedback, Testantwort im Chat-Look; funktioniert im Hell- und Dunkel-Modus des Backends
 - Neue Dienstklassen `GlobalWidget`, `GlobalWidgetListener`, `StartController`
+- Nach dem Update: `composer update`, `contao:migrate` (neues Seitenfeld), Seiten-Cache leeren
 
 ### 1.5.1 - 2026-10-29
 
