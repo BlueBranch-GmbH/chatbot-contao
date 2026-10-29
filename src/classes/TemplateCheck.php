@@ -15,28 +15,28 @@ namespace Bluebranch\Chatbot\classes;
  */
 class TemplateCheck
 {
-    /** Template-Name => [Marker im Quelltext => Hinweis, wenn er fehlt] */
+    /** Template-Name => [Marker im Quelltext => Schluessel des Hinweises (languages/<Sprache>/chatbot_start.php, `tpl_<Schluessel>`)] */
     private const CHECKS = [
         'mod_chatbot_widget' => [
-            'error' => ['$this->sig' => 'Signatur von Seite und Modul fehlt (seit 1.3.0 Pflicht): Der Chat antwortet mit „Bitte laden Sie die Seite neu.“'],
-            'info' => ['$this->voice' => 'ohne Mikrofon-Knopf (Spracheingabe)', 'indexer::stop' => 'Widget-Text kann im Contao-Suchindex landen'],
+            'error' => ['$this->sig' => 'sig'],
+            'info' => ['$this->voice' => 'voice', 'indexer::stop' => 'indexer'],
         ],
         'mod_chatbot_ask' => [
-            'error' => ['$this->sig' => 'Signatur von Seite und Modul fehlt (seit 1.3.0 Pflicht): Der Chat antwortet mit „Bitte laden Sie die Seite neu.“'],
-            'info' => ['$this->voice' => 'ohne Mikrofon-Knopf (Spracheingabe)', '$this->accentStyle' => 'ohne neues Standard-Design und Akzentfarbe'],
+            'error' => ['$this->sig' => 'sig'],
+            'info' => ['$this->voice' => 'voice', '$this->accentStyle' => 'style'],
         ],
         'mod_chatbot_generate_search' => [
-            'error' => ['$this->sig' => 'Signatur von Seite und Modul fehlt (seit 1.3.0 Pflicht): Der Chat antwortet mit „Bitte laden Sie die Seite neu.“'],
-            'info' => ['$this->accentStyle' => 'ohne neues Standard-Design und Akzentfarbe'],
+            'error' => ['$this->sig' => 'sig'],
+            'info' => ['$this->accentStyle' => 'style'],
         ],
         'mod_chatbot_generate_search_full' => [
-            'error' => ['$this->sig' => 'Signatur von Seite und Modul fehlt (seit 1.3.0 Pflicht): Der Chat antwortet mit „Bitte laden Sie die Seite neu.“'],
-            'info' => ['$this->voice' => 'ohne Mikrofon-Knopf (Spracheingabe)', '$this->accentStyle' => 'ohne neues Standard-Design und Akzentfarbe'],
+            'error' => ['$this->sig' => 'sig'],
+            'info' => ['$this->voice' => 'voice', '$this->accentStyle' => 'style'],
         ],
     ];
 
     /**
-     * @return list<array{file: string, level: string, messages: list<string>}>
+     * @return list<array{file: string, level: string, messages: list<string>}> Hinweise als Schluessel
      */
     public static function scan(string $projectDir): array
     {

@@ -2,6 +2,6 @@
     <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
     <input type="hidden" name="pageId" value="{{ root.id }}">
     <input type="hidden" name="action" value="save_key">
-    <input type="password" name="api_key" placeholder="API-Key hier einfügen" required minlength="16" maxlength="200" autocomplete="off" spellcheck="false" aria-label="API-Key">
-    <button type="submit" class="cs-btn">Speichern &amp; Verbindung testen</button>
+    <input type="password" name="api_key" placeholder="{{ t.key_placeholder }}" required minlength="16" maxlength="200" autocomplete="off" spellcheck="false" aria-label="{{ t.key_placeholder }}">
+    <button type="submit" class="cs-btn">{{ t.key_submit }}</button>
 </form>

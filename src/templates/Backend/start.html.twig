@@ -5,11 +5,13 @@
 </div>
 
 {#
-  Schritt-fuer-Schritt-Seite. Alles hier laeuft durch Twigs Autoescape, kein |raw (ausser json_encode
-  fuer Skriptwerte). Pflicht sind die Schritte 1 bis 3 (`steps`); Schritt 4 und 5 sind optional.
+  Schritt-fuer-Schritt-Seite. Alle Texte stehen in languages/<Sprache>/chatbot_start.php; der Controller reicht sie als `t` herein.
+  Einige enthalten einfaches HTML und werden mit |raw ausgegeben; dynamische Werte gehen als |e-escapte Platzhalter hinein.
+  Pflicht sind die Schritte 1 bis 3 (`steps`); Schritt 4 und 5 sind optional.
 #}
 {% set current = not steps.connect ? 1 : (not steps.train ? 2 : (not steps.show ? 3 : 4)) %}
 {% set allDone = doneCount == 3 %}
+{% set total = modules.widget + modules.ask + modules.search %}
 
 <div class="chatbot-start">
 
@@ -19,18 +21,16 @@
             <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2zm7 11l.9 2.4L22 16l-2.1.6L19 19l-.9-2.4L16 16l2.1-.6L19 13zM5 14l.9 2.4L8 17l-2.1.6L5 20l-.9-2.4L2 17l2.1-.6L5 14z"/></svg>
         </div>
         <div class="cs-hero__text">
-            <h2>Erste Schritte</h2>
-            <p>
-                {% if allDone %}
-                    Alles eingerichtet &ndash; Ihr Chatbot läuft. Probieren Sie ihn aus oder passen Sie die Voreinstellungen an.
-                {% else %}
-                    In drei Schritten zum laufenden Chatbot: Zugang verbinden, Inhalte trainieren, Chat anzeigen.
-                {% endif %}
+            <h2>{{ t.title }}</h2>
+            <p>{{ t[allDone ? 'hero_lead_done' : 'hero_lead_todo'] }}</p>
+            <p class="cs-hero__links">
+                <a class="cs-hero__btn" href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">{{ t.portal }} &#8599;</a>
+                <a class="cs-hero__link" href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">{{ t.guide }} &#8599;</a>
             </p>
             {% if roots|length > 1 %}
             <form method="get" class="cs-hero__site">
                 <input type="hidden" name="do" value="chatbot_start">
-                <label for="chatbot-start-site">Website</label>
+                <label for="chatbot-start-site">{{ t.website }}</label>
                 <select id="chatbot-start-site" name="pageId" onchange="this.form.submit()">
                     {% for r in roots %}
                         <option value="{{ r.id }}"{{ r.id == root.id ? ' selected' : '' }}>{{ r.title }}</option>
@@ -39,9 +39,9 @@
             </form>
             {% endif %}
         </div>
-        <div class="cs-ring{{ allDone ? ' is-done' : '' }}" style="--p: {{ (doneCount / 3 * 100)|round }}" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="{{ doneCount }}" aria-label="Fortschritt">
+        <div class="cs-ring{{ allDone ? ' is-done' : '' }}" style="--p: {{ (doneCount / 3 * 100)|round }}" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="{{ doneCount }}" aria-label="{{ t.progress }}">
             <span class="cs-ring__value">
-                {% if allDone %}<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{% else %}<strong>{{ doneCount }}</strong><small>von 3</small>{% endif %}
+                {% if allDone %}<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{% else %}<strong>{{ doneCount }}</strong><small>{{ t.of3 }}</small>{% endif %}
             </span>
         </div>
     </header>
@@ -54,17 +54,16 @@
     {% endif %}
 
     {% if customTemplates %}
-    {% set hasError = false %}{% for t in customTemplates %}{% if t.level == 'error' %}{% set hasError = true %}{% endif %}{% endfor %}
+    {% set hasError = false %}{% for tpl in customTemplates %}{% if tpl.level == 'error' %}{% set hasError = true %}{% endif %}{% endfor %}
     <div class="cs-notice cs-notice--{{ hasError ? 'error' : 'warn' }}" role="status">
         <span class="cs-notice__icon" aria-hidden="true">!</span>
         <div>
-            <strong>{{ hasError ? 'Angepasste Templates sind zu alt' : 'Angepasste Templates im Projekt' }}</strong>
-            <p style="margin:4px 0 8px">Diese Dateien im Ordner <code>templates/</code> ersetzen die der Erweiterung und werden bei Updates nicht mitgezogen.
-                {% if hasError %}Mindestens eine bricht den Chat. Am einfachsten: die Datei löschen (dann gilt das Template der Erweiterung) oder neu aus <code>vendor/bluebranch/chatbot/src/Resources/contao/templates/</code> kopieren und anpassen.{% else %}Der Chat funktioniert, es fehlen neuere Funktionen. Zum Nachziehen die Datei löschen oder neu aus <code>vendor/bluebranch/chatbot/src/Resources/contao/templates/</code> kopieren.{% endif %}</p>
+            <strong>{{ t[hasError ? 'tpl_title_error' : 'tpl_title_info'] }}</strong>
+            <p style="margin:4px 0 8px">{{ t.tpl_intro|raw }} {{ t[hasError ? 'tpl_fix_error' : 'tpl_fix_info']|raw }}</p>
             <ul class="cs-tpl">
-                {% for t in customTemplates %}
-                <li><code>{{ t.file }}</code> <span class="cs-pill {{ t.level == 'error' ? 'cs-pill--bad' : 'cs-pill--muted' }}">{{ t.level == 'error' ? 'bricht den Chat' : 'veraltet' }}</span>
-                    <small>{{ t.messages|join(' · ') }}</small></li>
+                {% for tpl in customTemplates %}
+                <li><code>{{ tpl.file }}</code> <span class="cs-pill {{ tpl.level == 'error' ? 'cs-pill--bad' : 'cs-pill--muted' }}">{{ t[tpl.level == 'error' ? 'tpl_badge_error' : 'tpl_badge_info'] }}</span>
+                    <small>{% for m in tpl.messages %}{{ t['tpl_' ~ m] }}{{ not loop.last ? ' · ' : '' }}{% endfor %}</small></li>
                 {% endfor %}
             </ul>
         </div>
@@ -78,31 +77,31 @@
             <div class="cs-badge">{% if steps.connect %}<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{% else %}1{% endif %}</div>
             <div class="cs-card">
                 <div class="cs-card__head">
-                    <h3>Zugang verbinden</h3>
-                    {% if steps.connect %}<span class="cs-pill cs-pill--ok">Verbunden</span>{% elseif hasKey and connectionError %}<span class="cs-pill cs-pill--bad">Fehler</span>{% else %}<span class="cs-pill">Jetzt dran</span>{% endif %}
+                    <h3>{{ t.s1_title }}</h3>
+                    {% if steps.connect %}<span class="cs-pill cs-pill--ok">{{ t.pill_connected }}</span>{% elseif hasKey and connectionError %}<span class="cs-pill cs-pill--bad">{{ t.pill_error }}</span>{% else %}<span class="cs-pill">{{ t.pill_now }}</span>{% endif %}
                 </div>
 
                 {% if connected %}
                     <div class="cs-chips">
-                        <span class="cs-chip"><small>Tarif</small><strong>{{ tier.label }}</strong></span>
+                        <span class="cs-chip"><small>{{ t.chip_plan }}</small><strong>{{ tier.label }}</strong></span>
                         {% if tier.requestsPerMonth is not null %}
-                        <span class="cs-chip"><small>Anfragen im Monat</small><strong>{{ tier.usedThisMonth|number_format(0, ',', '.') }} / {{ tier.requestsPerMonth|number_format(0, ',', '.') }}</strong></span>
+                        <span class="cs-chip"><small>{{ t.chip_requests }}</small><strong>{{ tier.usedThisMonth|number_format(0, ',', '.') }} / {{ tier.requestsPerMonth|number_format(0, ',', '.') }}</strong></span>
                         {% endif %}
-                        <span class="cs-chip"><small>Spracheingabe</small><strong>{{ tier.transcriptionEnabled ? 'bis ' ~ tier.maxAudioSeconds ~ ' s' : 'nicht verfügbar' }}</strong></span>
+                        <span class="cs-chip"><small>{{ t.chip_voice }}</small><strong>{{ tier.transcriptionEnabled ? t.voice_up_to|replace({'%seconds%': tier.maxAudioSeconds}) : t.voice_none }}</strong></span>
                     </div>
-                    <p class="cs-muted">Der Key ist bei „{{ root.title }}“ im Seitenbaum gespeichert.</p>
+                    <p class="cs-muted">{{ t.s1_saved_at|replace({'%title%': root.title|e})|raw }}</p>
                     <details class="cs-details">
-                        <summary>Anderen Key eintragen</summary>
+                        <summary>{{ t.s1_other_key }}</summary>
                         {% include '@Chatbot/Backend/_start_key_form.html.twig' %}
                     </details>
                 {% else %}
                     {% if hasKey and connectionError %}
-                        <p class="cs-bad">{{ connectionError }} Tragen Sie den Key unten noch einmal ein, wenn er sich geändert hat.</p>
+                        <p class="cs-bad">{{ t.s1_retry|replace({'%message%': connectionError|e})|raw }}</p>
                     {% endif %}
-                    <p>Damit der Chatbot antworten kann, braucht Ihre Website einen Zugang. Die Registrierung ist kostenlos und dauert eine Minute &ndash; erstellen Sie dort einen <strong>API-Key</strong> und fügen Sie ihn hier ein.</p>
+                    <p>{{ t.s1_intro|raw }}</p>
                     {% include '@Chatbot/Backend/_start_key_form.html.twig' %}
                     <p class="cs-actions">
-                        <a class="cs-btn cs-btn--ghost" href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">Kostenlos registrieren &#8599;</a>
+                        <a class="cs-btn cs-btn--ghost" href="https://chatbot.bluebranch.de/" target="_blank" rel="noopener">{{ t.s1_register }} &#8599;</a>
                     </p>
                 {% endif %}
             </div>
@@ -113,31 +112,27 @@
             <div class="cs-badge">{% if steps.train %}<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{% else %}2{% endif %}</div>
             <div class="cs-card">
                 <div class="cs-card__head">
-                    <h3>Inhalte trainieren</h3>
-                    {% if steps.train %}<span class="cs-pill cs-pill--ok">Trainiert</span>{% elseif not steps.connect %}<span class="cs-pill cs-pill--muted">Zuerst Schritt 1</span>{% else %}<span class="cs-pill">Jetzt dran</span>{% endif %}
+                    <h3>{{ t.s2_title }}</h3>
+                    {% if steps.train %}<span class="cs-pill cs-pill--ok">{{ t.pill_trained }}</span>{% elseif not steps.connect %}<span class="cs-pill cs-pill--muted">{{ t.pill_first }}</span>{% else %}<span class="cs-pill">{{ t.pill_now }}</span>{% endif %}
                 </div>
-                <p>
-                    Der Chatbot antwortet nur aus Ihren eigenen Seiten. Dafür liest Contao Ihre Inhalte beim Aufbau des
-                    <strong>Suchindex</strong> und übergibt sie an den Chatbot.
-                </p>
+                <p>{{ t.s2_intro|raw }}</p>
                 {% if steps.train %}
                     <div class="cs-chips">
-                        <span class="cs-chip"><small>Seiten</small><strong>{{ trainedPages }}</strong></span>
-                        <span class="cs-chip"><small>Zusatzinhalte</small><strong>{{ extraContent }}</strong></span>
+                        <span class="cs-chip"><small>{{ t.chip_pages }}</small><strong>{{ trainedPages }}</strong></span>
+                        <span class="cs-chip"><small>{{ t.chip_extra }}</small><strong>{{ extraContent }}</strong></span>
                     </div>
-                    <p class="cs-muted">Neue und geänderte Seiten werden bei ihrem nächsten Aufruf automatisch ergänzt.</p>
-                {% else %}
-                    <ol class="cs-list">
-                        <li>Öffnen Sie <strong>System → Wartung</strong> und wählen Sie <em>Suchindex neu aufbauen</em>.</li>
-                        <li>Starten Sie den Vorgang und warten Sie, bis er fertig ist.</li>
-                        <li>Kommen Sie hierher zurück &ndash; der Stand aktualisiert sich beim Laden der Seite.</li>
-                    </ol>
+                    <p class="cs-muted">{{ t.s2_auto }}</p>
                 {% endif %}
+                <div id="chatbot-train-progress" class="cs-progress" hidden aria-live="polite">
+                    <div class="cs-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+                    <p id="chatbot-train-text" class="cs-muted"></p>
+                </div>
                 <p class="cs-actions">
-                    <a class="cs-btn{{ steps.train ? ' cs-btn--ghost' : '' }}" href="{{ path('contao_backend', {do: 'maintenance'}) }}">Wartung öffnen</a>
-                    <a class="cs-btn cs-btn--ghost" href="{{ path('contao_backend', {do: 'chatbot_start', pageId: root.id}) }}">Stand aktualisieren</a>
-                    <a class="cs-link" href="{{ path('contao_backend', {do: 'chatbot_content'}) }}">Zusatzinhalte (PDF, Word, Text) hinzufügen</a>
+                    <button type="button" id="chatbot-train" class="cs-btn{{ steps.train ? ' cs-btn--ghost' : '' }}"{{ not connected ? ' disabled' : '' }}>{{ t[steps.train ? 'train_new' : 'train_now'] }}</button>
+                    {% if steps.train %}<button type="button" id="chatbot-train-all" class="cs-btn cs-btn--ghost"{{ not connected ? ' disabled' : '' }}>{{ t.train_all }}</button>{% endif %}
+                    <a class="cs-link" href="{{ path('contao_backend', {do: 'chatbot_content'}) }}">{{ t.add_extra }}</a>
                 </p>
+                <p class="cs-muted">{{ t.s2_hint|replace({'%url%': path('contao_backend', {do: 'maintenance'})|e})|raw }}</p>
             </div>
         </section>
 
@@ -146,51 +141,41 @@
             <div class="cs-badge">{% if steps.show %}<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{% else %}3{% endif %}</div>
             <div class="cs-card">
                 <div class="cs-card__head">
-                    <h3>Chat auf der Website anzeigen</h3>
-                    {% if globalOn %}<span class="cs-pill cs-pill--ok">Auf allen Seiten</span>{% elseif steps.show %}<span class="cs-pill cs-pill--ok">Module vorhanden</span>{% elseif not steps.connect %}<span class="cs-pill cs-pill--muted">Zuerst Schritt 1</span>{% else %}<span class="cs-pill">Jetzt dran</span>{% endif %}
+                    <h3>{{ t.s3_title }}</h3>
+                    {% if globalOn %}<span class="cs-pill cs-pill--ok">{{ t.pill_all_pages }}</span>{% elseif steps.show %}<span class="cs-pill cs-pill--ok">{{ t.pill_modules }}</span>{% elseif not steps.connect %}<span class="cs-pill cs-pill--muted">{{ t.pill_first }}</span>{% else %}<span class="cs-pill">{{ t.pill_now }}</span>{% endif %}
                 </div>
 
                 {% if globalOn %}
-                    <p>
-                        Der Chat erscheint auf <strong>allen Seiten</strong>{% if globalModule %} (Modul „{{ globalModule.name }}“, ID {{ globalModule.id }}){% endif %}.
-                        Einzelne Seiten nehmen Sie in den Seiteneinstellungen mit <em>Chat auf dieser Seite ausblenden</em> aus.
-                    </p>
+                    {% set modText = globalModule ? (' ' ~ t.s3_module|replace({'%name%': globalModule.name|e, '%id%': globalModule.id})|raw) : '' %}
+                    <p>{{ t.s3_active|replace({'%module%': modText})|raw }}</p>
                     <form method="post" class="cs-actions">
                         <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
                         <input type="hidden" name="pageId" value="{{ root.id }}">
                         <input type="hidden" name="action" value="widget_off">
-                        <button type="submit" class="cs-btn cs-btn--ghost">Nicht mehr automatisch anzeigen</button>
+                        <button type="submit" class="cs-btn cs-btn--ghost">{{ t.s3_off }}</button>
                         {% if globalModule %}
-                        <a class="cs-link" href="{{ path('contao_backend', {do: 'themes', table: 'tl_module', act: 'edit', id: globalModule.id}) }}">Aussehen und Texte im Modul ändern</a>
+                        <a class="cs-link" href="{{ path('contao_backend', {do: 'themes', table: 'tl_module', act: 'edit', id: globalModule.id}) }}">{{ t.s3_edit_module }}</a>
                         {% endif %}
                     </form>
                 {% else %}
-                    <p>Wie soll der Chat erscheinen?</p>
+                    <p>{{ t.s3_ask }}</p>
                     <div class="cs-choices">
                         <div class="cs-choice cs-choice--main">
                             <div class="cs-choice__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.500 18.300 12 21c-2.500-2.700-3.800-5.700-3.800-9S9.500 5.700 12 3z"/></svg></div>
-                            <strong>Auf allen Seiten <span class="cs-tag">empfohlen</span></strong>
-                            <p>Ein Klick &ndash; kein Modul, kein Layout. Das Chat-Symbol erscheint unten rechts auf jeder Seite.</p>
+                            <strong>{{ t.s3_a_title }} <span class="cs-tag">{{ t.tag_recommended }}</span></strong>
+                            <p>{{ t.s3_a_text }}</p>
                             <form method="post">
                                 <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
                                 <input type="hidden" name="pageId" value="{{ root.id }}">
                                 <input type="hidden" name="action" value="widget_on">
-                                <button type="submit" class="cs-btn"{{ not connected ? ' disabled' : '' }}>Chat auf allen Seiten anzeigen</button>
+                                <button type="submit" class="cs-btn"{{ not connected ? ' disabled' : '' }}>{{ t.s3_a_button }}</button>
                             </form>
                         </div>
                         <div class="cs-choice">
                             <div class="cs-choice__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg></div>
-                            <strong>Selbst platzieren</strong>
-                            <p>
-                                Für mehr Kontrolle: Binden Sie das Modul <em>Chatbot Widget</em>, <em>Chatbot Frage</em> oder
-                                <em>Chatbot KI-Suche</em> in ein Layout oder einen Artikel ein
-                                {% if modules.widget + modules.ask + modules.search > 0 %}
-                                    (es gibt bereits {{ modules.widget + modules.ask + modules.search }} {{ modules.widget + modules.ask + modules.search == 1 ? 'Modul' : 'Module' }}).
-                                {% else %}
-                                    (Layout → Module, oder Inhaltselement „Modul“).
-                                {% endif %}
-                            </p>
-                            <a class="cs-btn cs-btn--ghost" href="{{ path('contao_backend', {do: 'themes', table: 'tl_module'}) }}">Module öffnen</a>
+                            <strong>{{ t.s3_b_title }}</strong>
+                            <p>{{ t.s3_b_text|replace({'%hint%': (total > 0 ? t.s3_b_have|replace({'%count%': total}) : t.s3_b_none)|e})|raw }}</p>
+                            <a class="cs-btn cs-btn--ghost" href="{{ path('contao_backend', {do: 'themes', table: 'tl_module'}) }}">{{ t.s3_b_button }}</a>
                         </div>
                     </div>
                 {% endif %}
@@ -202,13 +187,13 @@
             <div class="cs-badge">4</div>
             <div class="cs-card">
                 <div class="cs-card__head">
-                    <h3>Ausprobieren</h3>
-                    <span class="cs-pill cs-pill--muted">optional</span>
+                    <h3>{{ t.s4_title }}</h3>
+                    <span class="cs-pill cs-pill--muted">{{ t.pill_optional }}</span>
                 </div>
-                <p>Stellen Sie dem Chatbot eine Frage zu Ihrer Website &ndash; so wie ein Besucher es täte.</p>
+                <p>{{ t.s4_text }}</p>
                 <form id="chatbot-start-test" class="cs-test" autocomplete="off">
-                    <input type="text" id="chatbot-start-q" placeholder="z. B. Welche Leistungen bieten Sie an?" maxlength="500" aria-label="Testfrage"{{ not connected ? ' disabled' : '' }}>
-                    <button type="submit" class="cs-btn"{{ not connected ? ' disabled' : '' }}>Fragen</button>
+                    <input type="text" id="chatbot-start-q" placeholder="{{ t.s4_placeholder }}" maxlength="500" aria-label="{{ t.s4_label }}"{{ not connected ? ' disabled' : '' }}>
+                    <button type="submit" class="cs-btn"{{ not connected ? ' disabled' : '' }}>{{ t.s4_ask }}</button>
                 </form>
                 <div id="chatbot-start-answer" class="cs-answer" hidden aria-live="polite">
                     <div class="cs-answer__avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2z"/></svg></div>
@@ -218,7 +203,7 @@
                     </div>
                 </div>
                 <p class="cs-actions">
-                    <a class="cs-btn cs-btn--ghost" href="{{ siteUrl }}" target="_blank" rel="noopener">Website öffnen &#8599;</a>
+                    <a class="cs-btn cs-btn--ghost" href="{{ siteUrl }}" target="_blank" rel="noopener">{{ t.open_site }} &#8599;</a>
                 </p>
             </div>
         </section>
@@ -228,8 +213,8 @@
             <div class="cs-badge">5</div>
             <div class="cs-card">
                 <div class="cs-card__head">
-                    <h3>Feinschliff</h3>
-                    <span class="cs-pill cs-pill--muted">optional</span>
+                    <h3>{{ t.s5_title }}</h3>
+                    <span class="cs-pill cs-pill--muted">{{ t.pill_optional }}</span>
                 </div>
                 <form method="post">
                     <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
@@ -238,32 +223,116 @@
                     <label class="cs-switch">
                         <input type="checkbox" name="voice" value="1"{{ voiceDefault ? ' checked' : '' }}>
                         <span class="cs-switch__track" aria-hidden="true"></span>
-                        <span class="cs-switch__text"><strong>Spracheingabe anbieten</strong>Besucher können ihre Frage sprechen (Mikrofon-Knopf). Die Aufnahme wird nicht gespeichert. Bitte in der Datenschutzerklärung erwähnen.</span>
+                        <span class="cs-switch__text"><strong>{{ t.s5_voice_t }}</strong>{{ t.s5_voice_d }}</span>
                     </label>
                     <label class="cs-switch">
                         <input type="checkbox" name="feedback" value="1"{{ feedbackDefault ? ' checked' : '' }}>
                         <span class="cs-switch__track" aria-hidden="true"></span>
-                        <span class="cs-switch__text"><strong>Feedback abfragen</strong>Daumen hoch/runter unter jeder Antwort; die bewertete Frage wird im Backend unter „Fragen &amp; Feedback“ gespeichert.</span>
+                        <span class="cs-switch__text"><strong>{{ t.s5_fb_t }}</strong>{{ t.s5_fb_d }}</span>
                     </label>
-                    <p class="cs-actions"><button type="submit" class="cs-btn cs-btn--ghost">Voreinstellungen speichern</button></p>
+                    <p class="cs-actions"><button type="submit" class="cs-btn cs-btn--ghost">{{ t.s5_save }}</button></p>
                 </form>
-                <p class="cs-muted cs-links">
-                    Name, Farbe, Symbol und Begrüßung stellen Sie unter
-                    <a href="{{ path('contao_backend', {do: 'settings'}) }}">System → Einstellungen</a> ein. Weiter geht es mit
-                    <a href="{{ path('contao_backend', {do: 'chatbot_log'}) }}">Fragen &amp; Feedback</a> und
-                    <a href="{{ path('contao_backend', {do: 'chatbot_trained_content'}) }}">Trainierte Seiten</a>;
-                    die Anleitung steht unter <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.
-                </p>
+                <p class="cs-muted cs-links">{{ t.s5_links|replace({'%settings%': path('contao_backend', {do: 'settings'})|e, '%log%': path('contao_backend', {do: 'chatbot_log'})|e, '%trained%': path('contao_backend', {do: 'chatbot_trained_content'})|e})|raw }}</p>
             </div>
         </section>
 
     </div>
 </div>
 
+{% set js = {
+    running: t.js_running,
+    progress: t.js_progress|replace({'%pos%': '{pos}', '%total%': '{total}'}),
+    unreachable: t.js_unreachable|replace({'%failed%': '{failed}'}),
+    none: t.js_none,
+    failAll: t.js_fail_all|replace({'%detail%': '{detail}'}),
+    done: t.js_done|replace({'%ok%': '{ok}', '%failed%': '{failed}'}),
+    trainFailed: t.js_train_failed|replace({'%message%': '{message}'}),
+    answering: t.js_answering,
+    noAnswer: t.js_no_answer,
+    requestFailed: t.js_request_failed,
+} %}
+<script>
+(function () {
+    const L = {{ js|json_encode|raw }};
+    const fill_ = function (template, values) { return template.replace(/\{(\w+)\}/g, function (m, k) { return values[k] !== undefined ? values[k] : m; }); };
+
+    const start = document.getElementById('chatbot-train');
+    if (!start) return;
+
+    const all = document.getElementById('chatbot-train-all');
+    const box = document.getElementById('chatbot-train-progress');
+    const bar = box.querySelector('.cs-progress__bar');
+    const fill = bar.querySelector('span');
+    const text = document.getElementById('chatbot-train-text');
+    const url = {{ trainUrl|json_encode|raw }};
+    const token = {{ streamToken|json_encode|raw }};
+    const pageId = {{ root.id }};
+    let busy = false;
+
+    function show(message, percent) {
+        box.hidden = false;
+        text.textContent = message;
+        if (percent !== null) {
+            fill.style.width = percent + '%';
+            bar.setAttribute('aria-valuenow', String(Math.round(percent)));
+        }
+    }
+
+    async function run(reset) {
+        if (busy) return;
+        busy = true;
+        [start, all].forEach(function (b) { if (b) b.disabled = true; });
+        show(L.running, 0);
+
+        let runId = '';
+        try {
+            for (;;) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Stream-Token': token },
+                    body: JSON.stringify({ pageId: pageId, runId: runId, reset: reset && runId === '' }),
+                });
+                const data = await response.json().catch(function () { return {}; });
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || ('HTTP ' + response.status));
+                }
+
+                runId = data.runId;
+                const percent = data.total > 0 ? data.pos / data.total * 100 : 100;
+                show(fill_(L.progress, { pos: data.pos, total: data.total }) + (data.failed ? fill_(L.unreachable, { failed: data.failed }) : ''), percent);
+
+                if (data.done) {
+                    if (data.total === 0) {
+                        show(L.none, 100);
+                    } else if (data.ok === 0) {
+                        show(fill_(L.failAll, { detail: data.lastError ? ': ' + data.lastError : '' }), 100);
+                    } else {
+                        show(fill_(L.done, { ok: data.ok, failed: data.failed ? ', ' + fill_(L.unreachable, { failed: data.failed }).trim() + (data.lastError ? ' [' + data.lastError + ']' : '') : '' }), 100);
+                        setTimeout(function () { window.location.reload(); }, 6000);
+                    }
+                    break;
+                }
+            }
+        } catch (error) {
+            show(fill_(L.trainFailed, { message: error.message }), null);
+        } finally {
+            busy = false;
+            [start, all].forEach(function (b) { if (b) b.disabled = false; });
+        }
+    }
+
+    start.addEventListener('click', function () { run(false); });
+    if (all) all.addEventListener('click', function () { run(true); });
+})();
+</script>
+
 <script src="{{ assets.marked }}"></script>
 <script src="{{ assets.common }}"></script>
 <script>
 (function () {
+    const L = {{ js|json_encode|raw }};
     const form = document.getElementById('chatbot-start-test');
     if (!form || !window.ChatbotStream) return;
 
@@ -283,7 +352,10 @@
         let answer = '';
         let sources = [];
         box.hidden = false;
-        text.innerHTML = '<em>Antwort wird erzeugt …</em>';
+        text.innerHTML = '';
+        const waiting = document.createElement('em');
+        waiting.textContent = L.answering;
+        text.appendChild(waiting);
         list.innerHTML = '';
         button.disabled = true;
 
@@ -304,7 +376,7 @@
                     } catch (err) { /* unvollstaendiger Block */ }
                 },
                 end: function () {
-                    if (!answer) text.textContent = 'Es kam keine Antwort. Wurde der Suchindex schon aufgebaut?';
+                    if (!answer) text.textContent = L.noAnswer;
                     list.innerHTML = '';
                     ChatbotSources.linkable(sources).slice(0, 3).forEach(function (s) {
                         const li = document.createElement('li');
@@ -315,7 +387,7 @@
                     finish();
                 },
                 error: function (e) {
-                    let message = 'Die Anfrage ist fehlgeschlagen.';
+                    let message = L.requestFailed;
                     try { const d = JSON.parse(e.data); if (d.message) message = d.message; } catch (err) { /* ohne Rumpf */ }
                     text.textContent = message;
                     finish();
@@ -373,6 +445,14 @@
     .cs-hero__text { flex: 1 1 auto; min-width: 0; position: relative; z-index: 1; }
     .cs-hero h2 { font-size: 1.75rem; color: #fff; }
     .cs-hero p { margin: 6px 0 0; color: rgba(255,255,255,.88); font-size: 1.02rem; }
+    .cs-hero__links { margin: 14px 0 0 !important; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .cs-hero__btn { display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 10px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.45); color: #fff; font-weight: 600; text-decoration: none; }
+    .cs-hero__btn:hover { background: rgba(255,255,255,.3); color: #fff; }
+    .cs-hero__link { color: rgba(255,255,255,.9); font-weight: 600; }
+    .cs-hero__link:hover { color: #fff; }
+    .cs-progress { margin: 6px 0 4px; }
+    .cs-progress__bar { height: 10px; border-radius: 999px; overflow: hidden; background: var(--cs-subtle); border: 1px solid var(--cs-border); }
+    .cs-progress__bar span { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--cs-accent), var(--cs-accent-dark)); transition: width .3s ease; }
     .cs-hero__site { margin: 14px 0 0 !important; display: flex; align-items: center; gap: 10px; }
     .cs-hero__site label { font-size: .85rem; color: rgba(255,255,255,.85); }
     .cs-hero__site select { border-radius: 8px; border: 0; padding: 6px 10px; font: inherit; max-width: 100%; }
@@ -442,6 +522,7 @@
     .cs-tag { display: inline-block; margin-left: 6px; padding: 1px 9px; border-radius: 999px; font-size: .7rem; font-weight: 700; vertical-align: 2px; background: rgba(37,99,235,.12); color: var(--cs-accent); }
 
     .cs-muted { color: var(--cs-muted); font-size: .92rem; }
+    .cs-card a:not(.cs-btn) { color: var(--cs-accent); font-weight: 600; text-underline-offset: 3px; }
     .cs-bad { color: var(--cs-bad); }
     .cs-list { margin: 0 0 14px 20px; padding: 0; line-height: 1.75; }
 

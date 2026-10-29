@@ -125,9 +125,7 @@ class StartController extends AbstractBackendController
             if (!empty($result['success']) && isset($result['tier'])) {
                 $tier = $result;
             } else {
-                $connectionError = 401 === ($result['statusCode'] ?? 0)
-                    ? 'Die API hat den Key abgelehnt.'
-                    : 'Die API ist gerade nicht erreichbar oder antwortet nicht.';
+                $connectionError = $this->text(401 === ($result['statusCode'] ?? 0) ? 'conn_rejected' : 'conn_unreachable');
             }
         }
 
@@ -186,9 +184,11 @@ class StartController extends AbstractBackendController
             'feedbackDefault' => (bool) Config::get('chatbot_feedback_default'),
             'customTemplates' => TemplateCheck::scan((string) $container->getParameter('kernel.project_dir')),
             'notice' => $this->noticeFor((string) $request->query->get('done'), $tier),
+            't' => $this->texts(),
             'requestToken' => $this->requestToken(),
             'streamToken' => StreamToken::forSession($request),
             'streamUrl' => $router->generate('bluebranch_chatbot_chat_stream_be'),
+            'trainUrl' => $router->generate('bluebranch_chatbot_start_train'),
             'siteUrl' => $siteUrl,
             'assets' => [
                 'marked' => Asset::url('js/marked.min.js'),
@@ -272,21 +272,35 @@ class StartController extends AbstractBackendController
 
     private function noticeFor(string $code, ?array $tier): ?array
     {
-        $texts = [
-            'key_ok' => ['ok', 'Verbunden. Der Key ist gespeichert.'],
-            'key_rejected' => ['error', 'Die API hat den Key abgelehnt. Bitte prüfen Sie, ob er vollständig kopiert ist. Ein bisheriger Key bleibt erhalten.'],
-            'key_format' => ['error', 'Der Key sieht nicht richtig aus. Erlaubt sind Buchstaben, Ziffern sowie Punkt, Unterstrich und Bindestrich.'],
-            'widget_on' => ['ok', 'Der Chat erscheint jetzt auf allen Seiten. Falls er auf der Website noch fehlt: Seitencache leeren (System → Wartung).'],
-            'widget_off' => ['ok', 'Der Chat wird nicht mehr automatisch eingesetzt. Module, die Sie selbst platziert haben, bleiben unberührt.'],
-            'defaults' => ['ok', 'Die Voreinstellungen sind gespeichert.'],
-            'token' => ['error', 'Die Anfrage war abgelaufen. Bitte versuchen Sie es noch einmal.'],
-        ];
+        $types = ['key_ok' => 'ok', 'key_rejected' => 'error', 'key_format' => 'error', 'widget_on' => 'ok', 'widget_off' => 'ok', 'defaults' => 'ok', 'token' => 'error'];
 
-        if (!isset($texts[$code])) {
+        if (!isset($types[$code])) {
             return null;
         }
 
-        return ['type' => $texts[$code][0], 'text' => $texts[$code][1]];
+        return ['type' => $types[$code], 'text' => $this->text('notice_' . $code)];
+    }
+
+    /**
+     * Alle Texte der Seite als Wörterbuch für die Vorlage (`t.schluessel`).
+     *
+     * @return array<string, string>
+     */
+    private function texts(): array
+    {
+        System::loadLanguageFile('chatbot_start');
+
+        return array_map('strval', (array) ($GLOBALS['TL_LANG']['chatbot_start'] ?? []));
+    }
+
+    /**
+     * Text der Seite „Erste Schritte“ in der Sprache des Backend-Benutzers (languages/<Sprache>/chatbot_start.php).
+     */
+    private function text(string $key): string
+    {
+        System::loadLanguageFile('chatbot_start');
+
+        return (string) ($GLOBALS['TL_LANG']['chatbot_start'][$key] ?? $key);
     }
 
     /**
