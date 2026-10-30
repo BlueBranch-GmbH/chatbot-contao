@@ -305,7 +305,7 @@ Server seine eigene Domain erreicht; sonst bleibt es beim nächsten Besuch.
 
 ## Trainierte Inhalte einsehen
 
-Das Backend-Modul *BlueBranch Chatbot → Trainierte Seiten* zeigt, was die Wissensbasis
+Das Backend-Modul *BlueBranch Chatbot → Trainierte Inhalte* zeigt, was die Wissensbasis
 tatsächlich enthält – je Website, mit Titel, URL, Anzahl der Chunks, Sprache und Trainingsdatum.
 Einzelne Einträge oder der gesamte Bestand lassen sich dort löschen. Über das eingebaute
 Test-Feld kannst du dem Chatbot direkt eine Frage stellen und die Antwort samt Quellen prüfen,
@@ -811,6 +811,20 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.8.1 - 2026-10-30
+
+- **Fix:** Der Assistent *Erste Schritte* brach beim Einschalten von „Chat auf allen Seiten“ mit „Unknown column 'tl_theme.1'“ ab, wenn
+  noch kein Chatbot-Modul existierte (`GlobalWidget::createModule()` suchte das Theme mit `findOneBy('1', '1')`)
+- **Name und Akzentfarbe** werden in Schritt 3 von *Erste Schritte* abgefragt (Farbwähler und Hex-Feld) und beim Einschalten des Chats
+  mitgespeichert; bei aktivem Chat gibt es dafür einen eigenen Speichern-Knopf. Die Werte sind dieselben wie unter *System → Einstellungen*
+- **Bestätigungen als Toast:** Erfolgsmeldungen in *Erste Schritte* (Key gespeichert, Chat an/aus, Voreinstellungen, Training fertig) erscheinen
+  als Contao-Toast; Fehler und Warnungen bleiben als Hinweis in der Seite
+- **Freigabe für Benutzer und Gruppen:** *Erste Schritte* und *Trainierte Inhalte* sind nicht mehr auf Administratoren beschränkt, sondern
+  über die Backend-Module in den Benutzer- und Gruppenrechten freigebbar (neu: `BackendAccess`); ebenso das Training, die Test-Frage und das
+  Löschen trainierter Inhalte
+- *Trainierte Seiten* heißt jetzt *Trainierte Inhalte*
+- Nach dem Update: `composer update`, Cache leeren
 
 ### 1.8.0 - 2026-10-29
 

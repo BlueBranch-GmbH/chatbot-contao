@@ -88,7 +88,7 @@ class GlobalWidget
 
     private static function createModule(): int
     {
-        $theme = ThemeModel::findOneBy('1', '1');
+        $theme = ThemeModel::findAll(['limit' => 1, 'order' => 'id'])?->current();
 
         if (!$theme instanceof ThemeModel) {
             $theme = new ThemeModel();

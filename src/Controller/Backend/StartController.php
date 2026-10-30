@@ -4,10 +4,10 @@ namespace Bluebranch\Chatbot\Controller\Backend;
 
 use Bluebranch\Chatbot\classes\Asset;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
+use Bluebranch\Chatbot\classes\BackendAccess;
 use Bluebranch\Chatbot\classes\GlobalWidget;
 use Bluebranch\Chatbot\classes\StreamToken;
 use Bluebranch\Chatbot\classes\TemplateCheck;
-use Contao\BackendUser;
 use Contao\Config;
 use Contao\CoreBundle\Controller\AbstractBackendController;
 use Contao\CoreBundle\Exception\RedirectResponseException;
@@ -67,10 +67,8 @@ class StartController extends AbstractBackendController
 
         $this->framework->initialize();
 
-        $user = BackendUser::getInstance();
-
-        if (!$user instanceof BackendUser || !$user->isAdmin) {
-            $response = new Response('<div style="padding: 20px;"><p style="color: #d9534f; font-weight: bold;">Zugriff verweigert.</p><p>Diese Seite ist nur für Administratoren zugänglich.</p></div>', 403);
+        if (!BackendAccess::module('chatbot_start')) {
+            $response = new Response('<div style="padding: 20px;"><p style="color: #d9534f; font-weight: bold;">Zugriff verweigert.</p><p>Dafür fehlt Ihrem Benutzer oder dessen Gruppe die Freigabe (System → Benutzer → Backend-Module).</p></div>', 403);
 
             return $isLegacy ? $response->getContent() : $response;
         }
@@ -180,6 +178,8 @@ class StartController extends AbstractBackendController
             'modules' => $modules,
             'steps' => $steps,
             'doneCount' => \count(array_filter($steps)),
+            'chatName' => trim((string) Config::get('chatbot_default_name')),
+            'chatColor' => $this->hexColor((string) Config::get('chatbot_default_color')),
             'voiceDefault' => (bool) Config::get('chatbot_voice_default'),
             'feedbackDefault' => (bool) Config::get('chatbot_feedback_default'),
             'customTemplates' => TemplateCheck::scan((string) $container->getParameter('kernel.project_dir')),
@@ -216,9 +216,15 @@ class StartController extends AbstractBackendController
                 return $this->saveKey($root, trim((string) $request->request->get('api_key')));
 
             case 'widget_on':
+                $this->saveLook($request);
                 GlobalWidget::enable();
 
                 return 'widget_on';
+
+            case 'look':
+                $this->saveLook($request);
+
+                return 'look';
 
             case 'widget_off':
                 GlobalWidget::disable();
@@ -233,6 +239,24 @@ class StartController extends AbstractBackendController
         }
 
         return '';
+    }
+
+    /**
+     * Name und Akzentfarbe des Chats (System -> Einstellungen). Ohne Felder in der Anfrage bleibt alles, wie es ist.
+     */
+    private function saveLook(Request $request): void
+    {
+        if ($request->request->has('chat_name')) {
+            $name = trim(strip_tags((string) $request->request->get('chat_name')));
+
+            GlobalWidget::store(mb_substr($name, 0, 60), 'chatbot_default_name');
+        }
+
+        if ($request->request->has('chat_color')) {
+            $color = ltrim(trim((string) $request->request->get('chat_color')), '#');
+
+            GlobalWidget::store(1 === preg_match('/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $color) ? strtolower($color) : '', 'chatbot_default_color');
+        }
     }
 
     /**
@@ -270,9 +294,20 @@ class StartController extends AbstractBackendController
         return $accepted ? 'key_ok' : 'key_rejected';
     }
 
+    private function hexColor(string $value): string
+    {
+        $value = trim($value, '# ');
+
+        if (3 === \strlen($value)) {
+            $value = $value[0] . $value[0] . $value[1] . $value[1] . $value[2] . $value[2];
+        }
+
+        return 1 === preg_match('/^[0-9a-fA-F]{6}$/', $value) ? strtolower($value) : '';
+    }
+
     private function noticeFor(string $code, ?array $tier): ?array
     {
-        $types = ['key_ok' => 'ok', 'key_rejected' => 'error', 'key_format' => 'error', 'widget_on' => 'ok', 'widget_off' => 'ok', 'defaults' => 'ok', 'token' => 'error'];
+        $types = ['key_ok' => 'ok', 'key_rejected' => 'error', 'key_format' => 'error', 'widget_on' => 'ok', 'widget_off' => 'ok', 'defaults' => 'ok', 'look' => 'ok', 'token' => 'error'];
 
         if (!isset($types[$code])) {
             return null;

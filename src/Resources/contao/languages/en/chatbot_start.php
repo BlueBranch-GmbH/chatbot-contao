@@ -90,7 +90,7 @@ $GLOBALS['TL_LANG']['chatbot_start']['s5_voice_d'] = 'Visitors can speak their q
 $GLOBALS['TL_LANG']['chatbot_start']['s5_fb_t'] = 'Ask for feedback';
 $GLOBALS['TL_LANG']['chatbot_start']['s5_fb_d'] = 'Thumbs up/down below every answer; the rated question is stored in the back end under "Questions & feedback".';
 $GLOBALS['TL_LANG']['chatbot_start']['s5_save'] = 'Save defaults';
-$GLOBALS['TL_LANG']['chatbot_start']['s5_links'] = 'Set name, colour, icon and greeting under <a href="%settings%">System → Settings</a>. Continue with <a href="%log%">Questions &amp; feedback</a> and <a href="%trained%">Trained pages</a>; the guide is at <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.';
+$GLOBALS['TL_LANG']['chatbot_start']['s5_links'] = 'Set name, colour, icon and greeting under <a href="%settings%">System → Settings</a>. Continue with <a href="%log%">Questions &amp; feedback</a> and <a href="%trained%">Trained content</a>; the guide is at <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.';
 $GLOBALS['TL_LANG']['chatbot_start']['js_running'] = 'Fetching pages …';
 $GLOBALS['TL_LANG']['chatbot_start']['js_progress'] = '%pos% of %total% pages fetched';
 $GLOBALS['TL_LANG']['chatbot_start']['js_unreachable'] = ' (%failed% unreachable)';
@@ -101,3 +101,11 @@ $GLOBALS['TL_LANG']['chatbot_start']['js_train_failed'] = 'Training failed: %mes
 $GLOBALS['TL_LANG']['chatbot_start']['js_answering'] = 'Generating answer …';
 $GLOBALS['TL_LANG']['chatbot_start']['js_no_answer'] = 'No answer came back. Has the search index been built yet?';
 $GLOBALS['TL_LANG']['chatbot_start']['js_request_failed'] = 'The request failed.';
+$GLOBALS['TL_LANG']['chatbot_start']['look_t'] = 'Name and accent colour';
+$GLOBALS['TL_LANG']['chatbot_start']['look_d'] = 'This is what your chatbot is called in the chat, and the colour of its icon and buttons. You can change both later under System → Settings.';
+$GLOBALS['TL_LANG']['chatbot_start']['look_name'] = 'Chatbot name';
+$GLOBALS['TL_LANG']['chatbot_start']['look_name_ph'] = 'e.g. Assistant';
+$GLOBALS['TL_LANG']['chatbot_start']['look_color'] = 'Accent colour';
+$GLOBALS['TL_LANG']['chatbot_start']['look_save'] = 'Save name and colour';
+$GLOBALS['TL_LANG']['chatbot_start']['look_note'] = 'Saved together when you click “Show chat on all pages”.';
+$GLOBALS['TL_LANG']['chatbot_start']['notice_look'] = 'Name and accent colour are saved.';

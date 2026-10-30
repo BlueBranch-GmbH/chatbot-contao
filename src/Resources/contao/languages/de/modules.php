@@ -1,7 +1,7 @@
 <?php
 
 $GLOBALS['TL_LANG']['MOD']['bluebranch_chatbot'] = 'BlueBranch Chatbot';
-$GLOBALS['TL_LANG']['MOD']['chatbot_trained_content'] = ['Trainierte Seiten', 'Hier sehen Sie alle für den Chatbot trainierten Inhalte.'];
+$GLOBALS['TL_LANG']['MOD']['chatbot_trained_content'] = ['Trainierte Inhalte', 'Hier sehen Sie alle für den Chatbot trainierten Inhalte.'];
 
 $GLOBALS['TL_LANG']['FMD']['bluebranch_chatbot'] = 'BlueBranch Chatbot';
 $GLOBALS['TL_LANG']['FMD']['chatbot_generate_search'] = ['Chatbot KI-Suche', 'KI-Antwort zum Suchbegriff – über der Trefferliste der Contao-Suche oder (mit Template „_full“) mit eigenem Suchfeld.'];

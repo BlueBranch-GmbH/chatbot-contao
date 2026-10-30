@@ -255,7 +255,7 @@ class ExtraContent
     }
 
     /**
-     * Ein Zusatzinhalt wurde in „Trainierte Seiten“ einzeln geloescht. Der Eintrag wird
+     * Ein Zusatzinhalt wurde in „Trainierte Inhalte“ einzeln geloescht. Der Eintrag wird
      * deaktiviert - sonst braechte ihn der naechste Abgleich gleich wieder in den Index.
      */
     public function markRemovedByExternalId(string $externalId): void

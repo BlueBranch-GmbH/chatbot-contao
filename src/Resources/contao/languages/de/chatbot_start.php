@@ -90,7 +90,7 @@ $GLOBALS['TL_LANG']['chatbot_start']['s5_voice_d'] = 'Besucher können ihre Frag
 $GLOBALS['TL_LANG']['chatbot_start']['s5_fb_t'] = 'Feedback abfragen';
 $GLOBALS['TL_LANG']['chatbot_start']['s5_fb_d'] = 'Daumen hoch/runter unter jeder Antwort; die bewertete Frage wird im Backend unter „Fragen & Feedback“ gespeichert.';
 $GLOBALS['TL_LANG']['chatbot_start']['s5_save'] = 'Voreinstellungen speichern';
-$GLOBALS['TL_LANG']['chatbot_start']['s5_links'] = 'Name, Farbe, Symbol und Begrüßung stellen Sie unter <a href="%settings%">System → Einstellungen</a> ein. Weiter geht es mit <a href="%log%">Fragen &amp; Feedback</a> und <a href="%trained%">Trainierte Seiten</a>; die Anleitung steht unter <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.';
+$GLOBALS['TL_LANG']['chatbot_start']['s5_links'] = 'Name, Farbe, Symbol und Begrüßung stellen Sie unter <a href="%settings%">System → Einstellungen</a> ein. Weiter geht es mit <a href="%log%">Fragen &amp; Feedback</a> und <a href="%trained%">Trainierte Inhalte</a>; die Anleitung steht unter <a href="https://chatbot.bluebranch.de/anleitung/contao" target="_blank" rel="noopener">chatbot.bluebranch.de</a>.';
 $GLOBALS['TL_LANG']['chatbot_start']['js_running'] = 'Seiten werden abgerufen …';
 $GLOBALS['TL_LANG']['chatbot_start']['js_progress'] = '%pos% von %total% Seiten abgerufen';
 $GLOBALS['TL_LANG']['chatbot_start']['js_unreachable'] = ' (%failed% nicht erreichbar)';
@@ -101,3 +101,11 @@ $GLOBALS['TL_LANG']['chatbot_start']['js_train_failed'] = 'Das Training ist fehl
 $GLOBALS['TL_LANG']['chatbot_start']['js_answering'] = 'Antwort wird erzeugt …';
 $GLOBALS['TL_LANG']['chatbot_start']['js_no_answer'] = 'Es kam keine Antwort. Wurde der Suchindex schon aufgebaut?';
 $GLOBALS['TL_LANG']['chatbot_start']['js_request_failed'] = 'Die Anfrage ist fehlgeschlagen.';
+$GLOBALS['TL_LANG']['chatbot_start']['look_t'] = 'Name und Akzentfarbe';
+$GLOBALS['TL_LANG']['chatbot_start']['look_d'] = 'So heißt Ihr Chatbot im Chat, und in dieser Farbe erscheinen Symbol und Knöpfe. Beides lässt sich später unter System → Einstellungen ändern.';
+$GLOBALS['TL_LANG']['chatbot_start']['look_name'] = 'Name des Chatbots';
+$GLOBALS['TL_LANG']['chatbot_start']['look_name_ph'] = 'z. B. Assistent';
+$GLOBALS['TL_LANG']['chatbot_start']['look_color'] = 'Akzentfarbe';
+$GLOBALS['TL_LANG']['chatbot_start']['look_save'] = 'Name und Farbe speichern';
+$GLOBALS['TL_LANG']['chatbot_start']['look_note'] = 'Wird beim Klick auf „Chat auf allen Seiten anzeigen“ mit übernommen.';
+$GLOBALS['TL_LANG']['chatbot_start']['notice_look'] = 'Name und Akzentfarbe sind gespeichert.';

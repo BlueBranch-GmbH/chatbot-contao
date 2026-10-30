@@ -47,7 +47,7 @@
     </header>
 
     {% if notice %}
-    <div class="cs-notice cs-notice--{{ notice.type }}" role="status">
+    <div class="cs-notice cs-notice--{{ notice.type }}" role="status"{% if notice.type == 'ok' %} id="chatbot-notice-ok"{% endif %}>
         <span class="cs-notice__icon" aria-hidden="true">{{ notice.type == 'ok' ? '✓' : '!' }}</span>
         <span>{{ notice.text }}</span>
     </div>
@@ -145,9 +145,33 @@
                     {% if globalOn %}<span class="cs-pill cs-pill--ok">{{ t.pill_all_pages }}</span>{% elseif steps.show %}<span class="cs-pill cs-pill--ok">{{ t.pill_modules }}</span>{% elseif not steps.connect %}<span class="cs-pill cs-pill--muted">{{ t.pill_first }}</span>{% else %}<span class="cs-pill">{{ t.pill_now }}</span>{% endif %}
                 </div>
 
+                {% set lookFields %}
+                    <div class="cs-look">
+                        <div class="cs-look__head"><strong>{{ t.look_t }}</strong><span class="cs-muted">{{ t.look_d }}</span></div>
+                        <div class="cs-look__row">
+                            <label class="cs-look__field">{{ t.look_name }}
+                                <input type="text" name="chat_name" form="chatbot-look-form" value="{{ chatName }}" maxlength="60" placeholder="{{ t.look_name_ph }}" autocomplete="off">
+                            </label>
+                            <label class="cs-look__field cs-look__field--color">{{ t.look_color }}
+                                <span class="cs-look__color">
+                                    <input type="color" id="chatbot-look-picker" value="#{{ chatColor ?: '2563eb' }}" aria-label="{{ t.look_color }}">
+                                    <input type="text" id="chatbot-look-hex" name="chat_color" form="chatbot-look-form" value="{{ chatColor ? '#' ~ chatColor : '' }}" maxlength="7" placeholder="#2563eb" autocomplete="off" spellcheck="false">
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                {% endset %}
                 {% if globalOn %}
+                    {% set lookForm = 'chatbot-look-form' %}
                     {% set modText = globalModule ? (' ' ~ t.s3_module|replace({'%name%': globalModule.name|e, '%id%': globalModule.id})|raw) : '' %}
                     <p>{{ t.s3_active|replace({'%module%': modText})|raw }}</p>
+                    {{ lookFields|raw }}
+                    <form method="post" id="chatbot-look-form" class="cs-actions">
+                        <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
+                        <input type="hidden" name="pageId" value="{{ root.id }}">
+                        <input type="hidden" name="action" value="look">
+                        <button type="submit" class="cs-btn">{{ t.look_save }}</button>
+                    </form>
                     <form method="post" class="cs-actions">
                         <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
                         <input type="hidden" name="pageId" value="{{ root.id }}">
@@ -159,12 +183,14 @@
                     </form>
                 {% else %}
                     <p>{{ t.s3_ask }}</p>
+                    {{ lookFields|raw }}
+                    <p class="cs-muted cs-look__note">{{ t.look_note }}</p>
                     <div class="cs-choices">
                         <div class="cs-choice cs-choice--main">
                             <div class="cs-choice__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.500 18.300 12 21c-2.500-2.700-3.800-5.700-3.800-9S9.500 5.700 12 3z"/></svg></div>
                             <strong>{{ t.s3_a_title }} <span class="cs-tag">{{ t.tag_recommended }}</span></strong>
                             <p>{{ t.s3_a_text }}</p>
-                            <form method="post">
+                            <form method="post" id="chatbot-look-form">
                                 <input type="hidden" name="REQUEST_TOKEN" value="{{ requestToken }}">
                                 <input type="hidden" name="pageId" value="{{ root.id }}">
                                 <input type="hidden" name="action" value="widget_on">
@@ -253,6 +279,29 @@
 } %}
 <script>
 (function () {
+    const picker = document.getElementById('chatbot-look-picker');
+    const hex = document.getElementById('chatbot-look-hex');
+    if (!picker || !hex) return;
+    picker.addEventListener('input', function () { hex.value = picker.value; });
+    hex.addEventListener('input', function () {
+        if (/^#?([0-9a-fA-F]{6})$/.test(hex.value.trim())) picker.value = '#' + hex.value.trim().replace('#', '');
+    });
+})();
+</script>
+<script>
+// Bestätigungen als Contao-Toast; ohne Meldungsbereich bleibt der Hinweis in der Seite stehen.
+window.chatbotToast = function (message) {
+    if (!document.getElementById('messages')) return false;
+    document.dispatchEvent(new CustomEvent('contao--message', { detail: { type: 'info', message: String(message).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') } }));
+    return true;
+};
+(function () {
+    const inline = document.getElementById('chatbot-notice-ok');
+    if (inline) {
+        setTimeout(function () { if (window.chatbotToast(inline.textContent.trim())) inline.remove(); }, 150);
+    }
+})();
+(function () {
     const L = {{ js|json_encode|raw }};
     const fill_ = function (template, values) { return template.replace(/\{(\w+)\}/g, function (m, k) { return values[k] !== undefined ? values[k] : m; }); };
 
@@ -309,7 +358,9 @@
                     } else if (data.ok === 0) {
                         show(fill_(L.failAll, { detail: data.lastError ? ': ' + data.lastError : '' }), 100);
                     } else {
-                        show(fill_(L.done, { ok: data.ok, failed: data.failed ? ', ' + fill_(L.unreachable, { failed: data.failed }).trim() + (data.lastError ? ' [' + data.lastError + ']' : '') : '' }), 100);
+                        const doneText = fill_(L.done, { ok: data.ok, failed: data.failed ? ', ' + fill_(L.unreachable, { failed: data.failed }).trim() + (data.lastError ? ' [' + data.lastError + ']' : '') : '' });
+                        show(doneText, 100);
+                        if (!data.failed) window.chatbotToast(doneText);
                         setTimeout(function () { window.location.reload(); }, 6000);
                     }
                     break;
@@ -592,6 +643,19 @@
     .cs-switch__text strong { color: var(--cs-text); font-size: 1.02rem; }
     .cs-links { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--cs-border); }
     .cs-links a { color: var(--cs-accent); font-weight: 600; }
+
+    /* Name und Akzentfarbe */
+    .cs-look { margin: 14px 0 4px; padding: 16px 18px; border: 1px solid var(--cs-border); border-radius: 14px; background: var(--cs-card); }
+    .cs-look__head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; font-size: .94rem; }
+    .cs-look__row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .cs-look__field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; font-size: .88rem; color: var(--cs-muted); }
+    .cs-look__field--color { flex: 0 1 220px; }
+    .cs-look__field input[type=text] { min-height: 42px; padding: 0 14px; border-radius: 10px; font: inherit; border: 1px solid var(--cs-border); background: var(--cs-card); color: var(--cs-text); }
+    .cs-look__field input[type=text]:focus { outline: none; border-color: var(--cs-accent); box-shadow: 0 0 0 4px var(--cs-ring); }
+    .cs-look__color { display: flex; gap: 8px; }
+    .cs-look__color input[type=color] { flex: 0 0 46px; height: 42px; padding: 3px; border-radius: 10px; border: 1px solid var(--cs-border); background: var(--cs-card); cursor: pointer; }
+    .cs-look__color input[type=text] { flex: 1 1 auto; min-width: 0; }
+    .cs-look__note { margin: 6px 0 14px !important; font-size: .88rem; }
 
     @media (max-width: 760px) {
         .chatbot-start { padding: 10px 14px 48px; }

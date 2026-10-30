@@ -2,9 +2,9 @@
 
 namespace Bluebranch\Chatbot\Controller\Backend;
 
+use Bluebranch\Chatbot\classes\BackendAccess;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\StreamToken;
-use Contao\BackendUser;
 use Contao\CoreBundle\Controller\AbstractBackendController;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\PageModel;
@@ -48,9 +48,8 @@ class TrainedContentController extends AbstractBackendController
         }
 
         $this->framework->initialize();
-        $user = BackendUser::getInstance();
-        if (!$user instanceof BackendUser || !$user->isAdmin) {
-            return new Response('<div style="padding: 20px;"><p style="color: #d9534f; font-weight: bold;">Zugriff verweigert.</p><p>Diese Seite ist nur für Administratoren zugänglich.</p></div>', 403);
+        if (!BackendAccess::module('chatbot_trained_content')) {
+            return new Response('<div style="padding: 20px;"><p style="color: #d9534f; font-weight: bold;">Zugriff verweigert.</p><p>Dafür fehlt Ihrem Benutzer oder dessen Gruppe die Freigabe (System → Benutzer → Backend-Module).</p></div>', 403);
         }
 
         $session = $request->getSession();

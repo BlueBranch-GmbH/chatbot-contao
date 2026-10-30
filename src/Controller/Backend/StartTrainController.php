@@ -2,10 +2,10 @@
 
 namespace Bluebranch\Chatbot\Controller\Backend;
 
+use Bluebranch\Chatbot\classes\BackendAccess;
 use Bluebranch\Chatbot\classes\PageEligibility;
 use Bluebranch\Chatbot\classes\PageFetcher;
 use Bluebranch\Chatbot\classes\TrainingState;
-use Contao\BackendUser;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\Database;
 use Contao\PageModel;
@@ -50,9 +50,7 @@ class StartTrainController extends AbstractController
     {
         $this->framework->initialize();
 
-        $user = BackendUser::getInstance();
-
-        if (!$user instanceof BackendUser || !$user->isAdmin) {
+        if (!BackendAccess::module('chatbot_start')) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
 

@@ -2,6 +2,7 @@
 
 namespace Bluebranch\Chatbot\Controller;
 
+use Bluebranch\Chatbot\classes\BackendAccess;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\ChatLog;
 use Bluebranch\Chatbot\classes\ExtraContent;
@@ -274,7 +275,7 @@ class ChatbotAPIController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Invalid token'], 403);
         }
 
-        if ('backend' === $request->attributes->get('_scope') && !$this->isAdmin()) {
+        if ('backend' === $request->attributes->get('_scope') && !BackendAccess::module('chatbot_start', 'chatbot_trained_content')) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
 
@@ -322,7 +323,7 @@ class ChatbotAPIController extends AbstractController
     {
         $this->framework->initialize();
 
-        if (!$this->isAdmin()) {
+        if (!BackendAccess::module('chatbot_trained_content')) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
 
@@ -362,7 +363,7 @@ class ChatbotAPIController extends AbstractController
     {
         $this->framework->initialize();
 
-        if (!$this->isAdmin()) {
+        if (!BackendAccess::module('chatbot_trained_content')) {
             return new JsonResponse(['success' => false, 'message' => 'Access denied'], 403);
         }
 
@@ -410,12 +411,6 @@ class ChatbotAPIController extends AbstractController
         $ids = array_map('intval', \Contao\Database::getInstance()->getChildRecords($rootId, 'tl_page'));
 
         $state->markUnknown($rootId, ...$ids);
-    }
-
-    private function isAdmin(): bool
-    {
-        $user = \Contao\BackendUser::getInstance();
-        return $user instanceof \Contao\BackendUser && $user->isAdmin;
     }
 
     #[Route('/bluebranch/chatbot/api/v1/generate/stream', name: 'bluebranch_chatbot_generate_stream', methods: ['GET', 'POST'], defaults: ['_scope' => 'frontend', '_token_check' => false])]
@@ -606,7 +601,7 @@ class ChatbotAPIController extends AbstractController
     private function refuseAnswer(Request $request, array $context): ?StreamedResponse
     {
         if ('backend' === $request->attributes->get('_scope')) {
-            return $this->isAdmin() ? null : $this->sseError(403, 'Access denied');
+            return BackendAccess::module('chatbot_start', 'chatbot_trained_content') ? null : $this->sseError(403, 'Access denied');
         }
 
         if (null !== $context['error']) {
