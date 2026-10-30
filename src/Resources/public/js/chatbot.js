@@ -25,6 +25,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         this.panel = this.container.querySelector('.chatbot-widget__panel');
         this.messagesEl = this.container.querySelector('.chatbot-widget__messages');
         this.suggestionsEl = this.container.querySelector('.chatbot-widget__suggestions');
+        if (this.suggestionsEl) this.enableDragScroll(this.suggestionsEl);
         this.form = this.container.querySelector('.chatbot-widget__form');
         this.input = this.container.querySelector('.chatbot-widget__input');
         this.sendButton = this.container.querySelector('.chatbot-widget__send');
@@ -557,7 +558,53 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
 
     autoGrow() {
         this.input.style.height = 'auto';
-        this.input.style.height = Math.min(this.input.scrollHeight, 120) + 'px';
+        // scrollHeight misst ohne Rand; ohne den Zuschlag bliebe das Feld knapp zu klein und zeigte eine Scrollbar.
+        const needed = this.input.scrollHeight + (this.input.offsetHeight - this.input.clientHeight);
+        this.input.style.height = Math.min(needed, 120) + 'px';
+        this.input.style.overflowY = needed > 120 ? 'auto' : 'hidden';
+    }
+
+    /**
+     * Vorschlags-Pillen ohne Scrollbar: Mit der Maus lassen sie sich ziehen (Touch scrollt von selbst).
+     */
+    enableDragScroll(el) {
+        let startX = 0;
+        let startLeft = 0;
+        let down = false;
+        let moved = false;
+
+        el.addEventListener('pointerdown', (event) => {
+            if (event.pointerType !== 'mouse' || event.button !== 0) return;
+            down = true;
+            moved = false;
+            startX = event.clientX;
+            startLeft = el.scrollLeft;
+        });
+
+        el.addEventListener('pointermove', (event) => {
+            if (!down) return;
+            const dx = event.clientX - startX;
+            if (!moved && Math.abs(dx) > 5) {
+                moved = true;
+                el.classList.add('is-dragging');
+            }
+            if (moved) el.scrollLeft = startLeft - dx;
+        });
+
+        const stop = () => {
+            down = false;
+            el.classList.remove('is-dragging');
+        };
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach((name) => el.addEventListener(name, stop));
+
+        // Nach dem Ziehen darf der Klick keine Pille auslösen.
+        el.addEventListener('click', (event) => {
+            if (moved) {
+                event.preventDefault();
+                event.stopPropagation();
+                moved = false;
+            }
+        }, true);
     }
 
     /**

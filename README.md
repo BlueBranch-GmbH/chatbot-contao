@@ -812,6 +812,13 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.8.2 - 2026-10-30
+
+- **Vorschlags-Pillen im Chat-Widget** lassen sich mit der Maus ziehen (Drag & Drop), die Leiste bleibt ohne Scrollbar; ein Klick direkt nach
+  dem Ziehen löst keine Pille aus. Auf Touch-Geräten scrollt sie wie bisher per Wisch
+- **Eingabefeld im Chat-Widget** zeigt keine Scrollbar mehr: Die automatische Höhe rechnet den Rand mit, gescrollt wird erst ab 120 px
+- Nach dem Update: `composer update`, Cache leeren
+
 ### 1.8.1 - 2026-10-30
 
 - **Fix:** Der Assistent *Erste Schritte* brach beim Einschalten von „Chat auf allen Seiten“ mit „Unknown column 'tl_theme.1'“ ab, wenn
