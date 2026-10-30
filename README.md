@@ -816,6 +816,12 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.8.5 - 2026-10-30
+
+- **Geerbter API-Key im Backend:** Die Auswahl der Startseite bei den Zusatzinhalten, der Assistent *Erste Schritte* und die Liste der trainierten
+  Inhalte melden „ohne API-Key“ nicht mehr, wenn die Startseite den Key einer Schwesterstartseite derselben Domain erbt (mehrsprachige Seiten)
+- Nach dem Update: `composer update`, Cache leeren
+
 ### 1.8.4 - 2026-10-30
 
 - Link auf die Produktseite [chatbot-dsgvo.de](https://www.chatbot-dsgvo.de/) im README und als Homepage bei Packagist

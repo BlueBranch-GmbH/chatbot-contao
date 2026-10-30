@@ -2,6 +2,7 @@
 
 namespace Bluebranch\Chatbot\EventListener;
 
+use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\ExtraContent;
 use Contao\Backend;
 use Contao\CoreBundle\DependencyInjection\Attribute\AsCallback;
@@ -19,10 +20,12 @@ use Contao\System;
 class ExtraContentListener
 {
     private ExtraContent $extraContent;
+    private ChatbotAPI $chatbotApi;
 
-    public function __construct(ExtraContent $extraContent)
+    public function __construct(ExtraContent $extraContent, ChatbotAPI $chatbotApi)
     {
         $this->extraContent = $extraContent;
+        $this->chatbotApi = $chatbotApi;
     }
 
     /**
@@ -91,7 +94,7 @@ class ExtraContentListener
         $roots = PageModel::findBy('type', 'root', ['order' => 'sorting']);
 
         foreach ($roots ?? [] as $root) {
-            $options[$root->id] = $root->title . ($root->dns ? ' (' . $root->dns . ')' : '') . ($root->chatbot_api_key ? '' : ' – ohne API-Key');
+            $options[$root->id] = $root->title . ($root->dns ? ' (' . $root->dns . ')' : '') . ('' !== $this->chatbotApi->rootApiKey((int) $root->id) ? '' : ' – ohne API-Key');
         }
 
         return $options;

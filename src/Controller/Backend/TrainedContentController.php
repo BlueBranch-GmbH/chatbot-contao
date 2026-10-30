@@ -201,7 +201,7 @@ class TrainedContentController extends AbstractBackendController
                 $availableRootPages[] = [
                     'id' => $rootPage->id,
                     'title' => $rootPage->title . ' (' . ($rootPage->dns ?: $rootPage->id) . ')',
-                    'has_api_key' => !empty($rootPage->chatbot_api_key)
+                    'has_api_key' => '' !== $this->chatbotApi->rootApiKey((int) $rootPage->id)
                 ];
             }
         }

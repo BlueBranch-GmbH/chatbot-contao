@@ -246,7 +246,7 @@ class ChatbotAPI
      * teilen nie einen Key - dort gehoeren verschiedene Konten zu verschiedenen Auftritten.
      * Die Fallback-Sprache hat Vorrang, danach die Reihenfolge im Seitenbaum.
      */
-    private function rootApiKey(int $rootId): string
+    public function rootApiKey(int $rootId): string
     {
         $root = PageModel::findById($rootId);
 

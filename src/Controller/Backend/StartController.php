@@ -111,7 +111,7 @@ class StartController extends AbstractBackendController
     private function buildView(Request $request, array $roots, PageModel $root): array
     {
         $rootId = (int) $root->id;
-        $hasKey = '' !== (string) $root->chatbot_api_key;
+        $hasKey = '' !== $this->chatbotApi->rootApiKey($rootId);
 
         // Verbindung: ein Aufruf bei jedem Laden der Seite - der Besucher soll sehen, ob es gerade geht.
         $tier = null;
