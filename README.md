@@ -816,6 +816,11 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.8.4 - 2026-10-30
+
+- Link auf die Produktseite [chatbot-dsgvo.de](https://www.chatbot-dsgvo.de/) im README und als Homepage bei Packagist
+- Keine Änderung am Code
+
 ### 1.8.3 - 2026-10-30
 
 - **Mehrsprachige Seiten:** Hat die Startseite einer Sprache keinen eigenen API-Key, gilt der Key einer Startseite derselben Domain
