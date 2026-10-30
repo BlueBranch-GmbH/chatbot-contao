@@ -812,6 +812,14 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.8.3 - 2026-10-30
+
+- **Mehrsprachige Seiten:** Hat die Startseite einer Sprache keinen eigenen API-Key, gilt der Key einer Startseite derselben Domain
+  (die Fallback-Sprache zuerst). Bisher blieb das Widget in neu angelegten Sprachen unsichtbar, die Seiten kamen nicht in den Index
+- **Quellen in der Sprache der Seite:** Auf mehrsprachigen Seiten (Chat, Frage-Modul, Suche) erscheinen nur Quellen derselben Sprache.
+  Einsprachige Installationen sind nicht betroffen
+- Nach dem Update: `composer update`, Cache leeren
+
 ### 1.8.2 - 2026-10-30
 
 - **Vorschlags-Pillen im Chat-Widget** lassen sich mit der Maus ziehen (Drag & Drop), die Leiste bleibt ohne Scrollbar; ein Klick direkt nach
