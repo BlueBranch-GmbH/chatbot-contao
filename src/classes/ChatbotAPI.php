@@ -238,6 +238,36 @@ class ChatbotAPI
     }
 
     /**
+     * Key einer Startseite - fehlt er, der einer Schwesterstartseite derselben Domain.
+     *
+     * Bei mehrsprachigen Seiten hat jede Sprache ihre eigene Startseite, aber meist nur eine
+     * Domain und ein Konto. Ohne diesen Rueckgriff bliebe jede neu angelegte Sprache stumm: Das
+     * Widget erscheint dort nicht, und die Seiten kaemen nie in den Index. Verschiedene Domains
+     * teilen nie einen Key - dort gehoeren verschiedene Konten zu verschiedenen Auftritten.
+     * Die Fallback-Sprache hat Vorrang, danach die Reihenfolge im Seitenbaum.
+     */
+    private function rootApiKey(int $rootId): string
+    {
+        $root = PageModel::findById($rootId);
+
+        if (!$root instanceof PageModel) {
+            return '';
+        }
+
+        if ('' !== (string) $root->chatbot_api_key) {
+            return (string) $root->chatbot_api_key;
+        }
+
+        $siblings = PageModel::findBy(
+            ['tl_page.type=?', 'tl_page.dns=?', "tl_page.chatbot_api_key!=''", 'tl_page.id!=?'],
+            ['root', (string) $root->dns, $rootId],
+            ['order' => 'tl_page.fallback DESC, tl_page.sorting']
+        );
+
+        return null !== $siblings ? (string) $siblings->first()->chatbot_api_key : '';
+    }
+
+    /**
      * Gets the API Key from the given page model's root page.
      */
     public function getApiKey(?PageModel $pageModel = null): string
@@ -248,8 +278,7 @@ class ChatbotAPI
             $rootId = (int) $pageModel->rootId;
 
             if (!\array_key_exists($rootId, $this->apiKeyCache)) {
-                $objRootPage = PageModel::findById($rootId);
-                $this->apiKeyCache[$rootId] = $objRootPage instanceof PageModel ? (string) $objRootPage->chatbot_api_key : '';
+                $this->apiKeyCache[$rootId] = $this->rootApiKey($rootId);
             }
 
             if ('' !== $this->apiKeyCache[$rootId]) {

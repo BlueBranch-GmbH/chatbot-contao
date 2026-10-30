@@ -8,6 +8,7 @@ use Bluebranch\Chatbot\classes\ChatLog;
 use Bluebranch\Chatbot\classes\ExtraContent;
 use Bluebranch\Chatbot\classes\RateLimit;
 use Bluebranch\Chatbot\classes\RequestSignature;
+use Bluebranch\Chatbot\classes\SourceLanguage;
 use Bluebranch\Chatbot\classes\StreamRecorder;
 use Bluebranch\Chatbot\classes\StreamToken;
 use Bluebranch\Chatbot\classes\TrainingState;
@@ -308,8 +309,15 @@ class ChatbotAPIController extends AbstractController
             ], $istLimit ? 429 : ($istPausiert ? 503 : 502));
         }
 
+        $sourceList = (array) ($result['sources'] ?? []);
+        $sourceFilter = SourceLanguage::forPage((int) ($context['pageId'] ?? 0));
+
+        if (null !== $sourceFilter) {
+            $sourceList = $sourceFilter($sourceList);
+        }
+
         $sources = [];
-        foreach (\array_slice((array) ($result['sources'] ?? []), 0, 10) as $source) {
+        foreach (\array_slice($sourceList, 0, 10) as $source) {
             if (\is_array($source)) {
                 $sources[] = ['title' => (string) ($source['title'] ?? ''), 'url' => (string) ($source['url'] ?? '')];
             }
@@ -756,7 +764,8 @@ class ChatbotAPIController extends AbstractController
                     return;
                 }
 
-                $recorder = new StreamRecorder();
+                // Mehrsprachige Seiten teilen einen Index: Quellen in anderer Sprache gehen nicht an den Besucher.
+                $recorder = new StreamRecorder(SourceLanguage::forPage((int) ($context['pageId'] ?? 0)));
 
                 foreach ($this->httpClient->stream($apiResponse) as $chunk) {
                     if ($chunk->isTimeout()) {
@@ -768,13 +777,16 @@ class ChatbotAPIController extends AbstractController
                     $content = $chunk->getContent();
 
                     if ('' !== $content) {
-                        echo $content;
-                        flush();
-                        $recorder->feed($content);
+                        $out = $recorder->feed($content);
+
+                        if ('' !== $out) {
+                            echo $out;
+                            flush();
+                        }
                     }
                 }
 
-                $recorder->finish();
+                echo $recorder->finish();
                 $this->recordAnswer($recorder, $context);
             } catch (\Throwable $e) {
                 $this->logger->error('Fehler beim Streamen der Chatbot-Antwort: ' . $e->getMessage());
