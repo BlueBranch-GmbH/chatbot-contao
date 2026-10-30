@@ -13,6 +13,8 @@ Antwort – ausschließlich aus deinen eigenen Seiten, mit Quellenangabe.
   Training mit deinen Daten, Vertrag nach Art. 28 DSGVO auf Anfrage.
 - **Kostenlos starten.** Eine kostenlose Stufe zum Ausprobieren, größere Pakete für mehr Anfragen.
 
+Mehr zum Produkt, zu den Tarifen und zum Datenschutz: [chatbot-dsgvo.de](https://www.chatbot-dsgvo.de/)
+
 Die Erweiterung übergibt die Seiteninhalte beim Suchindex-Lauf an die Chatbot-API, die daraus
 eine Vektor-Wissensbasis aufbaut. Aus genau diesem Bestand werden Fragen beantwortet – als
 aufklappbares Chat-Widget und als zusammenfassende Antwort über der Trefferliste der
@@ -444,6 +446,8 @@ drawn only from your own pages, with sources.
 - **GDPR.** Hosted and processed in Germany, our own AI model without an OpenAI account, no training
   with your data, agreement under Art. 28 GDPR on request.
 - **Start for free.** A free tier to try it out, larger plans for more requests.
+
+More about the product, plans and data protection: [chatbot-dsgvo.de](https://www.chatbot-dsgvo.de/)
 
 During the search index run, the extension hands your page content to the Chatbot API, which
 builds a vector knowledge base from it. Questions are answered from exactly that content – as a
