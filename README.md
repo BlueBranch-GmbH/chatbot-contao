@@ -816,6 +816,11 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.8.6 - 2026-10-31
+
+- **Abgelaufene Sitzung:** Lehnt der Server den Sitzungs-Token ab (etwa weil der Tab lange offen war), holt das Widget still einen neuen und wiederholt die Frage einmal. Bisher kam die Fehlermeldung, bis die Seite neu geladen wurde
+- Nach dem Update: `composer update`, Cache leeren
+
 ### 1.8.5 - 2026-10-30
 
 - **Geerbter API-Key im Backend:** Die Auswahl der Startseite bei den Zusatzinhalten, der Assistent *Erste Schritte* und die Liste der trainierten

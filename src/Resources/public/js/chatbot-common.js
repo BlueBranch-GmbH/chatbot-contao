@@ -14,6 +14,9 @@
  */
 window.ChatbotStreamToken = window.ChatbotStreamToken || (function () {
     let pending = null;
+    // Ersetzte Token (alt -> neu): Module halten ihren Token selbst vor und bekommen so
+    // nach einer Erneuerung automatisch den frischen.
+    const superseded = {};
 
     return {
         /**
@@ -22,7 +25,7 @@ window.ChatbotStreamToken = window.ChatbotStreamToken || (function () {
          */
         get(preset) {
             if (preset) {
-                return Promise.resolve(preset);
+                return Promise.resolve(superseded[preset] || preset);
             }
 
             if (!pending) {
@@ -52,6 +55,24 @@ window.ChatbotStreamToken = window.ChatbotStreamToken || (function () {
 
             return pending;
         },
+
+        /**
+         * Holt einen neuen Token, wenn der Server den bisherigen ablehnt (Session abgelaufen,
+         * etwa nach langer Zeit im offenen Tab).
+         *
+         * @param {string} stale Der abgelehnte Token.
+         * @returns {Promise<string>}
+         */
+        refresh(stale) {
+            pending = null;
+
+            return this.get().then((token) => {
+                if (stale) {
+                    superseded[stale] = token;
+                }
+                return token;
+            });
+        },
     };
 })();
 
@@ -71,7 +92,7 @@ window.ChatbotStream = window.ChatbotStream || {
      * @returns {{close: function(): void}}
      */
     open(url, options) {
-        const controller = new AbortController();
+        let controller = new AbortController();
         const handlers = options.handlers || {};
         let closed = false;
         let finished = false;
@@ -103,20 +124,30 @@ window.ChatbotStream = window.ChatbotStream || {
             }
         };
 
-        fetch(url, {
+        const start = (token, retried) => fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
             signal: controller.signal,
             headers: {
                 'Accept': 'text/event-stream',
                 'Content-Type': 'application/json',
-                'X-CSRF-Token': options.token || '',
+                'X-CSRF-Token': token || '',
             },
             body: JSON.stringify(options.body || {}),
         }).then((response) => {
             if (!response.ok || !response.body) {
                 // Auch abgelehnte Anfragen tragen meist ein Fehlerereignis mit Begruendung.
                 return response.text().then((text) => {
+                    // Abgelaufene Session: einmal still einen neuen Token holen und wiederholen,
+                    // statt den Besucher die Seite neu laden zu lassen.
+                    if (response.status === 403 && !retried && !closed && /Invalid (stream )?token/i.test(text || '')) {
+                        return ChatbotStreamToken.refresh(token).then((fresh) => {
+                            if (closed) return;
+                            controller = new AbortController();
+                            return start(fresh, true);
+                        }).catch(() => emit('error'));
+                    }
+
                     const match = /^data:\s?(.*)$/m.exec(text || '');
                     emit('error', match ? match[1] : undefined);
                 });
@@ -157,6 +188,8 @@ window.ChatbotStream = window.ChatbotStream || {
             // Ein Abbruch durch close() ist gewollt und kein Fehler.
             emit('error');
         });
+
+        start(options.token, false);
 
         return {
             close() {
