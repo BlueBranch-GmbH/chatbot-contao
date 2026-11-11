@@ -54,6 +54,7 @@
             moduleId: <?= (int) $this->moduleId ?>,
             sig: <?= json_encode((string) $this->sig) ?>,
             feedback: <?= $this->feedback ? 'true' : 'false' ?>,
+            consent: <?= json_encode($this->consent, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
             voice: <?= $this->voice ? json_encode(['maxSeconds' => (int) $this->voiceMaxSeconds, 'language' => (string) $this->voiceLanguage], JSON_HEX_TAG | JSON_HEX_AMP) : 'false' ?>,
             strings: <?= json_encode($this->feedbackStrings, JSON_HEX_TAG | JSON_HEX_AMP) ?>
         });

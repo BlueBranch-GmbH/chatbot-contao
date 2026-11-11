@@ -36,6 +36,7 @@
             moduleId: <?= (int) $this->moduleId ?>,
             sig: <?= json_encode((string) $this->sig) ?>,
             feedback: <?= $this->feedback ? 'true' : 'false' ?>,
+            consent: <?= json_encode($this->consent, JSON_HEX_TAG | JSON_HEX_AMP) ?>,
             strings: <?= json_encode($this->feedbackStrings, JSON_HEX_TAG | JSON_HEX_AMP) ?>
         });
         chatbot.init();

@@ -28,3 +28,4 @@ $GLOBALS['TL_LANG']['tl_module']['chatbot_look_legend'] = 'Aussehen';
 $GLOBALS['TL_LANG']['tl_module']['chatbot_text_legend'] = 'Texte';
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feature_legend'] = 'Funktionen';
 $GLOBALS['TL_LANG']['tl_module']['chatbot_search_info'] = 'Die Suche gibt es in zwei Varianten: Mit dem Standard-Template erscheint die KI-Antwort über der Trefferliste des Contao-Suchmoduls. Wählen Sie unter „Template“ <code>mod_chatbot_generate_search_full</code>, hat das Modul ein eigenes Suchfeld mit Trefferliste – nur dort wirken „Getippte Fragen“ und das Mikrofon.';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_consent'] = ['Bestätigung einholen', 'Zeigt vorab den Hinweis, dass Besucher mit einer KI sprechen. Erst nach der Bestätigung kann gefragt werden (gilt für die Browser-Sitzung).'];

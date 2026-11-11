@@ -28,3 +28,4 @@ $GLOBALS['TL_LANG']['tl_module']['chatbot_look_legend'] = 'Appearance';
 $GLOBALS['TL_LANG']['tl_module']['chatbot_text_legend'] = 'Texts';
 $GLOBALS['TL_LANG']['tl_module']['chatbot_feature_legend'] = 'Features';
 $GLOBALS['TL_LANG']['tl_module']['chatbot_search_info'] = 'The search comes in two variants: with the default template the AI answer appears above the results of the Contao search module. Choose <code>mod_chatbot_generate_search_full</code> under "Template" and the module has its own search field with a result list – only there "Typed questions" and the microphone take effect.';
+$GLOBALS['TL_LANG']['tl_module']['chatbot_consent'] = ['Ask for confirmation', 'Shows a notice up front that visitors are talking to an AI. Questions can only be asked after they confirm (valid for the browser session).'];

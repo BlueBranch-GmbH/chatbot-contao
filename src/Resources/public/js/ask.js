@@ -23,6 +23,7 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
         this.labelSubmit = this.submitLabel ? this.submitLabel.textContent : '';
         this.labelStop = config.labelStop || 'Stopp';
         this.response = this.container.querySelector('.chatbot-response');
+        this.consent = config.consent || false;
 
         this.search = new ChatbotSearch({
             containerId: config.containerId,
@@ -68,6 +69,11 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
             this.submit();
         });
 
+        // Mit KI-Hinweis: Checkbox unter dem Feld, Absenden bleibt bis zum Haken gesperrt.
+        this.consentInline = this.consent && window.ChatbotConsent
+            ? ChatbotConsent.inline({ form: this.form, consent: this.consent })
+            : null;
+
         this.placeholder.start();
     }
 
@@ -84,6 +90,12 @@ window.ChatbotAsk = window.ChatbotAsk || class ChatbotAsk {
 
         if (question === '') {
             this.input.focus();
+            return;
+        }
+
+        // Ohne Haken bei der Bestaetigung geht keine Frage ab (z. B. per Eingabetaste oder Mikrofon).
+        if (this.consentInline && !ChatbotConsent.isGiven()) {
+            this.consentInline.attention();
             return;
         }
 

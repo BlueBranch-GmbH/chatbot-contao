@@ -69,6 +69,7 @@ if ($this->iconUrl) {
             'moduleId' => $this->moduleId,
             'sig' => $this->sig,
             'feedback' => $this->feedback,
+            'consent' => $this->consent,
             'botName' => \Contao\StringUtil::decodeEntities($this->botName),
             'greeting' => $this->greeting,
             'suggestions' => $this->suggestions,

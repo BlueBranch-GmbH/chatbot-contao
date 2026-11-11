@@ -119,14 +119,14 @@ Unter *Themes → Frontend-Module* stehen drei Module bereit:
 | Modul | Zweck |
 |---|---|
 | *Chatbot Widget* | Aufklappbarer Chat-Button, standardmäßig unten rechts |
-| *Chatbot KI-Suche* | Zusammenfassende KI-Antwort über der Trefferliste der Suche (mit dem Template `_full` mit eigenem Suchfeld) |
+| *Chatbot Suche* | Zusammenfassende KI-Antwort über der Trefferliste der Suche (mit dem Template `_full` mit eigenem Suchfeld) |
 | *Chatbot Frage* | Eingabefeld mit getippten Fragen, Antwort direkt darunter |
 
 Alle drei werden wie gewohnt in ein Layout oder einen Artikel eingebunden.
 
 ### Getippte Fragen
 
-*Chatbot Frage* und *Chatbot KI-Suche* haben beide das Feld **Getippte Fragen** — eine
+*Chatbot Frage* und *Chatbot Suche* haben beide das Feld **Getippte Fragen** — eine
 Liste beliebig vieler Texte. Sie werden im Frontend nacheinander Zeichen für Zeichen als
 Platzhalter ins Eingabefeld geschrieben, gelöscht und durch den nächsten ersetzt. Bleibt die
 Liste leer, steht dort der statische Platzhalter.
@@ -138,6 +138,21 @@ hat, sieht statt der Animation die erste Frage unbewegt stehen.
 *Chatbot Frage* ist für Startseiten gedacht: Eine eingegebene Frage geht ohne Seitenwechsel an
 die KI, die Antwort erscheint samt Quellen direkt darunter — wie beim Such-Modul, nur ohne die
 Trefferliste der Contao-Suche.
+
+### Bestätigung einholen
+
+Alle drei Module haben die Option **Bestätigung einholen** (Standard: aus). Ist sie aktiv, sehen
+Besucher zuerst den Hinweis, dass sie mit einer KI sprechen, und müssen ihn bestätigen:
+
+- *Chatbot Widget*: Eingabefeld und Vorschläge bleiben bis dahin ausgeblendet.
+- *Chatbot Frage*: Unter dem Eingabefeld steht eine Checkbox mit dem Hinweis; „Fragen“ und das
+  Mikrofon bleiben bis zum Haken gesperrt. Drei Sekunden nach dem Haken blendet sich der Hinweis aus.
+- *Chatbot Suche*: Die Variante `_full` verhält sich wie *Chatbot Frage*; die Suche und die
+  KI-Antwort folgen nach dem Haken. Ohne eigenes Suchfeld (Standard-Template) erscheint mit einem
+  Suchbegriff in der Adresse ein Hinweis mit Knopf „Verstanden“, auf den die KI-Antwort wartet.
+
+Die Bestätigung gilt für die Browser-Sitzung und für alle Chatbot-Module der Seite. Den Text liefern
+die Sprachdateien (`consentText`, `consentButton` in `chatbot_widget`).
 
 ## Globale Einstellungen
 
@@ -537,14 +552,14 @@ Two front end modules are available under *Themes → Front end modules*:
 | Module | Purpose |
 |---|---|
 | *Chatbot Widget* | Collapsible chat button, bottom right by default |
-| *Chatbot AI search* | Summarising AI answer above the search results (with the `_full` template with its own search field) |
+| *Chatbot Search* | Summarising AI answer above the search results (with the `_full` template with its own search field) |
 | *Chatbot Question* | Input field with typed questions, answer right below it |
 
 All three are added to a layout or an article as usual.
 
 ### Typed questions
 
-*Chatbot Question* and *Chatbot AI search* both offer the **Typed questions** field — a list
+*Chatbot Question* and *Chatbot Search* both offer the **Typed questions** field — a list
 of as many texts as you like. In the front end they are written into the input field as a
 placeholder, one character at a time, then deleted and replaced by the next one. If the list stays
 empty, the static placeholder remains.
@@ -556,6 +571,21 @@ first question standing still instead of the animation.
 *Chatbot Question* is meant for home pages: a question is sent to the AI without a page reload and
 the answer appears right below it, sources included — like the search module, only without the
 Contao search results.
+
+### Ask for confirmation
+
+All three modules have the option **Ask for confirmation** (default: off). When enabled, visitors
+first see a notice that they are talking to an AI and have to confirm it:
+
+- *Chatbot Widget*: input field and suggestions stay hidden until then.
+- *Chatbot Question*: a checkbox with the notice sits below the input field; "Ask" and the
+  microphone stay locked until it is ticked. The notice fades out three seconds after ticking.
+- *Chatbot Search*: the `_full` variant behaves like *Chatbot Question*; the search and the AI
+  answer follow after ticking. Without its own search field (default template) a notice with an
+  "Understood" button appears when a search term is in the address, and the AI answer waits for it.
+
+The confirmation is valid for the browser session and for all chatbot modules on the page. The text
+comes from the language files (`consentText`, `consentButton` in `chatbot_widget`).
 
 ## Global settings
 
@@ -815,6 +845,12 @@ Das Team von [www.bluebranch.de](https://www.bluebranch.de/)
 MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
+
+### 1.9.0 - 2026-11-11
+
+- **Bestätigung einholen:** Neue Option an *Chatbot Widget*, *Chatbot Frage* und *Chatbot Suche* (Standard: aus). Besucher sehen den Hinweis, dass sie mit einer KI sprechen, und müssen ihn bestätigen, bevor sie fragen können. Beim Widget bleiben Eingabe und Vorschläge bis dahin ausgeblendet; bei Frage und Suche mit eigenem Suchfeld steht eine Checkbox unter dem Feld, „Fragen“ und das Mikrofon bleiben bis zum Haken gesperrt, und der Hinweis blendet sich drei Sekunden danach aus. Die Bestätigung gilt für die Browser-Sitzung (`sessionStorage`) und für alle Chatbot-Module der Seite; auf dem Server wird nichts gespeichert. Die Texte stehen in den Sprachdateien (`consentText`, `consentButton`)
+- **Umbenannt:** *Chatbot KI-Suche* heißt jetzt *Chatbot Suche* (englisch *Chatbot search*)
+- Nach dem Update: `composer update`, Datenbank aktualisieren (neues Feld `chatbot_consent` in `tl_module`), Cache leeren
 
 ### 1.8.6 - 2026-10-31
 

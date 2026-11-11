@@ -50,6 +50,8 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
         this.greeting = config.greeting || 'Wie kann ich heute helfen?';
         this.suggestions = Array.isArray(config.suggestions) ? config.suggestions.filter(Boolean) : [];
         this.showSummarize = config.showSummarize !== false;
+        this.consent = config.consent || false;
+        this.consentPending = false;
         this.strings = Object.assign({
             send: 'Nachricht senden',
             stop: 'Antwort stoppen',
@@ -138,6 +140,20 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
 
         this.initVoice();
         this.renderSuggestions();
+
+        // Mit KI-Hinweis bleiben Eingabe und Vorschlaege gesperrt (CSS), bis der Besucher bestaetigt hat.
+        if (this.consent && window.ChatbotConsent && !ChatbotConsent.isGiven()) {
+            this.consentPending = true;
+            ChatbotConsent.gate({
+                container: this.panel,
+                before: this.suggestionsEl || this.form,
+                consent: this.consent,
+                onConfirm: () => {
+                    this.consentPending = false;
+                    if (this.isOpen) this.input.focus();
+                },
+            });
+        }
     }
 
     /**
@@ -663,7 +679,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     }
 
     sendPrompt(text) {
-        if (!text || this.isBusy) return;
+        if (!text || this.isBusy || this.consentPending) return;
 
         this.addMessage('user', text);
         this.history.push({ role: 'user', content: text, time: Date.now() });
@@ -673,7 +689,7 @@ window.ChatbotWidget = window.ChatbotWidget || class ChatbotWidget {
     }
 
     summarizePage() {
-        if (this.isBusy) return;
+        if (this.isBusy || this.consentPending) return;
 
         const displayText = this.strings.summarize;
         const pageContent = this.extractPageContent();

@@ -13,6 +13,7 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
         this.sig = config.sig || '';
         this.feedback = config.feedback === true;
         this.strings = config.strings || {};
+        this.consent = config.consent || false;
         this.apiUrl = config.apiUrl || '/bluebranch/chatbot/api/v1/generate/stream';
 
         this.container = document.getElementById(this.containerId);
@@ -37,11 +38,40 @@ window.ChatbotSearch = window.ChatbotSearch || class ChatbotSearch {
     }
 
     init() {
-        if (!this.query || this.query.trim() === '') {
+        const hasQuery = !!this.query && this.query.trim() !== '';
+        const form = this.container.querySelector('form');
+        const start = () => {
+            if (hasQuery) {
+                this.startRequest();
+            }
+        };
+
+        if (this.consent && window.ChatbotConsent && !ChatbotConsent.isGiven()) {
+            if (form) {
+                // Eigenes Suchfeld (Variante „_full“): Checkbox unter dem Feld; ohne Haken geht keine Suche ab.
+                // Steht schon ein Suchbegriff in der Adresse, wartet die Antwort auf den Haken.
+                const inline = ChatbotConsent.inline({ form: form, consent: this.consent, onConfirm: start });
+
+                form.addEventListener('submit', (event) => {
+                    if (!ChatbotConsent.isGiven()) {
+                        event.preventDefault();
+                        if (inline) inline.attention();
+                    }
+                });
+            } else if (hasQuery) {
+                // Ohne eigenes Feld: Hinweis mit Knopf, die Antwort wartet darauf.
+                ChatbotConsent.gate({
+                    container: this.container,
+                    before: this.container.querySelector('.chatbot-response'),
+                    consent: this.consent,
+                    onConfirm: start,
+                });
+            }
+
             return;
         }
 
-        this.startRequest();
+        start();
     }
 
     /**

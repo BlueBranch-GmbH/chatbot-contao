@@ -1033,3 +1033,162 @@ window.ChatbotVoiceField = window.ChatbotVoiceField || {
         };
     },
 };
+
+/**
+ * KI-Hinweis mit Bestaetigung: Solange ein Besucher ihn nicht bestaetigt hat, bleibt das Modul gesperrt.
+ *
+ * Gemerkt wird die Bestaetigung nur fuer die Browser-Sitzung (sessionStorage) und gilt fuer alle
+ * Chatbot-Module der Seite: Wer im Widget bestaetigt, wird im Frage-Feld nicht noch einmal gefragt.
+ * Das Sperren macht beim Widget das CSS ueber die Klasse `chatbot-consent-pending` am Container.
+ * Frage und Suche sperren nichts: Sie zeigen den Hinweis erst beim Absenden und senden nach dem Klick.
+ */
+window.ChatbotConsent = window.ChatbotConsent || (function () {
+    const KEY = 'chatbot_consent';
+    const EVENT = 'chatbot:consent';
+    let given = false;
+
+    function stored() {
+        try {
+            return window.sessionStorage.getItem(KEY) === '1';
+        } catch (e) {
+            // Speicher gesperrt (z. B. privater Modus): die Bestaetigung gilt dann nur fuer diese Seite.
+            return false;
+        }
+    }
+
+    function remember() {
+        given = true;
+
+        try {
+            window.sessionStorage.setItem(KEY, '1');
+        } catch (e) {
+            // siehe stored()
+        }
+
+        document.dispatchEvent(new CustomEvent(EVENT));
+    }
+
+    return {
+        isGiven() {
+            return given || stored();
+        },
+
+        /**
+         * Checkbox unter dem Formular (Frage und Suche mit Suchfeld): Absenden und Mikrofon bleiben
+         * gesperrt, bis sie gesetzt ist. Gibt ein anderes Modul die Bestaetigung, zieht dieses nach.
+         *
+         * @param {Object} o
+         * @param {Element} o.form
+         * @param {{text: string, button: string}|false} o.consent
+         * @param {Function} [o.onConfirm]  laeuft sofort, wenn nichts (mehr) zu bestaetigen ist, sonst nach dem Haken
+         * @returns {{attention: Function}|null} null = nichts zu bestaetigen
+         */
+        inline(o) {
+            if (!o.form || !o.consent || this.isGiven()) {
+                if (typeof o.onConfirm === 'function') o.onConfirm();
+                return null;
+            }
+
+            const label = document.createElement('label');
+            label.className = 'chatbot-consent-inline';
+
+            const box = document.createElement('input');
+            box.type = 'checkbox';
+            box.className = 'chatbot-consent-inline__box';
+
+            const text = document.createElement('span');
+            text.className = 'chatbot-consent-inline__text';
+            text.textContent = o.consent.text;
+
+            label.append(box, text);
+            o.form.after(label);
+
+            const controls = () => o.form.querySelectorAll('button[type="submit"], .submit, .chatbot-voice-btn');
+            controls().forEach((button) => { button.disabled = true; });
+
+            const onGiven = () => {
+                document.removeEventListener(EVENT, onGiven);
+                box.checked = true;
+                box.disabled = true;
+                label.classList.add('is-given');
+                controls().forEach((button) => { button.disabled = false; });
+
+                // Der Hinweis hat seine Pflicht getan: nach 3 Sekunden blendet er sich aus.
+                window.setTimeout(() => {
+                    label.classList.add('is-leaving');
+                    window.setTimeout(() => label.remove(), 400);
+                }, 3000);
+
+                if (typeof o.onConfirm === 'function') o.onConfirm();
+            };
+
+            document.addEventListener(EVENT, onGiven);
+            box.addEventListener('change', () => {
+                if (box.checked) remember();
+            });
+
+            return {
+                // Wer trotzdem absendet (Eingabetaste, Mikrofon), bekommt die Checkbox gezeigt.
+                attention() {
+                    label.classList.add('is-attention');
+                    box.focus();
+                    window.setTimeout(() => label.classList.remove('is-attention'), 1200);
+                },
+            };
+        },
+
+        /**
+         * @param {Object} o
+         * @param {Element} o.container  bekommt solange die Klasse chatbot-consent-pending
+         * @param {Element} [o.before]   vor diesem Element erscheint der Hinweis (sonst am Anfang des Containers)
+         * @param {{text: string, button: string}|false} o.consent  false = nichts zu bestaetigen
+         * @param {Function} o.onConfirm  laeuft sofort, wenn nichts (mehr) zu bestaetigen ist, sonst nach dem Klick
+         */
+        gate(o) {
+            if (!o.container || !o.consent || this.isGiven()) {
+                if (typeof o.onConfirm === 'function') o.onConfirm();
+                return;
+            }
+
+            // Steht der Hinweis schon, bleibt es bei dem einen: Wer erneut absendet, soll nicht zwei bekommen.
+            if (o.container.querySelector('.chatbot-consent')) {
+                return;
+            }
+
+            const box = document.createElement('div');
+            box.className = 'chatbot-consent';
+            box.setAttribute('role', 'group');
+
+            const text = document.createElement('p');
+            text.className = 'chatbot-consent__text';
+            text.id = 'chatbot-consent-' + Math.random().toString(36).slice(2, 9);
+            text.textContent = o.consent.text;
+            box.setAttribute('aria-labelledby', text.id);
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'chatbot-consent__button';
+            button.textContent = o.consent.button;
+
+            box.append(text, button);
+
+            if (o.before && o.before.parentNode) {
+                o.before.parentNode.insertBefore(box, o.before);
+            } else {
+                o.container.insertBefore(box, o.container.firstChild);
+            }
+
+            o.container.classList.add('chatbot-consent-pending');
+
+            const onGiven = () => {
+                document.removeEventListener(EVENT, onGiven);
+                box.remove();
+                o.container.classList.remove('chatbot-consent-pending');
+                if (typeof o.onConfirm === 'function') o.onConfirm();
+            };
+
+            document.addEventListener(EVENT, onGiven);
+            button.addEventListener('click', remember);
+        },
+    };
+})();

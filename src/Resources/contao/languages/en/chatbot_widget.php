@@ -41,3 +41,5 @@ $GLOBALS['TL_LANG']['chatbot_widget']['searchLoading'] = 'Generating answer...';
 $GLOBALS['TL_LANG']['chatbot_widget']['searchDone'] = 'Answer generated';
 $GLOBALS['TL_LANG']['chatbot_widget']['searchStopped'] = 'Answer stopped';
 $GLOBALS['TL_LANG']['chatbot_widget']['searchSeconds'] = 'seconds';
+$GLOBALS['TL_LANG']['chatbot_widget']['consentText'] = 'This chat is operated by an artificial intelligence (AI). Answers are generated automatically and may contain errors.';
+$GLOBALS['TL_LANG']['chatbot_widget']['consentButton'] = 'Understood';

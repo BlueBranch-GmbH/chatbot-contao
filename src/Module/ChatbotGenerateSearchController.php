@@ -5,6 +5,7 @@ namespace Bluebranch\Chatbot\Module;
 use Bluebranch\Chatbot\classes\Appearance;
 use Bluebranch\Chatbot\classes\ChatbotAPI;
 use Bluebranch\Chatbot\classes\ChatLog;
+use Bluebranch\Chatbot\classes\Consent;
 use Bluebranch\Chatbot\classes\RequestSignature;
 use Bluebranch\Chatbot\classes\FeedbackStrings;
 use Bluebranch\Chatbot\classes\TypedQuestions;
@@ -99,6 +100,8 @@ class ChatbotGenerateSearchController extends AbstractFrontendModuleController
         $template->searchResults = $nativeResults['results'];
         $template->moduleId = (int) $model->id;
         $template->feedback = ChatLog::feedbackEnabled($model);
+        // KI-Hinweis zum Bestaetigen (false = nicht gewuenscht).
+        $template->consent = Consent::forModule($model);
         // Bindet Seite und Modul an diese Ausgabe (siehe RequestSignature).
         $template->sig = RequestSignature::sign((int) ($this->getPageModel() instanceof PageModel ? $this->getPageModel()->id : 0), (int) $model->id);
         $template->feedbackStrings = FeedbackStrings::get();
