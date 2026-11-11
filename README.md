@@ -846,6 +846,15 @@ MIT – siehe [LICENSE.txt](LICENSE.txt).
 
 ## Changes
 
+### 1.9.1 - 2026-11-11
+
+- **Events und News-Details überschreiben sich nicht mehr:** Alle Detailseiten einer Reader-Seite (Event, News) teilten sich bisher eine ID im KI-Index, es blieb nur die zuletzt indexierte übrig. Die Grundadresse einer Seite behält ihre ID, jede weitere URL (Detailseite, Pagination) bekommt eine eigene. Bereits trainierte Seiten bleiben gültig
+- **Kein Datenbank-Update nötig:** Der Stand je URL liegt im Cache (`cache.app`), die Varianten einer Seite werden aus dem Suchindex abgeleitet. Geht der Cache verloren, werden die Detailseiten einmal neu übertragen
+- **Altbestand:** Liegt die Liste einer Reader-Seite nicht im Suchindex, wird der alte Sammel-Eintrag der Seite einmalig entfernt, damit nichts doppelt im Index steht
+- **Verwaiste Einträge:** Der Bereinigungs-Cronjob gleicht den KI-Index mit der Website ab und entfernt Seiten und Detailseiten, die es nicht mehr gibt. Er löscht nur Seiten-Einträge mit einer Domain dieser Installation (Domain am Startpunkt eintragen), höchstens 200 je Lauf und nichts, was jünger als zwei Stunden ist
+- Wird ein einzelner Eintrag im Suchindex gelöscht, entfernt das nur noch die betroffene Detailseite statt der ganzen Seite
+- Nach dem Update: `composer update`, Cache leeren. Die Detailseiten werden beim nächsten Crawler-Lauf (*System → Suchindex neu aufbauen*) neu trainiert
+
 ### 1.9.0 - 2026-11-11
 
 - **Bestätigung einholen:** Neue Option an *Chatbot Widget*, *Chatbot Frage* und *Chatbot Suche* (Standard: aus). Besucher sehen den Hinweis, dass sie mit einer KI sprechen, und müssen ihn bestätigen, bevor sie fragen können. Beim Widget bleiben Eingabe und Vorschläge bis dahin ausgeblendet; bei Frage und Suche mit eigenem Suchfeld steht eine Checkbox unter dem Feld, „Fragen“ und das Mikrofon bleiben bis zum Haken gesperrt, und der Hinweis blendet sich drei Sekunden danach aus. Die Bestätigung gilt für die Browser-Sitzung (`sessionStorage`) und für alle Chatbot-Module der Seite; auf dem Server wird nichts gespeichert. Die Texte stehen in den Sprachdateien (`consentText`, `consentButton`)

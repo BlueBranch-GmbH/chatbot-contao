@@ -153,8 +153,11 @@ Braucht für die Verbrauchszeile API 0.0.56; mit älterer API entfällt sie. Kei
 
 ### Funktion und Robustheit
 
-- [ ] **Reader-Seiten (News, Events) überschreiben sich im Index**: externe ID `page_<id>` ist je
-      Seite, nicht je URL. Braucht URL-basierte IDs und Löschen per Präfix in der API.
+- [x] **Reader-Seiten (News, Events) überschreiben sich im Index**: behoben (ungetaggt). Die Grundadresse
+      einer Seite behält `page_<id>`, jede andere URL (Detailseite, Pagination) bekommt `page_<id>_<hash>`;
+      Stand je URL im Cache `cache.app` (keine Migration), Varianten einer Seite werden aus `tl_search` abgeleitet. Altbestand: ein einmaliges Löschen von `page_<id>`, wenn die Grundadresse nicht im Index steht.
+      Getestet (11.11.2026) mit echtem `contao:crawl` gegen Mock-API auf Contao 5.7 (Demo-Events) und 4.13 (3 Test-Events): je Event eigene ID, zweiter Lauf überträgt nichts, Orphan-Abgleich und Löschen aller Varianten. News-Reader nicht eigens getestet (gleicher Mechanismus). Verwaiste Einträge räumt `PurgeIneligiblePagesCron::purgeOrphans()` per API-Liste ab (nur `page_*`, nur Domains dieser Installation, max. 200 je Lauf, nichts unter 2 h alt); läuft nur mit eingetragener Domain am Startpunkt. Event, das nur unveröffentlicht
+      wird, verschwindet erst, wenn Contao den `tl_search`-Eintrag löscht.
 - [ ] **Abgelaufener Sitzungs-Token wird nicht erneuert** (lange offener Tab → 403 bis zum
       Neuladen). Bei 403 Token neu holen und einmal wiederholen (WordPress macht das bereits).
 - [ ] **Bereinigungs-Cronjob schreibt `localconfig.php`** bei jedem Lauf (`Config::persist`);

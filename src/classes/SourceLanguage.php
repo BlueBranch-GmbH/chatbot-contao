@@ -11,7 +11,7 @@ use Contao\PageModel;
  * Alle Sprachen einer Domain teilen einen Index; die API sucht ueber alle Treffer und liefert
  * deutsche und englische Seiten gemischt. Der Besucher einer englischen Seite soll aber keine
  * Links auf die deutsche Fassung bekommen. Die Sprache einer Quelle steht nicht in der Antwort
- * der API, sie ergibt sich aus der `externalId`: `page_<id>` ist eine Contao-Seite, `extra_<id>`
+ * der API, sie ergibt sich aus der `externalId`: `page_<id>` (oder `page_<id>_<hash>` fuer eine Einzel-URL wie ein Event) ist eine Contao-Seite, `extra_<id>`
  * ein Eintrag unter „Zusaetzliche Inhalte“.
  *
  * Eine einsprachige Installation filtert nie - dort traegt „Zusaetzliche Inhalte“ ohne Sprache
@@ -88,8 +88,10 @@ class SourceLanguage
 
         $language = '';
 
-        if (1 === preg_match('/^page_(\d+)$/', $externalId, $m)) {
-            $page = PageModel::findById((int) $m[1]);
+        $ownerId = TrainingState::ownerPageId($externalId);
+
+        if (null !== $ownerId) {
+            $page = PageModel::findById($ownerId);
 
             if ($page instanceof PageModel) {
                 $page->loadDetails();

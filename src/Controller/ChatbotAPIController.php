@@ -393,6 +393,10 @@ class ChatbotAPIController extends AbstractController
             (new TrainingState())->markRemoved($deletedPageId);
         }
 
+        if (TrainingState::isVariantId($externalId) && TrainingState::deleteSucceeded($result)) {
+            (new TrainingState())->forgetVariant($externalId);
+        }
+
         if (null !== $this->extraContent && TrainingState::deleteSucceeded($result)) {
             $this->extraContent->markRemovedByExternalId($externalId);
         }

@@ -103,7 +103,7 @@ class ScheduledContentCron
         foreach ($pageIds as $pageId) {
             if (!$this->eligibility->isEligible($pageId)) {
                 if (!$state->isKnownAbsent($pageId)) {
-                    $result = $this->chatbotApi->deleteContent('page_' . $pageId, PageModel::findById($pageId));
+                    $result = $this->chatbotApi->deletePageContent($pageId, PageModel::findById($pageId));
 
                     if (TrainingState::deleteSucceeded($result)) {
                         $state->markRemoved($pageId);

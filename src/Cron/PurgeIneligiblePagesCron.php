@@ -103,7 +103,7 @@ class PurgeIneligiblePagesCron
                 }
 
                 $pageModel = PageModel::findById($id);
-                $result = $this->chatbotApi->deleteContent('page_' . $id, $pageModel);
+                $result = $this->chatbotApi->deletePageContent($id, $pageModel);
 
                 // Festhalten, damit die Seite nach einer erneuten Veroeffentlichung wieder
                 // trainiert wird - ihr Inhalt hat sich ja womoeglich nicht geaendert.
@@ -115,8 +115,160 @@ class PurgeIneligiblePagesCron
             }
 
             $this->logger->info(sprintf('Chatbot: Bereinigungslauf abgeschlossen, %d Seite(n) aus dem KI-Index entfernt/geprüft.', $count));
+
+            $orphans = $this->purgeOrphans();
+
+            if ($orphans > 0) {
+                $this->logger->info(sprintf('Chatbot: %d verwaiste(r) Eintrag/Einträge aus dem KI-Index entfernt.', $orphans));
+            }
         } catch (\Throwable $e) {
             $this->logger->error('Chatbot: Bereinigungslauf für den KI-Index fehlgeschlagen: ' . $e->getMessage());
         }
+    }
+    /** Obergrenze je Lauf: Ein Fehler in der Erlaubnisliste soll nicht den ganzen Index leeren. */
+    private const MAX_ORPHANS_PER_RUN = 200;
+
+    /** Eintraege, die juenger sind, bleiben unberuehrt: `tl_search` wird erst nach dem Training geschrieben. */
+    private const ORPHAN_GRACE = 7200;
+
+    /**
+     * Entfernt Eintraege, die in der API liegen, aber zu keiner Seite dieser Installation mehr gehoeren.
+     *
+     * Die Schritte oben loeschen gezielt, ausgehend von `tl_page`. Was dort nicht mehr vorkommt -
+     * eine geloeschte Seite, ein Event, dessen Suchindex-Eintrag Contao still entfernt hat -, kennen
+     * sie nicht. Hier wird deshalb die Liste der API durchgegangen und gegen die Datenbank gehalten.
+     *
+     * Vorsicht ist Absicht, denn ein Fehler hier loescht Inhalte:
+     *  - nur `page_<id>` und `page_<id>_<hash>`; Zusatzinhalte und Unbekanntes bleiben,
+     *  - nur Eintraege, deren URL zu einer Domain dieser Installation gehoert (teilen sich zwei
+     *    Installationen einen Key, bleiben die Seiten der anderen unangetastet); ohne eingetragene
+     *    Domain an den Startpunkten laeuft der Schritt gar nicht,
+     *  - ein Fehler oder eine unvollstaendige Liste bricht den Schritt ab,
+     *  - nichts, was juenger als zwei Stunden ist, und hoechstens 200 Loeschungen je Lauf.
+     *
+     * @return int Anzahl der geloeschten Eintraege
+     */
+    private function purgeOrphans(): int
+    {
+        $db = Database::getInstance();
+        $roots = $db->execute("SELECT id, dns FROM tl_page WHERE type='root'");
+        $hosts = [];
+        $rootByKey = [];
+
+        while ($roots->next()) {
+            if ('' !== (string) $roots->dns) {
+                $hosts[strtolower((string) $roots->dns)] = true;
+            }
+
+            $key = $this->chatbotApi->rootApiKey((int) $roots->id);
+
+            if ('' !== $key && !isset($rootByKey[$key])) {
+                $rootByKey[$key] = (int) $roots->id;
+            }
+        }
+
+        if ([] === $hosts || [] === $rootByKey) {
+            return 0;
+        }
+
+        $pageIds = [];
+        $pages = $db->execute('SELECT id FROM tl_page');
+
+        while ($pages->next()) {
+            $pageIds[(int) $pages->id] = true;
+        }
+
+        if ([] === $pageIds) {
+            return 0;
+        }
+
+        $removed = 0;
+        $baseUrls = [];
+
+        foreach ($rootByKey as $rootId) {
+            $offset = 0;
+            $limit = 1000;
+            $seen = [];
+
+            do {
+                $response = $this->chatbotApi->listContent($limit, $offset, $rootId);
+
+                // Eine Teilliste darf nicht als vollstaendige gelten.
+                if (isset($response['success']) && false === $response['success']) {
+                    break;
+                }
+
+                $items = \is_array($response['data'] ?? null) ? $response['data'] : [];
+
+                foreach ($items as $item) {
+                    $externalId = (string) ($item['externalId'] ?? '');
+
+                    if ('' === $externalId || isset($seen[$externalId])) {
+                        continue;
+                    }
+
+                    $seen[$externalId] = true;
+
+                    if (!$this->isOrphan($item, $externalId, $hosts, $pageIds, $baseUrls)) {
+                        continue;
+                    }
+
+                    if ($removed >= self::MAX_ORPHANS_PER_RUN) {
+                        break 2;
+                    }
+
+                    $result = $this->chatbotApi->deleteContent($externalId, $rootId);
+
+                    if (TrainingState::deleteSucceeded($result)) {
+                        $this->trainingState->forgetVariant($externalId);
+                        ++$removed;
+                    }
+                }
+
+                $offset += $limit;
+            } while (\count($items) >= $limit && $offset < 100000);
+        }
+
+        return $removed;
+    }
+
+    /**
+     * @param array<string, bool>        $hosts
+     * @param array<int, bool>           $pageIds
+     * @param array<int, string|null>    $baseUrls Merker je Seite
+     */
+    private function isOrphan(array $item, string $externalId, array $hosts, array $pageIds, array &$baseUrls): bool
+    {
+        $pageId = TrainingState::ownerPageId($externalId);
+
+        if (null === $pageId) {
+            return false;
+        }
+
+        $host = strtolower((string) parse_url((string) ($item['url'] ?? ''), PHP_URL_HOST));
+
+        if ('' === $host || !isset($hosts[$host])) {
+            return false;
+        }
+
+        $created = isset($item['createdAt']) ? strtotime((string) $item['createdAt']) : false;
+
+        if (false === $created || $created > time() - self::ORPHAN_GRACE) {
+            return false;
+        }
+
+        if (!isset($pageIds[$pageId])) {
+            return true;
+        }
+
+        if (!TrainingState::isVariantId($externalId)) {
+            return false;
+        }
+
+        if (!\array_key_exists($pageId, $baseUrls)) {
+            $baseUrls[$pageId] = TrainingState::basePageUrl(PageModel::findById($pageId));
+        }
+
+        return !\in_array($externalId, $this->trainingState->variantIds($pageId, $baseUrls[$pageId]), true);
     }
 }

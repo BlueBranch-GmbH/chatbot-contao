@@ -108,6 +108,30 @@ class ChatbotAPI
     }
 
     /**
+     * Entfernt eine Seite samt ihren Einzel-URLs (Reader-Seiten, Pagination) aus dem Index.
+     *
+     * @return array Antwort der Loeschung der Seite selbst; bei einem Fehler an einer Einzel-URL
+     *               success=false, damit der Aufrufer die Seite nicht als entfernt markiert
+     */
+    public function deletePageContent(int $pageId, $page = null, array $options = []): array
+    {
+        $state = new TrainingState();
+        $result = $this->deleteContent('page_' . $pageId, $page, $options);
+
+        foreach ($state->variantIds($pageId, TrainingState::basePageUrl($this->getPageModel($page))) as $variantId) {
+            $variantResult = $this->deleteContent($variantId, $page, $options);
+
+            if (TrainingState::deleteSucceeded($variantResult)) {
+                $state->forgetVariant($variantId);
+            } else {
+                $result = $variantResult;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Generates a response from the chatbot using RAG.
      */
     public function generateSearch(array $payload, $page = null): array

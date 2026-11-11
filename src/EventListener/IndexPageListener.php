@@ -97,8 +97,12 @@ class IndexPageListener
                 15
             );
 
+            $pageModel = PageModel::findById($pageId);
+            $externalId = TrainingState::externalIdFor($pageId, (string) $indexData['url'], TrainingState::basePageUrl($pageModel));
+            $isVariant = TrainingState::isVariantId($externalId);
+
             $payload = [
-                'externalId' => 'page_' . $pageId,
+                'externalId' => $externalId,
                 'title' => ($pageData['pageTitle'] ?? '') ?: (($pageData['title'] ?? '') ?: ($indexData['title'] ?? '')),
                 'url' => $indexData['url'],
                 'content' => trim($markdownContent ?: ''),
@@ -113,19 +117,27 @@ class IndexPageListener
             // indexierten Seitenaufruf, nicht nur wenn sich etwas geaendert hat.
             $checksum = $this->trainingState->checksum($payload);
 
-            if (!$this->trainingState->needsTraining($pageId, $checksum)) {
+            $needsTraining = $isVariant
+                ? $this->trainingState->variantNeedsTraining($externalId, $checksum)
+                : $this->trainingState->needsTraining($pageId, $checksum);
+
+            if (!$needsTraining) {
                 return;
             }
 
             $this->writeDebugFile('train_' . $payload['externalId'] . '.json', $payload);
-            $pageModel = PageModel::findById($pageId);
 
             $result = $this->chatbotApi->trainContent($payload, $pageModel);
 
             // Nur bei Erfolg merken - ein Fehlschlag (etwa ein erschoepftes Kontingent)
             // wird beim naechsten Aufruf wiederholt.
             if (!empty($result['success'])) {
-                $this->trainingState->markTrained($pageId, $checksum);
+                if ($isVariant) {
+                    $this->trainingState->markVariantTrained($externalId, $checksum);
+                    $this->dropLegacyEntry($pageId, $pageModel);
+                } else {
+                    $this->trainingState->markTrained($pageId, $checksum);
+                }
             }
 
         } catch (\Exception $e) {
@@ -154,11 +166,21 @@ class IndexPageListener
             $pageId = $dc->activeRecord->pid;
 
             if ($pageId) {
-                $vectorId = 'page_' . $pageId;
+                $pageModel = PageModel::findById((int) $pageId);
+                $vectorId = TrainingState::externalIdFor((int) $pageId, (string) $dc->activeRecord->url, TrainingState::basePageUrl($pageModel));
 
                 $this->writeDebugFile('delete_search_vector_' . $vectorId . '.json', ['id' => $vectorId, 'action' => 'delete', 'tstamp' => time()]);
 
-                $this->removeFromIndex((int) $pageId);
+                if (TrainingState::isVariantId($vectorId)) {
+                    // Nur diese eine Detailseite: Die Grundadresse und die anderen Details bleiben.
+                    $result = $this->chatbotApi->deleteContent($vectorId, $pageModel);
+
+                    if (TrainingState::deleteSucceeded($result)) {
+                        $this->trainingState->forgetVariant($vectorId);
+                    }
+                } else {
+                    $this->removeFromIndex((int) $pageId);
+                }
             }
         } catch (\Exception $e) {
             $this->logger->error('Fehler beim Vormerken zum Löschen aus der Vektor-Datenbank (tl_search): ' . $e->getMessage());
@@ -186,7 +208,8 @@ class IndexPageListener
                 $this->writeDebugFile('delete_page_vector_' . $vectorId . '.json', ['id' => $vectorId, 'action' => 'delete', 'tstamp' => time()]);
 
                 $pageModel = PageModel::findById($pageId);
-                $this->chatbotApi->deleteContent($vectorId, $pageModel);
+                $this->chatbotApi->deletePageContent((int) $pageId, $pageModel);
+
             }
         } catch (\Exception $e) {
             $this->logger->error('Fehler beim Löschen aus der Vektor-Datenbank (tl_page): ' . $e->getMessage());
@@ -267,12 +290,37 @@ class IndexPageListener
     }
 
     /**
+     * Raeumt den Eintrag `page_<id>` auf, den eine Reader-Seite vor der Einzel-URL-Unterscheidung
+     * bekam.
+     *
+     * Damals ueberschrieb jede Detailseite diesen Eintrag - er enthaelt irgendein Event unter der
+     * Adresse der Seite. Steht die Grundadresse nicht im Suchindex (die Liste liegt auf einer
+     * anderen Seite), ersetzt sie ihn nie, und das Event stuende doppelt im Index. Einmalig
+     * loeschen; danach gilt die Seite als „nicht im Index", der naechste Aufruf der Grundadresse
+     * trainiert sie wieder.
+     */
+    private function dropLegacyEntry(int $pageId, ?PageModel $pageModel): void
+    {
+        if ($this->trainingState->isKnownAbsent($pageId)
+            || $this->trainingState->baseIndexed($pageId, TrainingState::basePageUrl($pageModel))
+        ) {
+            return;
+        }
+
+        $result = $this->chatbotApi->deleteContent('page_' . $pageId, $pageModel);
+
+        if (TrainingState::deleteSucceeded($result)) {
+            $this->trainingState->markRemoved($pageId);
+        }
+    }
+
+    /**
      * Entfernt die Seite aus dem KI-Index und haelt das im Trainingsstand fest, damit sie
      * nach einer erneuten Veroeffentlichung wieder trainiert wird.
      */
     private function removeFromIndex(int $pageId): void
     {
-        $result = $this->chatbotApi->deleteContent('page_' . $pageId, PageModel::findById($pageId));
+        $result = $this->chatbotApi->deletePageContent($pageId, PageModel::findById($pageId));
 
         if (TrainingState::deleteSucceeded($result)) {
             $this->trainingState->markRemoved($pageId);
